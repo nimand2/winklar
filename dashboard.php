@@ -12,40 +12,46 @@ $user = current_user();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 40px 24px;
-            font-family: Arial, sans-serif;
-            background: #f8fafc;
-            color: #1f2937;
-        }
-
-        .wrapper {
-            max-width: 720px;
-            margin: 0 auto;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
-        }
-
-        a {
-            color: #0f766e;
-            text-decoration: none;
-            font-weight: 700;
-        }
-    </style>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('css/app.css')) ?>">
 </head>
-<body>
-    <main class="wrapper">
-        <h1>Dashboard</h1>
-        <p>Willkommen, <?= htmlspecialchars((string) ($user['username'] ?? '')) ?>.</p>
-        <p>Deine E-Mail: <?= htmlspecialchars((string) ($user['email'] ?? '')) ?></p>
-        <p>Diese Seite ist geschuetzt und nur nach erfolgreichem Login erreichbar.</p>
-        <p><a href="<?= htmlspecialchars(app_url('/logout.php')) ?>">Logout</a></p>
+<body class="app-shell">
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                            <div>
+                                <div class="brand-badge mb-3">Geschuetzter Bereich</div>
+                                <h1 class="h2 mb-2">Dashboard</h1>
+                                <p class="muted-copy mb-0">Diese Seite ist nur nach erfolgreichem Login erreichbar.</p>
+                            </div>
+
+                            <a href="<?= htmlspecialchars(app_url('/logout.php')) ?>" class="btn btn-outline-danger">
+                                Logout
+                            </a>
+                        </div>
+
+                        <div class="dashboard-meta">
+                            <div class="list-group">
+                                <div class="list-group-item p-3">
+                                    <div class="small text-body-secondary mb-1">Benutzername</div>
+                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($user['username'] ?? '')) ?></div>
+                                </div>
+                                <div class="list-group-item p-3 mt-3">
+                                    <div class="small text-body-secondary mb-1">E-Mail</div>
+                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($user['email'] ?? '')) ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

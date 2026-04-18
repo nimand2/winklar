@@ -16,6 +16,14 @@ function app_url(string $path = ''): string
 }
 
 /**
+ * Baut Asset-URLs innerhalb des Projekts auf.
+ */
+function asset_url(string $path): string
+{
+    return app_url('/assets/' . ltrim($path, '/'));
+}
+
+/**
  * Startet die Session mit sinnvollen Cookie-Optionen.
  */
 function ensure_session_started(): void
@@ -112,10 +120,13 @@ function find_user_by_login(string $login): ?array
     $statement = db()->prepare(
         'SELECT id, username, email, password_hash
          FROM users
-         WHERE email = :login OR username = :login
+         WHERE email = :email_login OR username = :username_login
          LIMIT 1'
     );
-    $statement->execute(['login' => $login]);
+    $statement->execute([
+        'email_login' => $login,
+        'username_login' => $login,
+    ]);
 
     $user = $statement->fetch();
     return $user ?: null;

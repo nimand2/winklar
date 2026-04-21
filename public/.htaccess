@@ -1,0 +1,10 @@
+RewriteEngine On
+DirectoryIndex index.php
+
+# Existing files and directories keep working, e.g. assets.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Everything else goes through the central front controller.
+RewriteRule ^ index.php [L,QSA]

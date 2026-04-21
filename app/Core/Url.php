@@ -16,6 +16,6 @@ final class Url
 
     public static function asset(string $path): string
     {
-        return self::app('/public/assets/' . ltrim($path, '/'));
+        return self::app('/assets/' . ltrim($path, '/'));
     }
 }

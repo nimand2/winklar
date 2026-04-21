@@ -24,9 +24,9 @@ Das Design soll:
 Fuer neue Seiten sollen immer diese Dateien genutzt werden:
 
 - Bootstrap CSS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css`
-- Eigenes CSS: [public/assets/css/app.css](/var/www/html/public/assets/css/app.css)
+- Eigenes CSS: [public/assets/css/app.css](/var/www/html/public/assets/css/app.css) als Datei, im Browser unter `/assets/css/app.css`
 - Optional Bootstrap JS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js`
-- Optional eigenes JS: [public/assets/js/login.js](/var/www/html/public/assets/js/login.js) oder spaeter weitere JS-Dateien
+- Optional eigenes JS: [public/assets/js/login.js](/var/www/html/public/assets/js/login.js) oder spaeter weitere JS-Dateien, im Browser unter `/assets/js/login.js`
 
 ## Layout-Stil
 
@@ -275,7 +275,7 @@ require_once __DIR__ . '/app/bootstrap.php';
 
 Wenn du neue Seiten baust, halte dich an diese 7 Punkte:
 
-1. Immer Bootstrap 5 + `public/assets/css/app.css` einbinden.
+1. Immer Bootstrap 5 + die Datei `public/assets/css/app.css` einbinden, die im Browser als `/assets/css/app.css` ausgeliefert wird.
 2. Immer `body class="app-shell"` verwenden.
 3. Inhalte in einem `container` und zentrierten `row` aufbauen.
 4. Den Hauptinhalt immer in einer `card` darstellen.

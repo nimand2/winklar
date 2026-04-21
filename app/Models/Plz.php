@@ -13,9 +13,7 @@ final class Anlass
         $statement = Database::connection()->prepare(
             'SELECT id, plz4, ortschaftsname
              FROM plz
-             WHERE plz4 LIKE :query
-             ORDER BY plz4 ASC
-             LIMIT 10'
+             WHERE plz4 LIKE :query'
         );
         $statement->execute(['query' => "%$query%"]);
 
@@ -24,12 +22,11 @@ final class Anlass
     public function find_by_ortschaftsname(string $ortschaftsname): ?array
     {
         $statement = Database::connection()->prepare(
-            'SELECT id, name, description, date
-             FROM anlass
-             WHERE ortschaftsname = :ortschaftsname
-             LIMIT 1'
+            'SELECT id, plz4, ortschaftsname
+             FROM plz
+             WHERE ortschaftsname = :ortschaftsname'
         );
-        $statement->execute(['ortschaftsname' => $ortschaftsname]);
+        $statement->execute(['ortschaftsname' => "%$ortschaftsname%"]);
 
         $anlass = $statement->fetch();
 

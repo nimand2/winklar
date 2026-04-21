@@ -20,6 +20,8 @@ CREATE TABLE plz (
     bfs_nr VARCHAR(20) NULL,
     kantonskuerzel VARCHAR(10) NULL,
     adressenanteil DECIMAL(5,2) NULL,
+    e DECIMAL(10,3) NULL,
+    n DECIMAL(10,3) NULL,
     ist_eintrag_aktiv TINYINT(1) NOT NULL DEFAULT 1,
     sprache VARCHAR(10) NULL,
     validity_from DATE NULL,

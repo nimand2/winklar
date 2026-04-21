@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Block direct access to internal application folders and sensitive root files.
+RewriteRule ^(app|model)(/|$) - [F,L]
+RewriteRule ^auth/auth\.php$ - [F,L]
+RewriteRule ^(config\.php|db\.php|schema\.sql|beispieldaten\.sql)$ - [F,L]
+
+# Existing files and directories keep working, e.g. assets.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Everything else goes through the central front controller.
+RewriteRule ^ public/index.php [L,QSA]

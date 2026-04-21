@@ -12,7 +12,7 @@ declare(strict_types=1);
 define('APP_BASE_PATH', '');
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'meine_website');
+define('DB_NAME', 'winklar');
 define('DB_USER', 'login_app');
 define('DB_PASS', '6dd81fb1c872b85a6159653473ef0b2d');
 define('DB_CHARSET', 'utf8mb4');

@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/auth/require_login.php';
-
-$user = current_user();
+use App\Core\Url;
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -14,7 +12,7 @@ $user = current_user();
     <title>Dashboard</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(Url::asset('css/app.css')) ?>">
 </head>
 <body class="app-shell">
     <main class="container py-5">
@@ -29,7 +27,7 @@ $user = current_user();
                                 <p class="muted-copy mb-0">Diese Seite ist nur nach erfolgreichem Login erreichbar.</p>
                             </div>
 
-                            <a href="<?= htmlspecialchars(app_url('/logout.php')) ?>" class="btn btn-outline-danger">
+                            <a href="<?= htmlspecialchars(Url::app('/logout')) ?>" class="btn btn-outline-danger">
                                 Logout
                             </a>
                         </div>

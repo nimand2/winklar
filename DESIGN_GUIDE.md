@@ -24,9 +24,9 @@ Das Design soll:
 Fuer neue Seiten sollen immer diese Dateien genutzt werden:
 
 - Bootstrap CSS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css`
-- Eigenes CSS: [assets/css/app.css](/var/www/html/assets/css/app.css)
+- Eigenes CSS: [public/assets/css/app.css](/var/www/html/public/assets/css/app.css)
 - Optional Bootstrap JS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js`
-- Optional eigenes JS: [assets/js/login.js](/var/www/html/assets/js/login.js) oder spaeter weitere JS-Dateien
+- Optional eigenes JS: [public/assets/js/login.js](/var/www/html/public/assets/js/login.js) oder spaeter weitere JS-Dateien
 
 ## Layout-Stil
 
@@ -210,7 +210,7 @@ Regeln:
 - auf Desktop begrenzte Spaltenbreite
 - Kartenpadding wird auf kleinen Geraeten automatisch reduziert
 
-Das ist bereits in [assets/css/app.css](/var/www/html/assets/css/app.css) vorgesehen.
+Das ist bereits in [public/assets/css/app.css](/var/www/html/public/assets/css/app.css) vorgesehen.
 
 ## Verhalten von JavaScript
 
@@ -232,7 +232,7 @@ Diese Struktur soll fuer neue Seiten als Vorlage dienen:
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/auth/auth.php';
+require_once __DIR__ . '/app/bootstrap.php';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -275,11 +275,10 @@ require_once __DIR__ . '/auth/auth.php';
 
 Wenn du neue Seiten baust, halte dich an diese 7 Punkte:
 
-1. Immer Bootstrap 5 + `assets/css/app.css` einbinden.
+1. Immer Bootstrap 5 + `public/assets/css/app.css` einbinden.
 2. Immer `body class="app-shell"` verwenden.
 3. Inhalte in einem `container` und zentrierten `row` aufbauen.
 4. Den Hauptinhalt immer in einer `card` darstellen.
 5. Oben eine `brand-badge`, dann Titel und kurzen Beschreibungstext platzieren.
 6. Formulare und Buttons nur mit Bootstrap-Klassen gestalten.
 7. Eigenes CSS nur dann erweitern, wenn es wirklich dem gesamten Projekt hilft.
-

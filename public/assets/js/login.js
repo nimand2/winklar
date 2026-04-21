@@ -11,4 +11,3 @@ document.addEventListener('DOMContentLoaded', function () {
         loginButton.textContent = 'Pruefe Login...';
     });
 });
-

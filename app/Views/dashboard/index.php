@@ -42,6 +42,10 @@ use App\Core\Url;
                                     <div class="small text-body-secondary mb-1">E-Mail</div>
                                     <div class="fw-semibold"><?= htmlspecialchars((string) ($user['email'] ?? '')) ?></div>
                                 </div>
+                                
+                            </div>
+                            <div>
+                                <a href="<?= htmlspecialchars(Url::app('/anlass')) ?>" class="btn btn-primary">Anlass auswählen</a>
                             </div>
                         </div>
                     </div>

@@ -21,6 +21,8 @@ spl_autoload_register(static function (string $className): void {
 
 use App\Models\RememberToken;
 use App\Models\User;
+use App\Models\Anlass;
+use App\Services\AnlassService;
 use App\Services\AuthService;
 
 function app_auth(): AuthService
@@ -35,4 +37,17 @@ function app_auth(): AuthService
     $authService->boot();
 
     return $authService;
+}
+
+function app_anlass_service(): AnlassService
+{
+    static $anlassService = null;
+
+    if ($anlassService instanceof AnlassService) {
+        return $anlassService;
+    }
+
+    $anlassService = new AnlassService(new Anlass());
+
+    return $anlassService;
 }

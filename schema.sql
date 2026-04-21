@@ -1,3 +1,7 @@
+drop database IF EXISTS winklar;
+create database IF NOT EXISTS winklar CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+use winklar;
+
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,

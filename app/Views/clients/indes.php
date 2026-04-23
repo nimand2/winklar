@@ -69,7 +69,7 @@ $errors = $errors ?? [];
                                                         href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/neu?adresse_id=' . (int) $adresse['id'])) ?>"
                                                         class="btn btn-primary"
                                                     >
-                                                        Öffnen
+                                                        Lösen
                                                     </a>
                                                 </div>
                                             </div>

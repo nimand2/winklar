@@ -1,4 +1,5 @@
 RewriteEngine On
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 DirectoryIndex index.php
 
 # Existing files and directories keep working, e.g. assets.

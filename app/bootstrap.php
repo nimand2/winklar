@@ -20,10 +20,14 @@ spl_autoload_register(static function (string $className): void {
 });
 
 use App\Models\RememberToken;
+use App\Models\Schussdaten;
+use App\Models\Standblatt;
 use App\Models\User;
 use App\Models\Anlass;
 use App\Services\AnlassService;
+use App\Services\ApiTokenService;
 use App\Services\AuthService;
+use App\Services\ClientApiService;
 
 function app_auth(): AuthService
 {
@@ -50,4 +54,30 @@ function app_anlass_service(): AnlassService
     $anlassService = new AnlassService(new Anlass());
 
     return $anlassService;
+}
+
+function app_api_token_service(): ApiTokenService
+{
+    static $apiTokenService = null;
+
+    if ($apiTokenService instanceof ApiTokenService) {
+        return $apiTokenService;
+    }
+
+    $apiTokenService = new ApiTokenService();
+
+    return $apiTokenService;
+}
+
+function app_client_api_service(): ClientApiService
+{
+    static $clientApiService = null;
+
+    if ($clientApiService instanceof ClientApiService) {
+        return $clientApiService;
+    }
+
+    $clientApiService = new ClientApiService(new Anlass(), new Standblatt(), new Schussdaten());
+
+    return $clientApiService;
 }

@@ -1,0 +1,174 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Core\Database;
+
+final class Schussdaten
+{
+    public function getAll(): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
+                    teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
+                    time_since_change, sweep_direction, demonstration, match_index, stich_index,
+                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
+                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+             FROM schussdaten
+             ORDER BY schuss_zeit DESC, id DESC'
+        );
+        $statement->execute();
+
+        return $statement->fetchAll();
+    }
+
+    public function create(array $data): int
+    {
+        $statement = Database::connection()->prepare(
+            'INSERT INTO schussdaten (
+                id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
+                teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
+                time_since_change, sweep_direction, demonstration, match_index, stich_index,
+                ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
+                externe_nummer, created_by_user_id, updated_by_user_id
+             ) VALUES (
+                :id_anlass, :start_nr, :primaerwertung, :schussart, :bahn_nr, :sekundaerwertung,
+                :teiler, :schuss_zeit, :mouche, :x_koordinate, :y_koordinate, :in_time,
+                :time_since_change, :sweep_direction, :demonstration, :match_index, :stich_index,
+                :ins_del, :total_art, :gruppe, :feuerart, :log_event, :log_typ,
+                :zeit_seit_jahresanfang, :abloesung, :waffe, :position, :target_id,
+                :externe_nummer, :created_by_user_id, :updated_by_user_id
+             )'
+        );
+        $statement->execute($this->buildPayload($data));
+
+        return (int) Database::connection()->lastInsertId();
+    }
+
+    public function createMany(array $rows): int
+    {
+        $created = 0;
+
+        foreach ($rows as $row) {
+            $this->create($row);
+            $created++;
+        }
+
+        return $created;
+    }
+
+    public function findById(int $id): ?array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
+                    teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
+                    time_since_change, sweep_direction, demonstration, match_index, stich_index,
+                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
+                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+             FROM schussdaten
+             WHERE id = :id
+             LIMIT 1'
+        );
+        $statement->execute(['id' => $id]);
+
+        $schussdaten = $statement->fetch();
+
+        return $schussdaten ?: null;
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $statement = Database::connection()->prepare(
+            'UPDATE schussdaten
+             SET id_anlass = :id_anlass,
+                 start_nr = :start_nr,
+                 primaerwertung = :primaerwertung,
+                 schussart = :schussart,
+                 bahn_nr = :bahn_nr,
+                 sekundaerwertung = :sekundaerwertung,
+                 teiler = :teiler,
+                 schuss_zeit = :schuss_zeit,
+                 mouche = :mouche,
+                 x_koordinate = :x_koordinate,
+                 y_koordinate = :y_koordinate,
+                 in_time = :in_time,
+                 time_since_change = :time_since_change,
+                 sweep_direction = :sweep_direction,
+                 demonstration = :demonstration,
+                 match_index = :match_index,
+                 stich_index = :stich_index,
+                 ins_del = :ins_del,
+                 total_art = :total_art,
+                 gruppe = :gruppe,
+                 feuerart = :feuerart,
+                 log_event = :log_event,
+                 log_typ = :log_typ,
+                 zeit_seit_jahresanfang = :zeit_seit_jahresanfang,
+                 abloesung = :abloesung,
+                 waffe = :waffe,
+                 position = :position,
+                 target_id = :target_id,
+                 externe_nummer = :externe_nummer,
+                 created_by_user_id = :created_by_user_id,
+                 updated_by_user_id = :updated_by_user_id
+             WHERE id = :id'
+        );
+
+        $payload = $this->buildPayload($data);
+        $payload['id'] = $id;
+
+        return $statement->execute($payload);
+    }
+
+    public function delete(int $id): bool
+    {
+        $statement = Database::connection()->prepare(
+            'DELETE FROM schussdaten
+             WHERE id = :id'
+        );
+
+        return $statement->execute(['id' => $id]);
+    }
+
+    private function buildPayload(array $data): array
+    {
+        return [
+            'id_anlass' => $data['id_anlass'],
+            'start_nr' => $data['start_nr'] ?? null,
+            'primaerwertung' => $data['primaerwertung'] ?? null,
+            'schussart' => $data['schussart'] ?? null,
+            'bahn_nr' => $data['bahn_nr'] ?? null,
+            'sekundaerwertung' => $data['sekundaerwertung'] ?? null,
+            'teiler' => $data['teiler'] ?? null,
+            'schuss_zeit' => $data['schuss_zeit'] ?? null,
+            'mouche' => $data['mouche'] ?? 0,
+            'x_koordinate' => $data['x_koordinate'] ?? null,
+            'y_koordinate' => $data['y_koordinate'] ?? null,
+            'in_time' => $data['in_time'] ?? 1,
+            'time_since_change' => $data['time_since_change'] ?? null,
+            'sweep_direction' => $data['sweep_direction'] ?? null,
+            'demonstration' => $data['demonstration'] ?? 0,
+            'match_index' => $data['match_index'] ?? null,
+            'stich_index' => $data['stich_index'] ?? null,
+            'ins_del' => $data['ins_del'] ?? 0,
+            'total_art' => $data['total_art'] ?? null,
+            'gruppe' => $data['gruppe'] ?? null,
+            'feuerart' => $data['feuerart'] ?? null,
+            'log_event' => $data['log_event'] ?? null,
+            'log_typ' => $data['log_typ'] ?? null,
+            'zeit_seit_jahresanfang' => $data['zeit_seit_jahresanfang'] ?? null,
+            'abloesung' => $data['abloesung'] ?? null,
+            'waffe' => $data['waffe'] ?? null,
+            'position' => $data['position'] ?? null,
+            'target_id' => $data['target_id'] ?? null,
+            'externe_nummer' => $data['externe_nummer'] ?? null,
+            'created_by_user_id' => $data['created_by_user_id'] ?? null,
+            'updated_by_user_id' => $data['updated_by_user_id'] ?? null,
+        ];
+    }
+}

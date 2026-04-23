@@ -23,7 +23,26 @@ final class Adressen
 
         return $statement->fetchAll();
     }
+    public function getArea(int $start, int $limit): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT a.id, a.creator_adress_id, a.modifier_adress_id, a.anrede, a.firmen_anrede,
+                    a.nachname, a.vorname, a.zusatz, a.strasse, a.postfach, a.nation, a.plz_id,
+                    p.plz4, p.ortschaftsname, telefon, email, notiz, geburtsdatum, lizenz, passwort,
+                    a.created_by_user_id, a.created_at, a.updated_by_user_id, a.updated_at
+             FROM adressen a
+             LEFT JOIN plz p ON p.id = a.plz_id
+             ORDER BY a.nachname ASC, a.vorname ASC, a.id ASC
+             LIMIT :limit OFFSET :start'
+        );
+        $statement->execute([
+            ':start' => $start,
+            ':limit' => $limit
+        ]);
 
+        return $statement->fetchAll();
+    }
+    
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -72,6 +91,25 @@ final class Adressen
         $statement->execute($this->buildPayload($data));
 
         return (int)Database::connection()->lastInsertId();
+    }
+
+    public function findById(int $id): ?array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT a.id, a.creator_adress_id, a.modifier_adress_id, a.anrede, a.firmen_anrede,
+                    a.nachname, a.vorname, a.zusatz, a.strasse, a.postfach, a.nation, a.plz_id,
+                    p.plz4, p.ortschaftsname, telefon, email, notiz, geburtsdatum, lizenz, passwort,
+                    a.created_by_user_id, a.created_at, a.updated_by_user_id, a.updated_at
+             FROM adressen a
+             LEFT JOIN plz p ON p.id = a.plz_id
+             WHERE a.id = :id
+             LIMIT 1'
+        );
+        $statement->execute(['id' => $id]);
+
+        $adresse = $statement->fetch();
+
+        return $adresse ?: null;
     }
 
     public function update(int $id, array $data): bool

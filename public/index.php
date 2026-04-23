@@ -6,12 +6,19 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Controllers\AuthController;
 use App\Controllers\AnlassController;
+use App\Controllers\ClientApiController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
 use App\Core\Response;
 use App\Core\Router;
 
 $authController = new AuthController(app_auth());
+$clientApiController = new ClientApiController(
+    app_auth(),
+    app_api_token_service(),
+    app_client_api_service(),
+    new App\Models\User()
+);
 $anlassController = new AnlassController(app_auth(), app_anlass_service());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());
@@ -24,6 +31,12 @@ $router->post('/login', [$authController, 'login']);
 $router->get('/logout', [$authController, 'logout']);
 $router->get('/dashboard', [$dashboardController, 'index']);
 $router->get('/anlass', [$anlassController, 'index']);
+
+$router->post('/api/login', [$clientApiController, 'login']);
+$router->get('/api/anlaesse', [$clientApiController, 'anlaesse']);
+$router->get('/api/anlaesse/{id}/shooters', [$clientApiController, 'shooters']);
+$router->get('/api/anlaesse/{id}/shooters/new', [$clientApiController, 'newShooters']);
+$router->post('/api/anlaesse/{id}/shots/import', [$clientApiController, 'importShots']);
 
 $router->get('/index.php', static function (): never {
     Response::redirect('/');

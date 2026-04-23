@@ -67,8 +67,12 @@ final class ApiTokenService
 
     private function secret(): string
     {
-        if (defined('API_TOKEN_SECRET') && API_TOKEN_SECRET !== '') {
-            return API_TOKEN_SECRET;
+        if (defined('API_TOKEN_SECRET')) {
+            $secret = (string) constant('API_TOKEN_SECRET');
+
+            if ($secret !== '') {
+                return $secret;
+            }
         }
 
         return hash('sha256', DB_PASS . '|' . DB_NAME);

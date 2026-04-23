@@ -27,4 +27,29 @@ final class AnlassController extends Controller
             'anlass' => $anlass,
         ]);
     }
+
+    public function show(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $id = (int) ($params['id'] ?? 0);
+
+        if ($id <= 0) {
+            http_response_code(404);
+            echo 'Anlass nicht gefunden';
+            return;
+        }
+
+        $anlass = $this->anlassService->getAnlassById($id);
+
+        if ($anlass === null) {
+            http_response_code(404);
+            echo 'Anlass nicht gefunden';
+            return;
+        }
+
+        $this->render('anlass/show', [
+            'user' => $user,
+            'anlass' => $anlass,
+        ]);
+    }
 }

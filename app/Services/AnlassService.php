@@ -17,4 +17,9 @@ final class AnlassService
     {
         return $this->anlassModel->getAll();
     }
+
+    public function getAnlassById(int $id): ?array
+    {
+        return $this->anlassModel->findById($id);
+    }
 }

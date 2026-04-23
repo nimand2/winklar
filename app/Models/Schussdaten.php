@@ -81,58 +81,22 @@ final class Schussdaten
         return $schussdaten ?: null;
     }
 
-    public function update(int $id, array $data): bool
+    public function findByStartNrAndIdAnlass(int $startNr, int $idAnlass): array
     {
         $statement = Database::connection()->prepare(
-            'UPDATE schussdaten
-             SET id_anlass = :id_anlass,
-                 start_nr = :start_nr,
-                 primaerwertung = :primaerwertung,
-                 schussart = :schussart,
-                 bahn_nr = :bahn_nr,
-                 sekundaerwertung = :sekundaerwertung,
-                 teiler = :teiler,
-                 schuss_zeit = :schuss_zeit,
-                 mouche = :mouche,
-                 x_koordinate = :x_koordinate,
-                 y_koordinate = :y_koordinate,
-                 in_time = :in_time,
-                 time_since_change = :time_since_change,
-                 sweep_direction = :sweep_direction,
-                 demonstration = :demonstration,
-                 match_index = :match_index,
-                 stich_index = :stich_index,
-                 ins_del = :ins_del,
-                 total_art = :total_art,
-                 gruppe = :gruppe,
-                 feuerart = :feuerart,
-                 log_event = :log_event,
-                 log_typ = :log_typ,
-                 zeit_seit_jahresanfang = :zeit_seit_jahresanfang,
-                 abloesung = :abloesung,
-                 waffe = :waffe,
-                 position = :position,
-                 target_id = :target_id,
-                 externe_nummer = :externe_nummer,
-                 created_by_user_id = :created_by_user_id,
-                 updated_by_user_id = :updated_by_user_id
-             WHERE id = :id'
+            'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
+                    teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
+                    time_since_change, sweep_direction, demonstration, match_index, stich_index,
+                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
+                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+             FROM schussdaten
+             WHERE start_nr = :start_nr AND id_anlass = :id_anlass  
+             ORDER BY schuss_zeit DESC'
         );
+        $statement->execute(['start_nr' => $startNr, 'id_anlass' => $idAnlass]);
 
-        $payload = $this->buildPayload($data);
-        $payload['id'] = $id;
-
-        return $statement->execute($payload);
-    }
-
-    public function delete(int $id): bool
-    {
-        $statement = Database::connection()->prepare(
-            'DELETE FROM schussdaten
-             WHERE id = :id'
-        );
-
-        return $statement->execute(['id' => $id]);
+        return $statement->fetchAll();
     }
 
     private function buildPayload(array $data): array

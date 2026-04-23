@@ -42,7 +42,10 @@ use App\Core\Url;
                         <div class="row g-3 mb-4">
                             <?php foreach ($anlass as $eintrag): ?>
                                 <div class="col-12 col-md-6 col-xl-4">
-                                    <div class="list-group-item h-100 p-4 bg-white rounded-4">
+                                    <a
+                                        href="<?= htmlspecialchars(Url::app('/anlass/' . (int) $eintrag['id'])) ?>"
+                                        class="anlass-card list-group-item h-100 p-4 bg-white rounded-4 text-decoration-none text-body"
+                                    >
                                         <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                                             <div>
                                                 <div class="small text-body-secondary mb-1">Kategorie</div>
@@ -64,7 +67,7 @@ use App\Core\Url;
                                                 Kein Enddatum hinterlegt.
                                             <?php endif; ?>
                                         </p>
-                                    </div>
+                                    </a>
                                 </div>
                             <?php endforeach; ?>
                         </div>

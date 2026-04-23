@@ -5,10 +5,12 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Controllers\AuthController;
+use App\Controllers\AdressenController;
 use App\Controllers\AnlassController;
 use App\Controllers\ClientApiController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
+use App\Controllers\LoesenController;
 use App\Core\Response;
 use App\Core\Router;
 
@@ -20,6 +22,8 @@ $clientApiController = new ClientApiController(
     new App\Models\User()
 );
 $anlassController = new AnlassController(app_auth(), app_anlass_service());
+$adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen());
+$loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());
 $router = new Router();
@@ -31,6 +35,12 @@ $router->post('/login', [$authController, 'login']);
 $router->get('/logout', [$authController, 'logout']);
 $router->get('/dashboard', [$dashboardController, 'index']);
 $router->get('/anlass', [$anlassController, 'index']);
+$router->get('/anlass/{id}/schuetzen', [$adressenController, 'index']);
+$router->get('/anlass/{id}/schuetzen/neu', [$adressenController, 'index']);
+$router->post('/anlass/{id}/schuetzen/neu', [$adressenController, 'store']);
+$router->get('/anlass/{id}/loesen/neu', [$loesenController, 'create']);
+$router->post('/anlass/{id}/loesen/neu', [$loesenController, 'store']);
+$router->get('/anlass/{id}', [$anlassController, 'show']);
 
 $router->post('/api/login', [$clientApiController, 'login']);
 $router->get('/api/anlaesse', [$clientApiController, 'anlaesse']);

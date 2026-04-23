@@ -55,6 +55,21 @@ final class Stich
         return $stich ?: null;
     }
 
+    public function findByAnlassId(int $anlassId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT id, id_anlass, id_disziplin, name, short_name, anzeige_id, scheibe, wertigkeit,
+                    anzahl_schuss, anzahl_passen, preis, verbindung, created_by_user_id, created_at,
+                    updated_by_user_id, updated_at
+             FROM stich
+             WHERE id_anlass = :id_anlass
+             ORDER BY name ASC, id ASC'
+        );
+        $statement->execute(['id_anlass' => $anlassId]);
+
+        return $statement->fetchAll();
+    }
+
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(

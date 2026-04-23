@@ -7,6 +7,9 @@ use App\Core\Url;
 $anlassId = (int) $anlass['id'];
 $adresseId = (int) $adresse['id'];
 $old = $old ?? [];
+$errors = $errors ?? [];
+$selectedStichIds = array_map('intval', (array) ($old['stich_ids'] ?? []));
+$stichCounts = (array) ($old['stich_counts'] ?? []);
 $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname'] ?? '')));
 ?>
 <!DOCTYPE html>
@@ -67,6 +70,12 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                             </div>
                         </div>
 
+                        <?php if ($errors !== []): ?>
+                            <div class="alert alert-danger">
+                                <?= htmlspecialchars((string) $errors[0]) ?>
+                            </div>
+                        <?php endif; ?>
+
                         <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/neu')) ?>">
                             <input type="hidden" name="adresse_id" value="<?= htmlspecialchars((string) $adresseId) ?>">
 
@@ -78,6 +87,71 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                 <div class="col-12 col-md-6">
                                     <label for="kosten" class="form-label">Kosten</label>
                                     <input id="kosten" name="kosten" type="number" step="0.01" min="0" class="form-control" value="<?= htmlspecialchars((string) ($old['kosten'] ?? '')) ?>">
+                                </div>
+                                <div class="col-12">
+                                    <div class="list-group-item p-3 bg-white rounded-4">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                                            <div>
+                                                <h2 class="h5 mb-1">Stiche auswählen</h2>
+                                                <div class="small text-body-secondary">
+                                                    Wähle die Stiche, die auf dieses Standblatt gehören.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <?php if ($stiche === []): ?>
+                                            <div class="alert alert-light border mb-0">
+                                                Für diesen Anlass sind noch keine Stiche hinterlegt.
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="row g-2">
+                                                <?php foreach ($stiche as $stich): ?>
+                                                    <?php $stichId = (int) $stich['id']; ?>
+                                                    <?php $anzahlStiche = max(1, (int) ($stichCounts[$stichId] ?? 1)); ?>
+                                                    <div class="col-12 col-md-6">
+                                                        <label class="list-group-item h-100 p-3">
+                                                            <div class="form-check">
+                                                                <input
+                                                                    class="form-check-input"
+                                                                    type="checkbox"
+                                                                    name="stich_ids[]"
+                                                                    value="<?= htmlspecialchars((string) $stichId) ?>"
+                                                                    id="stich-<?= htmlspecialchars((string) $stichId) ?>"
+                                                                    <?= in_array($stichId, $selectedStichIds, true) ? 'checked' : '' ?>
+                                                                >
+                                                                <span class="form-check-label fw-semibold">
+                                                                    <?= htmlspecialchars((string) $stich['name']) ?>
+                                                                </span>
+                                                            </div>
+                                                            <div class="mt-3">
+                                                                <label for="stich-count-<?= htmlspecialchars((string) $stichId) ?>" class="form-label small text-body-secondary">
+                                                                    Anzahl Stiche
+                                                                </label>
+                                                                <input
+                                                                    id="stich-count-<?= htmlspecialchars((string) $stichId) ?>"
+                                                                    name="stich_counts[<?= htmlspecialchars((string) $stichId) ?>]"
+                                                                    type="number"
+                                                                    min="1"
+                                                                    step="1"
+                                                                    class="form-control"
+                                                                    value="<?= htmlspecialchars((string) $anzahlStiche) ?>"
+                                                                >
+                                                            </div>
+                                                            <div class="small text-body-secondary mt-2">
+                                                                <?php if (!empty($stich['short_name'])): ?>
+                                                                    <?= htmlspecialchars((string) $stich['short_name']) ?> ·
+                                                                <?php endif; ?>
+                                                                <?= htmlspecialchars((string) ($stich['anzahl_schuss'] ?: '')) ?> Schuss
+                                                                <?php if ($stich['preis'] !== null): ?>
+                                                                    · CHF <?= htmlspecialchars((string) $stich['preis']) ?>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                                 <div class="col-12">
                                     <button type="submit" class="btn btn-primary">

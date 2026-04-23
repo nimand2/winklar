@@ -192,6 +192,7 @@ CREATE TABLE standblatt_stich (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_standblatt INT UNSIGNED NOT NULL,
     id_stich INT UNSIGNED NOT NULL,
+    anzahl_stiche INT UNSIGNED NOT NULL DEFAULT 0,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,

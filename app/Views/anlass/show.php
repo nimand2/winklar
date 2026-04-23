@@ -48,7 +48,7 @@ $anlassId = (int) $anlass['id'];
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-primary">
                                 Neuer Schütz
                             </a>
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen')) ?>" class="btn btn-outline-primary">
+                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="btn btn-outline-primary">
                                 Auswahl Schütz
                             </a>
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen')) ?>" class="btn btn-outline-secondary">

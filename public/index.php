@@ -23,7 +23,7 @@ $clientApiController = new ClientApiController(
 );
 $anlassController = new AnlassController(app_auth(), app_anlass_service());
 $adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen());
-$loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt());
+$loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());
 $router = new Router();
@@ -38,8 +38,11 @@ $router->get('/anlass', [$anlassController, 'index']);
 $router->get('/anlass/{id}/schuetzen', [$adressenController, 'index']);
 $router->get('/anlass/{id}/schuetzen/neu', [$adressenController, 'index']);
 $router->post('/anlass/{id}/schuetzen/neu', [$adressenController, 'store']);
+$router->get('/anlass/{id}/loesen', [$loesenController, 'open']);
 $router->get('/anlass/{id}/loesen/neu', [$loesenController, 'create']);
 $router->post('/anlass/{id}/loesen/neu', [$loesenController, 'store']);
+$router->get('/anlass/{id}/loesen/{standblattId}', [$loesenController, 'show']);
+$router->post('/anlass/{id}/loesen/{standblattId}', [$loesenController, 'update']);
 $router->get('/anlass/{id}', [$anlassController, 'show']);
 
 $router->post('/api/login', [$clientApiController, 'login']);

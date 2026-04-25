@@ -24,7 +24,7 @@ $clientApiController = new ClientApiController(
 );
 $anlassController = new AnlassController(app_auth(), app_anlass_service());
 $adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen());
-$loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich());
+$loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich(), new App\Models\Gaben());
 $abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Schussdaten(), new App\Models\Gaben());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());

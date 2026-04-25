@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Response;
 use App\Models\Adressen;
+use App\Models\Gaben;
 use App\Models\Standblatt;
 use App\Models\Stich;
 use App\Services\AnlassService;
@@ -20,6 +21,7 @@ final class LoesenController extends Controller
         private readonly Adressen $adressenModel,
         private readonly Standblatt $standblattModel,
         private readonly Stich $stichModel,
+        private readonly Gaben $gabenModel,
     ) {
     }
 
@@ -108,6 +110,8 @@ final class LoesenController extends Controller
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
         $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse'], (int) $anlass['id']);
         $selectedStiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
+        $gaben = $this->gabenModel->getAll();
+        usort($gaben, static fn (array $left, array $right): int => (float) $left['punktwert'] <=> (float) $right['punktwert']);
 
         $this->render('loesen/standblattPrint', [
             'user' => $user,
@@ -115,6 +119,7 @@ final class LoesenController extends Controller
             'adresse' => $adresse,
             'standblatt' => $standblatt,
             'stiche' => $selectedStiche,
+            'gaben' => $gaben,
         ]);
     }
 

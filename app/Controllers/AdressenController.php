@@ -23,11 +23,13 @@ final class AdressenController extends Controller
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $query = trim((string) ($_GET['q'] ?? ''));
 
         $this->render('clients/indes', [
             'user' => $user,
             'anlass' => $anlass,
-            'adressen' => $this->adressenModel->getAll(),
+            'adressen' => $this->adressenModel->search($query),
+            'query' => $query,
             'errors' => [],
             'old' => [],
         ]);
@@ -45,6 +47,7 @@ final class AdressenController extends Controller
                 'user' => $user,
                 'anlass' => $anlass,
                 'adressen' => $this->adressenModel->getAll(),
+                'query' => '',
                 'errors' => $errors,
                 'old' => $data,
             ]);

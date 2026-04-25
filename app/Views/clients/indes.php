@@ -7,6 +7,7 @@ use App\Core\Url;
 $anlassId = (int) $anlass['id'];
 $old = $old ?? [];
 $errors = $errors ?? [];
+$query = trim((string) ($query ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -48,6 +49,26 @@ $errors = $errors ?? [];
 
                         <div class="row g-4">
                             <div class="col-12 col-lg-7">
+                                <form method="get" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="mb-3">
+                                    <label for="adresssuche" class="form-label">Schütz suchen</label>
+                                    <div class="input-group">
+                                        <input
+                                            id="adresssuche"
+                                            name="q"
+                                            class="form-control"
+                                            value="<?= htmlspecialchars($query) ?>"
+                                            placeholder="Name, Verein, Lizenz, E-Mail, Telefon oder Ort"
+                                            autocomplete="off"
+                                        >
+                                        <button type="submit" class="btn btn-primary">Suchen</button>
+                                        <?php if ($query !== ''): ?>
+                                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-outline-secondary">
+                                                Zuruecksetzen
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </form>
+
                                 <div class="list-group">
                                     <?php foreach ($adressen as $adresse): ?>
                                         <div class="list-group-item p-3">
@@ -79,7 +100,11 @@ $errors = $errors ?? [];
 
                                 <?php if ($adressen === []): ?>
                                     <div class="alert alert-light border mb-0">
-                                        Es sind noch keine Adressen vorhanden.
+                                        <?php if ($query !== ''): ?>
+                                            Keine Adresse zu "<?= htmlspecialchars($query) ?>" gefunden.
+                                        <?php else: ?>
+                                            Es sind noch keine Adressen vorhanden.
+                                        <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
                             </div>

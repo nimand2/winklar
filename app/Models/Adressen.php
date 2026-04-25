@@ -23,6 +23,39 @@ final class Adressen
 
         return $statement->fetchAll();
     }
+
+    public function search(string $query): array
+    {
+        $query = trim($query);
+
+        if ($query === '') {
+            return $this->getAll();
+        }
+
+        $statement = Database::connection()->prepare(
+            'SELECT a.id, a.creator_adress_id, a.modifier_adress_id, a.anrede, a.firmen_anrede,
+                    a.nachname, a.vorname, a.zusatz, a.strasse, a.postfach, a.nation, a.plz_id,
+                    p.plz4, p.ortschaftsname, telefon, email, notiz, geburtsdatum, lizenz, passwort,
+                    a.created_by_user_id, a.created_at, a.updated_by_user_id, a.updated_at
+             FROM adressen a
+             LEFT JOIN plz p ON p.id = a.plz_id
+             WHERE a.nachname LIKE :query
+                OR a.vorname LIKE :query
+                OR a.firmen_anrede LIKE :query
+                OR a.zusatz LIKE :query
+                OR a.strasse LIKE :query
+                OR a.telefon LIKE :query
+                OR a.email LIKE :query
+                OR a.lizenz LIKE :query
+                OR p.plz4 LIKE :query
+                OR p.ortschaftsname LIKE :query
+             ORDER BY a.nachname ASC, a.vorname ASC, a.id ASC'
+        );
+        $statement->execute(['query' => '%' . $query . '%']);
+
+        return $statement->fetchAll();
+    }
+
     public function getArea(int $start, int $limit): array
     {
         $statement = Database::connection()->prepare(

@@ -30,6 +30,9 @@ use App\Core\Url;
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
+                                <a href="<?= htmlspecialchars(Url::app('/anlass/neu')) ?>" class="btn btn-primary">
+                                    Neuer Anlass
+                                </a>
                                 <a href="<?= htmlspecialchars(Url::app('/dashboard')) ?>" class="btn btn-outline-secondary">
                                     Zurueck zum Dashboard
                                 </a>

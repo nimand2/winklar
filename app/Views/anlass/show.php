@@ -45,6 +45,9 @@ $anlassId = (int) $anlass['id'];
                         </div>
 
                         <div class="d-flex flex-wrap gap-2 mb-4">
+                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>" class="btn btn-primary">
+                                Anlass konfigurieren
+                            </a>
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-primary">
                                 Neuer Schütz
                             </a>

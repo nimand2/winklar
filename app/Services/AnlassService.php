@@ -22,4 +22,14 @@ final class AnlassService
     {
         return $this->anlassModel->findById($id);
     }
+
+    public function createAnlass(array $data): int
+    {
+        return $this->anlassModel->create($data);
+    }
+
+    public function updateAnlass(int $id, array $data): bool
+    {
+        return $this->anlassModel->update($id, $data);
+    }
 }

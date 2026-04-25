@@ -40,7 +40,16 @@ foreach ($stiche as $stich) {
 $gridGroups = max(1, count($printGroups));
 $gaben = (array) ($gaben ?? []);
 $gabenColumns = max(1, count($gaben));
-$barcodeNumber = (string) (((10000000 + $standblattId) * 100) + (97 - (((10000000 + $standblattId) * 100) % 97)));
+$barcodeError = $standblattId > 999998
+    ? 'Fehler: Standblattnummer groesser 999998. SIUS-Barcode kann nicht erzeugt werden.'
+    : '';
+$barcodeNumber = '';
+
+if ($barcodeError === '') {
+    $barcodeBase = (10000000 + $standblattId) * 100;
+    $barcodeNumber = (string) ($barcodeBase + (97 - ($barcodeBase % 97)));
+}
+
 $barcodeSvg = static function (string $digits): string {
     if (strlen($digits) % 2 !== 0) {
         $digits = '0' . $digits;
@@ -195,6 +204,15 @@ $barcodeSvg = static function (string $digits): string {
             height: 17mm;
         }
 
+        .barcode-error {
+            border: 1px solid #991b1b;
+            color: #991b1b;
+            font-size: 7.5pt;
+            font-weight: 700;
+            padding: 2mm;
+            text-align: left;
+        }
+
         .label {
             font-weight: 700;
         }
@@ -314,7 +332,11 @@ $barcodeSvg = static function (string $digits): string {
             </div>
 
             <div class="barcode">
-                <?= $barcodeSvg($barcodeNumber) ?>
+                <?php if ($barcodeError !== ''): ?>
+                    <div class="barcode-error"><?= htmlspecialchars($barcodeError) ?></div>
+                <?php else: ?>
+                    <?= $barcodeSvg($barcodeNumber) ?>
+                <?php endif; ?>
             </div>
 
             <div class="meta">

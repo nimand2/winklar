@@ -8,6 +8,16 @@ final class View
 {
     public static function render(string $view, array $data = []): void
     {
+        self::requireView($view, $data);
+    }
+
+    public static function partial(string $view, array $data = []): void
+    {
+        self::requireView($view, $data);
+    }
+
+    private static function requireView(string $view, array $data = []): void
+    {
         $viewFile = dirname(__DIR__) . '/Views/' . $view . '.php';
 
         if (!is_file($viewFile)) {

@@ -22,10 +22,10 @@ $clientApiController = new ClientApiController(
     app_client_api_service(),
     new App\Models\User()
 );
-$anlassController = new AnlassController(app_auth(), app_anlass_service(), new App\Models\Gaben(), new App\Models\Stich(), new App\Models\Auszeichnungslimitten(), new App\Models\Standblatt(), new App\Models\Schussdaten());
+$anlassController = new AnlassController(app_auth(), app_anlass_service(), new App\Models\Gaben(), new App\Models\Stich(), new App\Models\Auszeichnungslimitten(), app_ranglisten_service(), app_kassen_service());
 $adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Plz());
 $loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich(), new App\Models\Gaben());
-$abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Schussdaten(), new App\Models\Gaben());
+$abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Gaben(), app_abrechnungs_service());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());
 $router = new Router();

@@ -148,17 +148,13 @@ final class LoesenController extends Controller
     private function findStandblattOrFail(int $id, int $anlassId): array
     {
         if ($id <= 0) {
-            http_response_code(404);
-            echo 'Standblatt nicht gefunden';
-            exit;
+            Response::notFound('Standblatt nicht gefunden');
         }
 
         $standblatt = $this->standblattModel->findById($id);
 
         if ($standblatt === null || (int) $standblatt['id_anlass'] !== $anlassId) {
-            http_response_code(404);
-            echo 'Standblatt nicht gefunden';
-            exit;
+            Response::notFound('Standblatt nicht gefunden');
         }
 
         return $standblatt;
@@ -167,17 +163,13 @@ final class LoesenController extends Controller
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            exit;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         $anlass = $this->anlassService->getAnlassById($id);
 
         if ($anlass === null) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            exit;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         return $anlass;
@@ -192,9 +184,7 @@ final class LoesenController extends Controller
         $adresse = $this->adressenModel->findById($id);
 
         if ($adresse === null) {
-            http_response_code(404);
-            echo 'Adresse nicht gefunden';
-            exit;
+            Response::notFound('Adresse nicht gefunden');
         }
 
         return $adresse;

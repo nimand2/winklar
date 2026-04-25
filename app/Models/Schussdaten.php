@@ -51,11 +51,24 @@ final class Schussdaten
 
     public function createMany(array $rows): int
     {
+        if ($rows === []) {
+            return 0;
+        }
+
+        $connection = Database::connection();
+        $connection->beginTransaction();
         $created = 0;
 
-        foreach ($rows as $row) {
-            $this->create($row);
-            $created++;
+        try {
+            foreach ($rows as $row) {
+                $this->create($row);
+                $created++;
+            }
+
+            $connection->commit();
+        } catch (\Throwable $throwable) {
+            $connection->rollBack();
+            throw $throwable;
         }
 
         return $created;

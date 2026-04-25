@@ -7,12 +7,7 @@ use App\Core\Url;
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?= htmlspecialchars(Url::asset('css/app.css')) ?>">
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Login']); ?>
 </head>
 <body class="app-shell">
     <main class="container auth-wrapper d-flex align-items-center justify-content-center py-5">
@@ -73,7 +68,7 @@ use App\Core\Url;
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php \App\Core\View::partial('partials/bootstrap-script'); ?>
     <script src="<?= htmlspecialchars(Url::asset('js/login.js')) ?>"></script>
 </body>
 </html>

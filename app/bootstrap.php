@@ -24,10 +24,15 @@ use App\Models\Schussdaten;
 use App\Models\Standblatt;
 use App\Models\User;
 use App\Models\Anlass;
+use App\Models\Gaben;
 use App\Services\AnlassService;
+use App\Services\AbrechnungsService;
 use App\Services\ApiTokenService;
 use App\Services\AuthService;
 use App\Services\ClientApiService;
+use App\Services\KassenService;
+use App\Services\RanglistenService;
+use App\Models\Stich;
 
 function app_auth(): AuthService
 {
@@ -80,4 +85,43 @@ function app_client_api_service(): ClientApiService
     $clientApiService = new ClientApiService(new Anlass(), new Standblatt(), new Schussdaten());
 
     return $clientApiService;
+}
+
+function app_ranglisten_service(): RanglistenService
+{
+    static $ranglistenService = null;
+
+    if ($ranglistenService instanceof RanglistenService) {
+        return $ranglistenService;
+    }
+
+    $ranglistenService = new RanglistenService(new Stich(), new Standblatt(), new Schussdaten());
+
+    return $ranglistenService;
+}
+
+function app_kassen_service(): KassenService
+{
+    static $kassenService = null;
+
+    if ($kassenService instanceof KassenService) {
+        return $kassenService;
+    }
+
+    $kassenService = new KassenService(new Standblatt(), new Gaben());
+
+    return $kassenService;
+}
+
+function app_abrechnungs_service(): AbrechnungsService
+{
+    static $abrechnungsService = null;
+
+    if ($abrechnungsService instanceof AbrechnungsService) {
+        return $abrechnungsService;
+    }
+
+    $abrechnungsService = new AbrechnungsService(new Standblatt(), new Schussdaten(), new Gaben());
+
+    return $abrechnungsService;
 }

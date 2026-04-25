@@ -56,8 +56,7 @@ final class Router
             return;
         }
 
-        http_response_code(404);
-        echo '404 Not Found';
+        Response::notFound();
     }
 
     private function map(string $method, string $path, callable $handler): void

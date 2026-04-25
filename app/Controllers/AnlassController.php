@@ -8,11 +8,11 @@ use App\Core\Controller;
 use App\Core\Response;
 use App\Models\Auszeichnungslimitten;
 use App\Models\Gaben;
-use App\Models\Schussdaten;
-use App\Models\Standblatt;
 use App\Models\Stich;
 use App\Services\AuthService;
 use App\Services\AnlassService;
+use App\Services\KassenService;
+use App\Services\RanglistenService;
 
 final class AnlassController extends Controller
 {
@@ -22,8 +22,8 @@ final class AnlassController extends Controller
         private readonly Gaben $gabenModel,
         private readonly Stich $stichModel,
         private readonly Auszeichnungslimitten $auszeichnungslimittenModel,
-        private readonly Standblatt $standblattModel,
-        private readonly Schussdaten $schussdatenModel,
+        private readonly RanglistenService $ranglistenService,
+        private readonly KassenService $kassenService,
     )
     {
     }
@@ -45,17 +45,13 @@ final class AnlassController extends Controller
         $id = (int) ($params['id'] ?? 0);
 
         if ($id <= 0) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            return;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         $anlass = $this->anlassService->getAnlassById($id);
 
         if ($anlass === null) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            return;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         $this->render('anlass/show', [
@@ -159,7 +155,7 @@ final class AnlassController extends Controller
         $this->render('anlass/rangliste', [
             'user' => $user,
             'anlass' => $anlass,
-            'ranglisten' => $this->buildRanglisten((int) $anlass['id']),
+            'ranglisten' => $this->ranglistenService->buildForAnlass((int) $anlass['id']),
         ]);
     }
 
@@ -171,7 +167,7 @@ final class AnlassController extends Controller
         $this->render('anlass/kasse', [
             'user' => $user,
             'anlass' => $anlass,
-            'abrechnung' => $this->buildKassenAbrechnung((int) $anlass['id']),
+            'abrechnung' => $this->kassenService->buildAbrechnung((int) $anlass['id']),
         ]);
     }
 
@@ -258,17 +254,13 @@ final class AnlassController extends Controller
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            exit;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         $anlass = $this->anlassService->getAnlassById($id);
 
         if ($anlass === null) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            exit;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         return $anlass;
@@ -305,164 +297,6 @@ final class AnlassController extends Controller
         }
 
         return $errors;
-    }
-
-    private function buildRanglisten(int $anlassId): array
-    {
-        $stiche = $this->stichModel->findByAnlassId($anlassId);
-        $standblaetter = $this->standblattModel->findForAnlassWithAdresse($anlassId);
-        $schuesse = $this->schussdatenModel->findByAnlassId($anlassId);
-        $schuesseByStandblattAndStich = [];
-
-        foreach ($schuesse as $schuss) {
-            if ((int) ($schuss['ins_del'] ?? 0) !== 0) {
-                continue;
-            }
-
-            $standblattId = (int) ($schuss['start_nr'] ?? 0);
-            $stichIndex = (int) ($schuss['stich_index'] ?? 0);
-
-            if ($standblattId <= 0 || $stichIndex <= 0) {
-                continue;
-            }
-
-            $schuesseByStandblattAndStich[$standblattId][$stichIndex][] = $schuss;
-        }
-
-        $ranglisten = [];
-
-        foreach ($stiche as $position => $stich) {
-            $stichIndex = $this->stichIndex($stich, $position);
-            $teilnehmer = [];
-
-            foreach ($standblaetter as $standblatt) {
-                $standblattId = (int) $standblatt['id'];
-                $stichSchuesse = $schuesseByStandblattAndStich[$standblattId][$stichIndex] ?? [];
-
-                if ($stichSchuesse === []) {
-                    continue;
-                }
-
-                $total = array_reduce(
-                    $stichSchuesse,
-                    fn (float $sum, array $schuss): float => $sum + $this->numericValue($schuss['primaerwertung'] ?? null),
-                    0.0
-                );
-
-                $teilnehmer[] = [
-                    'standblatt_id' => $standblattId,
-                    'name' => trim((string) (($standblatt['vorname'] ?? '') . ' ' . ($standblatt['nachname'] ?? ''))),
-                    'verein' => (string) (($standblatt['zusatz'] ?? '') ?: ($standblatt['firmen_anrede'] ?? '')),
-                    'geburtsdatum' => $standblatt['geburtsdatum'] ?? null,
-                    'total' => $total,
-                    'schuss_count' => count($stichSchuesse),
-                ];
-            }
-
-            usort($teilnehmer, static function (array $left, array $right): int {
-                $totalCompare = (float) $right['total'] <=> (float) $left['total'];
-
-                if ($totalCompare !== 0) {
-                    return $totalCompare;
-                }
-
-                $leftBirthdate = (string) ($left['geburtsdatum'] ?? '');
-                $rightBirthdate = (string) ($right['geburtsdatum'] ?? '');
-
-                return strcmp($rightBirthdate, $leftBirthdate)
-                    ?: strcmp((string) $left['name'], (string) $right['name'])
-                    ?: ((int) $left['standblatt_id'] <=> (int) $right['standblatt_id']);
-            });
-
-            foreach ($teilnehmer as $rang => $teilnehmerRow) {
-                $teilnehmer[$rang]['rang'] = $rang + 1;
-            }
-
-            $ranglisten[] = [
-                'stich' => $stich,
-                'teilnehmer' => $teilnehmer,
-            ];
-        }
-
-        return $ranglisten;
-    }
-
-    private function buildKassenAbrechnung(int $anlassId): array
-    {
-        $standblaetter = $this->standblattModel->findForAnlassWithAdresse($anlassId);
-        $stichEinnahmen = $this->standblattModel->findEinnahmenByStichForAnlass($anlassId);
-        $abgaben = $this->gabenModel->findAbgabenForAnlass($anlassId);
-        $einnahmenTotal = 0.0;
-        $offeneGabenPruefungen = 0;
-        $standblattRows = [];
-
-        foreach ($standblaetter as $standblatt) {
-            $kosten = $this->numericValue($standblatt['kosten'] ?? null);
-            $einnahmenTotal += $kosten;
-
-            if ((int) ($standblatt['gaben_geprueft'] ?? 0) !== 1) {
-                $offeneGabenPruefungen++;
-            }
-
-            $standblattRows[] = [
-                'id' => (int) $standblatt['id'],
-                'name' => trim((string) (($standblatt['vorname'] ?? '') . ' ' . ($standblatt['nachname'] ?? ''))),
-                'verein' => (string) (($standblatt['zusatz'] ?? '') ?: ($standblatt['firmen_anrede'] ?? '')),
-                'datum' => $standblatt['datum'] ?? null,
-                'kosten' => $kosten,
-                'gaben_geprueft' => (int) ($standblatt['gaben_geprueft'] ?? 0) === 1,
-            ];
-        }
-
-        $gabenTotal = 0.0;
-        $gabenById = [];
-
-        foreach ($abgaben as $abgabe) {
-            $gabenId = (int) $abgabe['gaben_id'];
-            $preis = $this->numericValue($abgabe['preis'] ?? null);
-            $gabenTotal += $preis;
-
-            if (!isset($gabenById[$gabenId])) {
-                $gabenById[$gabenId] = [
-                    'gaben_id' => $gabenId,
-                    'name' => (string) ($abgabe['name'] ?? ''),
-                    'preis' => $preis,
-                    'anzahl' => 0,
-                    'total' => 0.0,
-                ];
-            }
-
-            $gabenById[$gabenId]['anzahl']++;
-            $gabenById[$gabenId]['total'] += $preis;
-        }
-
-        return [
-            'einnahmen_total' => $einnahmenTotal,
-            'gaben_total' => $gabenTotal,
-            'netto' => $einnahmenTotal - $gabenTotal,
-            'standblatt_count' => count($standblaetter),
-            'offene_gaben_pruefungen' => $offeneGabenPruefungen,
-            'standblaetter' => $standblattRows,
-            'stich_einnahmen' => $stichEinnahmen,
-            'gaben' => array_values($gabenById),
-            'abgaben' => $abgaben,
-        ];
-    }
-
-    private function stichIndex(array $stich, int $position): int
-    {
-        $anzeigeId = (int) ($stich['anzeige_id'] ?? 0);
-
-        return $anzeigeId > 0 ? $anzeigeId : $position + 1;
-    }
-
-    private function numericValue(mixed $value): float
-    {
-        if ($value === null || $value === '') {
-            return 0.0;
-        }
-
-        return (float) str_replace(',', '.', (string) $value);
     }
 
     private function nullableString(mixed $value): ?string

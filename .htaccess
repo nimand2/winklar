@@ -2,9 +2,10 @@ RewriteEngine On
 DirectoryIndex index.php public/index.php
 
 # Block direct access to internal application folders and sensitive root files.
-RewriteRule ^(app|model)(/|$) - [F,L]
+RewriteRule ^(\.git|app|backup%20DB|backup[[:space:]]DB|client|model)(/|$) - [F,L]
 RewriteRule ^auth/auth\.php$ - [F,L]
 RewriteRule ^(config\.php|db\.php|schema\.sql|beispieldaten\.sql)$ - [F,L]
+RewriteRule ^[^/]+\.(csv|pdf|sql)$ - [F,L]
 
 # Route the project root to the front controller instead of showing a directory listing.
 RewriteRule ^$ public/index.php [L,QSA]

@@ -68,17 +68,13 @@ final class AdressenController extends Controller
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            exit;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         $anlass = $this->anlassService->getAnlassById($id);
 
         if ($anlass === null) {
-            http_response_code(404);
-            echo 'Anlass nicht gefunden';
-            exit;
+            Response::notFound('Anlass nicht gefunden');
         }
 
         return $anlass;

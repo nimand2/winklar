@@ -22,7 +22,7 @@ $clientApiController = new ClientApiController(
     app_client_api_service(),
     new App\Models\User()
 );
-$anlassController = new AnlassController(app_auth(), app_anlass_service(), new App\Models\Gaben(), new App\Models\Stich(), new App\Models\Auszeichnungslimitten());
+$anlassController = new AnlassController(app_auth(), app_anlass_service(), new App\Models\Gaben(), new App\Models\Stich(), new App\Models\Auszeichnungslimitten(), new App\Models\Standblatt(), new App\Models\Schussdaten());
 $adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen());
 $loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich(), new App\Models\Gaben());
 $abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Schussdaten(), new App\Models\Gaben());
@@ -47,6 +47,7 @@ $router->post('/anlass/{id}/konfiguration/gaben/{gabeId}', [$anlassController, '
 $router->post('/anlass/{id}/konfiguration/gaben/{gabeId}/loeschen', [$anlassController, 'deleteGabe']);
 $router->post('/anlass/{id}/konfiguration/gaben-regeln', [$anlassController, 'storeRegel']);
 $router->post('/anlass/{id}/konfiguration/gaben-regeln/{regelId}/loeschen', [$anlassController, 'deleteRegel']);
+$router->get('/anlass/{id}/abschliessen', [$anlassController, 'abschliessen']);
 $router->get('/anlass/{id}/schuetzen', [$adressenController, 'index']);
 $router->get('/anlass/{id}/schuetzen/neu', [$adressenController, 'index']);
 $router->post('/anlass/{id}/schuetzen/neu', [$adressenController, 'store']);

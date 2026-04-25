@@ -99,6 +99,24 @@ final class Schussdaten
         return $statement->fetchAll();
     }
 
+    public function findByAnlassId(int $idAnlass): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
+                    teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
+                    time_since_change, sweep_direction, demonstration, match_index, stich_index,
+                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
+                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+             FROM schussdaten
+             WHERE id_anlass = :id_anlass
+             ORDER BY start_nr ASC, match_index ASC, stich_index ASC, schuss_zeit ASC, id ASC'
+        );
+        $statement->execute(['id_anlass' => $idAnlass]);
+
+        return $statement->fetchAll();
+    }
+
     private function buildPayload(array $data): array
     {
         return [

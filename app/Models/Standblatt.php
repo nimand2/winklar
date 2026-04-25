@@ -48,7 +48,7 @@ final class Standblatt
         $statement = Database::connection()->prepare(
             'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.created_by_user_id,
                     s.created_at, s.updated_by_user_id, s.updated_at,
-                    a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon
+                    a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon, a.geburtsdatum
              FROM standblatt s
              INNER JOIN adressen a ON a.id = s.id_adresse
              WHERE s.id_anlass = :anlass_id

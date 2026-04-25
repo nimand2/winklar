@@ -68,7 +68,7 @@ final class LoesenController extends Controller
             'id_anlass' => (int) $anlass['id'],
             'id_adresse' => (int) $adresse['id'],
             'datum' => $this->nullableString($_POST['datum'] ?? null),
-            'kosten' => $this->nullableString($_POST['kosten'] ?? null),
+            'kosten' => $this->calculateKosten($stiche, $selectedStichCounts),
             'created_by_user_id' => (int) $user['id'],
             'updated_by_user_id' => (int) $user['id'],
         ];
@@ -101,6 +101,23 @@ final class LoesenController extends Controller
         ]);
     }
 
+    public function druck(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse'], (int) $anlass['id']);
+        $selectedStiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
+
+        $this->render('loesen/standblattPrint', [
+            'user' => $user,
+            'anlass' => $anlass,
+            'adresse' => $adresse,
+            'standblatt' => $standblatt,
+            'stiche' => $selectedStiche,
+        ]);
+    }
+
     public function update(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -114,7 +131,7 @@ final class LoesenController extends Controller
             'id_anlass' => (int) $anlass['id'],
             'id_adresse' => (int) $adresse['id'],
             'datum' => $this->nullableString($_POST['datum'] ?? null),
-            'kosten' => $this->nullableString($_POST['kosten'] ?? null),
+            'kosten' => $this->calculateKosten($stiche, $selectedStichCounts),
             'updated_by_user_id' => (int) $user['id'],
         ];
 
@@ -183,6 +200,23 @@ final class LoesenController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function calculateKosten(array $availableStiche, array $selectedStichCounts): string
+    {
+        $total = 0.0;
+
+        foreach ($availableStiche as $stich) {
+            $stichId = (int) $stich['id'];
+
+            if (!array_key_exists($stichId, $selectedStichCounts)) {
+                continue;
+            }
+
+            $total += (float) ($stich['preis'] ?? 0) * max(1, (int) $selectedStichCounts[$stichId]);
+        }
+
+        return number_format($total, 2, '.', '');
     }
 
     private function selectedStichCountsFromRequest(array $availableStiche): array

@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Controllers\AuthController;
 use App\Controllers\AdressenController;
+use App\Controllers\AbrechnenController;
 use App\Controllers\AnlassController;
 use App\Controllers\ClientApiController;
 use App\Controllers\DashboardController;
@@ -24,6 +25,7 @@ $clientApiController = new ClientApiController(
 $anlassController = new AnlassController(app_auth(), app_anlass_service());
 $adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen());
 $loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich());
+$abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Schussdaten(), new App\Models\Gaben());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());
 $router = new Router();
@@ -41,6 +43,8 @@ $router->post('/anlass/{id}/schuetzen/neu', [$adressenController, 'store']);
 $router->get('/anlass/{id}/loesen', [$loesenController, 'open']);
 $router->get('/anlass/{id}/loesen/neu', [$loesenController, 'create']);
 $router->post('/anlass/{id}/loesen/neu', [$loesenController, 'store']);
+$router->get('/anlass/{id}/loesen/{standblattId}/abrechnen', [$abrechnenController, 'show']);
+$router->get('/anlass/{id}/loesen/{standblattId}/druck', [$loesenController, 'druck']);
 $router->get('/anlass/{id}/loesen/{standblattId}', [$loesenController, 'show']);
 $router->post('/anlass/{id}/loesen/{standblattId}', [$loesenController, 'update']);
 $router->get('/anlass/{id}', [$anlassController, 'show']);

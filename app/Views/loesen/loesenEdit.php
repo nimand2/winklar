@@ -61,7 +61,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label for="kosten" class="form-label">Kosten</label>
-                                    <input id="kosten" name="kosten" type="number" step="0.01" min="0" class="form-control" value="<?= htmlspecialchars((string) ($old['kosten'] ?? '')) ?>">
+                                    <input id="kosten" name="kosten" type="number" step="0.01" min="0" class="form-control" value="<?= htmlspecialchars((string) ($old['kosten'] ?? '')) ?>" readonly>
                                 </div>
                                 <div class="col-12">
                                     <div class="list-group-item p-3 bg-white rounded-4">
@@ -92,6 +92,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                                                     name="stich_ids[]"
                                                                     value="<?= htmlspecialchars((string) $stichId) ?>"
                                                                     id="stich-<?= htmlspecialchars((string) $stichId) ?>"
+                                                                    data-stich-price="<?= htmlspecialchars((string) ($stich['preis'] ?? 0)) ?>"
                                                                     <?= in_array($stichId, $selectedStichIds, true) ? 'checked' : '' ?>
                                                                 >
                                                                 <span class="form-check-label fw-semibold">
@@ -128,10 +129,24 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                         <?php endif; ?>
                                     </div>
                                 </div>
-                                <div class="col-12">
+                                <div class="col-12 d-flex flex-wrap gap-2">
                                     <button type="submit" class="btn btn-primary">
                                         Standblatt speichern
                                     </button>
+                                    <a
+                                        href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>"
+                                        class="btn btn-outline-primary"
+                                    >
+                                        Standblatt abschliessen
+                                    </a>
+                                    <a
+                                        href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/druck')) ?>"
+                                        class="btn btn-outline-secondary"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >
+                                        Standblatt drucken
+                                    </a>
                                 </div>
                             </div>
                         </form>
@@ -142,5 +157,37 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const kostenInput = document.querySelector('#kosten');
+            const stichInputs = Array.from(document.querySelectorAll('input[name="stich_ids[]"]'));
+
+            if (!kostenInput || stichInputs.length === 0) {
+                return;
+            }
+
+            const calculateKosten = () => {
+                const total = stichInputs.reduce((sum, checkbox) => {
+                    if (!checkbox.checked) {
+                        return sum;
+                    }
+
+                    const countInput = document.querySelector(`[name="stich_counts[${checkbox.value}]"]`);
+                    const count = Math.max(1, parseInt(countInput?.value || '1', 10));
+                    const price = parseFloat((checkbox.dataset.stichPrice || '0').replace(',', '.'));
+
+                    return sum + (count * price);
+                }, 0);
+
+                kostenInput.value = total.toFixed(2);
+            };
+
+            stichInputs.forEach((checkbox) => {
+                checkbox.addEventListener('change', calculateKosten);
+                document.querySelector(`[name="stich_counts[${checkbox.value}]"]`)?.addEventListener('input', calculateKosten);
+            });
+            calculateKosten();
+        })();
+    </script>
 </body>
 </html>

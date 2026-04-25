@@ -11,7 +11,7 @@ final class Gaben
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
-            'SELECT id, name, preis, created_by_user_id, created_at, updated_by_user_id, updated_at
+            'SELECT id, name, punktwert, preis, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM gaben
              ORDER BY name ASC, id ASC'
         );
@@ -23,8 +23,8 @@ final class Gaben
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
-            'INSERT INTO gaben (name, preis, created_by_user_id, updated_by_user_id)
-             VALUES (:name, :preis, :created_by_user_id, :updated_by_user_id)'
+            'INSERT INTO gaben (name, punktwert, preis, created_by_user_id, updated_by_user_id)
+             VALUES (:name, :punktwert, :preis, :created_by_user_id, :updated_by_user_id)'
         );
         $statement->execute($this->buildPayload($data));
 
@@ -34,7 +34,7 @@ final class Gaben
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
-            'SELECT id, name, preis, created_by_user_id, created_at, updated_by_user_id, updated_at
+            'SELECT id, name, punktwert, preis, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM gaben
              WHERE id = :id
              LIMIT 1'
@@ -51,6 +51,7 @@ final class Gaben
         $statement = Database::connection()->prepare(
             'UPDATE gaben
              SET name = :name,
+                 punktwert = :punktwert,
                  preis = :preis,
                  created_by_user_id = :created_by_user_id,
                  updated_by_user_id = :updated_by_user_id
@@ -77,6 +78,7 @@ final class Gaben
     {
         return [
             'name' => $data['name'],
+            'punktwert' => $data['punktwert'] ?? 0.00,
             'preis' => $data['preis'] ?? 0.00,
             'created_by_user_id' => $data['created_by_user_id'] ?? null,
             'updated_by_user_id' => $data['updated_by_user_id'] ?? null,

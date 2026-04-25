@@ -17,101 +17,45 @@ if (!empty($adresse['geburtsdatum'])) {
 }
 
 $kosten = (float) ($standblatt['kosten'] ?? 0);
+$rows = (array) ($auswertung['rows'] ?? []);
+$gabenVergleich = (array) ($gabenVergleich ?? []);
 $formatMoney = static fn (float $value): string => number_format($value, 2, '.', "'");
-$visibleStiche = array_slice($stiche, 0, 3);
+$formatNumber = static function (float $value): string {
+    $rounded = round($value, 2);
+
+    return floor($rounded) === $rounded ? (string) (int) $rounded : number_format($rounded, 2, '.', "'");
+};
 $printGroups = [];
 
-foreach ($stiche as $stich) {
-    $anzahlStiche = max(1, (int) ($stich['anzahl_stiche'] ?? 1));
-    $anzahlSchuss = max(1, (int) ($stich['anzahl_schuss'] ?? 1));
+foreach ($rows as $row) {
+    $anzahlSchuss = max(1, (int) ($row['anzahl_schuss'] ?? count((array) ($row['schuesse'] ?? [])) ?: 1));
+    $anzahlStiche = max(1, (int) ($row['anzahl_stiche'] ?? 1));
     $columns = max(1, min(4, (int) ceil($anzahlSchuss / 5)));
+    $schuesse = array_values((array) ($row['schuesse'] ?? []));
 
-    for ($stichNumber = 1; $stichNumber <= $anzahlStiche; $stichNumber++) {
+    for ($groupIndex = 0; $groupIndex < $anzahlStiche; $groupIndex++) {
+        $groupSchuesse = array_slice($schuesse, $groupIndex * $anzahlSchuss, $anzahlSchuss);
+        $groupTotal = array_sum(array_map(static fn (array $schuss): float => (float) ($schuss['primaerwertung'] ?? 0), $groupSchuesse));
         $printGroups[] = [
-            'name' => (string) ($stich['name'] ?? 'Stich'),
-            'short_name' => (string) ($stich['short_name'] ?? ''),
-            'preis' => (float) ($stich['preis'] ?? 0),
+            'name' => (string) ($row['bezeichnung'] ?? 'Stich'),
+            'short_name' => (string) ($row['kurzname'] ?? ''),
+            'preis' => (float) ($row['preis'] ?? 0),
             'schuss' => $anzahlSchuss,
             'columns' => $columns,
+            'werte' => $groupSchuesse,
+            'total' => $groupTotal,
         ];
     }
 }
 
 $gridGroups = max(1, count($printGroups));
-$gaben = (array) ($gaben ?? []);
-$gabenColumns = max(1, count($gaben));
-$barcodeError = $standblattId > 999998
-    ? 'Fehler: Standblattnummer groesser 999998. SIUS-Barcode kann nicht erzeugt werden.'
-    : '';
-$barcodeNumber = '';
-
-if ($barcodeError === '') {
-    $barcodeBase = (10000000 + $standblattId) * 100;
-    $barcodeNumber = (string) ($barcodeBase + (97 - ($barcodeBase % 97)));
-}
-
-$barcodeSvg = static function (string $digits): string {
-    if (strlen($digits) % 2 !== 0) {
-        $digits = '0' . $digits;
-    }
-
-    $patterns = [
-        '0' => 'nnwwn',
-        '1' => 'wnnnw',
-        '2' => 'nwnnw',
-        '3' => 'wwnnn',
-        '4' => 'nnwnw',
-        '5' => 'wnwnn',
-        '6' => 'nwwnn',
-        '7' => 'nnnww',
-        '8' => 'wnnwn',
-        '9' => 'nwnwn',
-    ];
-    $bars = [];
-    $x = 8;
-    $narrow = 1;
-    $wide = 3;
-    $height = 42;
-    $addBar = static function (array &$bars, int &$x, int $width, bool $black) use ($height): void {
-        if ($black) {
-            $bars[] = '<rect x="' . $x . '" y="0" width="' . $width . '" height="' . $height . '"/>';
-        }
-
-        $x += $width;
-    };
-
-    foreach ([true, false, true, false] as $black) {
-        $addBar($bars, $x, $narrow, $black);
-    }
-
-    for ($index = 0; $index < strlen($digits); $index += 2) {
-        $barPattern = $patterns[$digits[$index]];
-        $spacePattern = $patterns[$digits[$index + 1]];
-
-        for ($position = 0; $position < 5; $position++) {
-            $addBar($bars, $x, $barPattern[$position] === 'w' ? $wide : $narrow, true);
-            $addBar($bars, $x, $spacePattern[$position] === 'w' ? $wide : $narrow, false);
-        }
-    }
-
-    $addBar($bars, $x, $wide, true);
-    $addBar($bars, $x, $narrow, false);
-    $addBar($bars, $x, $narrow, true);
-    $width = $x + 8;
-
-    return '<svg class="barcode-svg" viewBox="0 0 ' . $width . ' 58" role="img" aria-label="Standblatt Barcode ' . htmlspecialchars($digits) . '">'
-        . '<g fill="#000">' . implode('', $bars) . '</g>'
-        . '<text x="' . ($width / 2) . '" y="55" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="9">'
-        . htmlspecialchars($digits)
-        . '</text></svg>';
-};
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Standblatt drucken #<?= htmlspecialchars((string) $standblattId) ?></title>
+    <title>Abrechnung drucken #<?= htmlspecialchars((string) $standblattId) ?></title>
     <style>
         @page {
             size: A5 landscape;
@@ -162,7 +106,7 @@ $barcodeSvg = static function (string $digits): string {
 
         .header {
             display: grid;
-            grid-template-columns: 1fr 58mm 42mm;
+            grid-template-columns: 1fr 42mm;
             gap: 6mm;
             border-bottom: 1px solid #111;
             padding-bottom: 2mm;
@@ -192,47 +136,13 @@ $barcodeSvg = static function (string $digits): string {
             text-align: right;
         }
 
-        .barcode {
-            align-self: start;
-            padding-top: 1mm;
-            text-align: center;
-        }
-
-        .barcode-svg {
-            display: block;
-            width: 58mm;
-            height: 17mm;
-        }
-
-        .barcode-error {
-            border: 1px solid #991b1b;
-            color: #991b1b;
-            font-size: 7.5pt;
-            font-weight: 700;
-            padding: 2mm;
-            text-align: left;
-        }
-
         .label {
             font-weight: 700;
         }
 
-        .section-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6mm;
-            min-height: 14mm;
-            padding: 2mm 0;
-        }
-
-        .stich-box {
-            display: grid;
-            gap: 1mm;
-        }
-
         .shoot-grid {
             display: grid;
-            grid-template-columns: repeat(<?= htmlspecialchars((string) $gridGroups) ?>, 1fr);
+            grid-template-columns: repeat(<?= htmlspecialchars((string) $gridGroups) ?>, minmax(0, 1fr));
             gap: 1mm;
             margin-top: 6mm;
         }
@@ -257,14 +167,23 @@ $barcodeSvg = static function (string $digits): string {
 
         .shot-cell,
         .total-cell {
-            height: 7.8mm;
             border: 1px solid #222;
+            min-height: 7.8mm;
             padding: 0.6mm 0.8mm;
             font-size: 7.5pt;
         }
 
+        .shot-value,
+        .total-value {
+            display: block;
+            font-size: 12pt;
+            font-weight: 800;
+            line-height: 1;
+            text-align: center;
+        }
+
         .total-cell {
-            height: 8.5mm;
+            min-height: 8.5mm;
             text-align: center;
             font-weight: 700;
         }
@@ -277,10 +196,31 @@ $barcodeSvg = static function (string $digits): string {
 
         .awards {
             display: grid;
-            grid-template-columns: repeat(<?= htmlspecialchars((string) $gabenColumns) ?>, minmax(0, 1fr));
+            grid-template-columns: repeat(<?= htmlspecialchars((string) max(1, count($gabenVergleich))) ?>, minmax(0, 1fr));
             gap: 2mm;
-            text-align: center;
             font-size: 7.5pt;
+        }
+
+        .award {
+            text-align: center;
+        }
+
+        .award-checkbox {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3mm;
+            height: 3mm;
+            border: 1px solid #222;
+            margin-right: 1mm;
+            vertical-align: middle;
+        }
+
+        .award-checkbox.checked::after {
+            content: "✓";
+            font-size: 7pt;
+            font-weight: 800;
+            line-height: 1;
         }
 
         .print-note {
@@ -313,7 +253,7 @@ $barcodeSvg = static function (string $digits): string {
 <body>
     <div class="screen-actions">
         <button type="button" onclick="window.print()">Drucken</button>
-        <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId)) ?>">Zurück zum Standblatt</a>
+        <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>">Zurück zur Abrechnung</a>
     </div>
 
     <main class="sheet">
@@ -331,14 +271,6 @@ $barcodeSvg = static function (string $digits): string {
                 </div>
             </div>
 
-            <div class="barcode">
-                <?php if ($barcodeError !== ''): ?>
-                    <div class="barcode-error"><?= htmlspecialchars($barcodeError) ?></div>
-                <?php else: ?>
-                    <?= $barcodeSvg($barcodeNumber) ?>
-                <?php endif; ?>
-            </div>
-
             <div class="meta">
                 <div><span class="label">Datum:</span> <?= htmlspecialchars((string) ($standblatt['datum'] ?: date('d.m.Y'))) ?></div>
                 <div><span class="label">Standblatt:</span> <?= htmlspecialchars((string) $standblattId) ?></div>
@@ -350,14 +282,13 @@ $barcodeSvg = static function (string $digits): string {
         <section class="shoot-grid">
             <?php if ($printGroups === []): ?>
                 <div class="shot-group" style="grid-template-columns: 1fr;">
-                    <div class="shot-cell">Keine Stiche</div>
+                    <div class="shot-cell">Keine Schussdaten</div>
                 </div>
             <?php else: ?>
                 <?php foreach ($printGroups as $group): ?>
                     <div
                         class="shot-group"
                         style="grid-template-columns: repeat(<?= htmlspecialchars((string) $group['columns']) ?>, minmax(0, 1fr));"
-                        title="<?= htmlspecialchars(trim((string) $group['name'] . ' ' . $group['short_name'])) ?>"
                     >
                         <div class="shot-group-title">
                             <strong><?= htmlspecialchars((string) $group['name']) ?></strong>
@@ -365,9 +296,20 @@ $barcodeSvg = static function (string $digits): string {
                             <span><?= htmlspecialchars((string) $group['short_name']) ?> · <?= htmlspecialchars((string) $group['schuss']) ?> Schuss</span>
                         </div>
                         <?php for ($shot = 1; $shot <= (int) $group['schuss']; $shot++): ?>
-                            <div class="shot-cell"><?= htmlspecialchars((string) $shot) ?></div>
+                            <?php $schuss = $group['werte'][$shot - 1] ?? null; ?>
+                            <div class="shot-cell">
+                                <?= htmlspecialchars((string) $shot) ?>
+                                <?php if ($schuss !== null): ?>
+                                    <span class="shot-value"><?= htmlspecialchars($formatNumber((float) $schuss['primaerwertung'])) ?></span>
+                                <?php endif; ?>
+                            </div>
                         <?php endfor; ?>
-                        <div class="total-cell" style="grid-column: <?= htmlspecialchars((string) $group['columns']) ?>;">Total</div>
+                        <div class="total-cell" style="grid-column: <?= htmlspecialchars((string) $group['columns']) ?>;">
+                            Total
+                            <?php if ((float) $group['total'] > 0): ?>
+                                <span class="total-value"><?= htmlspecialchars($formatNumber((float) $group['total'])) ?></span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -375,13 +317,21 @@ $barcodeSvg = static function (string $digits): string {
 
         <footer class="footer">
             <div class="awards">
-                <?php if ($gaben === []): ?>
-                    <div>Keine Gaben hinterlegt</div>
+                <?php if ($gabenVergleich === []): ?>
+                    <div class="award">Keine Gaben hinterlegt</div>
                 <?php else: ?>
-                    <?php foreach ($gaben as $gabe): ?>
-                        <div>
-                            <?= htmlspecialchars((string) ($gabe['anzahl'] ?? 0)) ?> <?= htmlspecialchars((string) $gabe['name']) ?><br>
-                            ab <?= htmlspecialchars($formatMoney((float) ($gabe['punktwert'] ?? 0))) ?> Pkt.
+                    <?php foreach ($gabenVergleich as $gruppe): ?>
+                        <div class="award">
+                            <strong><?= htmlspecialchars((string) $gruppe['bezeichnung']) ?></strong><br>
+                            <?php $selectedGaben = array_values(array_filter((array) ($gruppe['gaben'] ?? []), static fn (array $gabe): bool => !empty($gabe['selected']))); ?>
+                            <?php if ($selectedGaben === []): ?>
+                                Keine Gabe ausgewählt
+                            <?php else: ?>
+                                <?php foreach ($selectedGaben as $gabe): ?>
+                                    <span class="award-checkbox checked"></span>
+                                    <?= htmlspecialchars((string) $gabe['anzahl']) ?> <?= htmlspecialchars((string) $gabe['name']) ?><br>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>

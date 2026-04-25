@@ -55,6 +55,14 @@ $formatNumber = static function (float $value): string {
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="btn btn-outline-secondary">
                                     Standblatt auswählen
                                 </a>
+                                <a
+                                    href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/druck')) ?>"
+                                    class="btn btn-primary"
+                                    target="_blank"
+                                    rel="noopener"
+                                >
+                                    Abrechnung drucken
+                                </a>
                             </div>
                         </div>
 
@@ -149,28 +157,60 @@ $formatNumber = static function (float $value): string {
 
                                     <?php if ($gabenVergleich === []): ?>
                                         <div class="alert alert-light border mb-0">
-                                            Es sind noch keine Gaben hinterlegt.
+                                            Für die gelösten Stiche sind noch keine Gabenregeln hinterlegt.
                                         </div>
                                     <?php else: ?>
-                                        <div class="list-group">
-                                            <?php foreach ($gabenVergleich as $gabe): ?>
-                                                <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
-                                                    <div>
-                                                        <div class="fw-semibold"><?= htmlspecialchars((string) $gabe['name']) ?></div>
-                                                        <div class="small text-body-secondary">
-                                                            Vergleichswert <?= htmlspecialchars($formatNumber((float) $gabe['limit'])) ?>
+                                        <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>">
+                                            <div class="list-group">
+                                                <?php foreach ($gabenVergleich as $gruppe): ?>
+                                                    <div class="list-group-item">
+                                                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                                            <div>
+                                                                <div class="fw-semibold"><?= htmlspecialchars((string) $gruppe['bezeichnung']) ?></div>
+                                                                <div class="small text-body-secondary">
+                                                                    Total <?= htmlspecialchars($formatNumber((float) $gruppe['total'])) ?>
+                                                                </div>
+                                                            </div>
                                                         </div>
+
+                                                        <?php if (($gruppe['gaben'] ?? []) === []): ?>
+                                                            <div class="small text-body-secondary">Keine Gaben für diesen Stich hinterlegt.</div>
+                                                        <?php else: ?>
+                                                            <div class="d-grid gap-2">
+                                                                <?php foreach ((array) $gruppe['gaben'] as $gabe): ?>
+                                                                    <?php $inputId = 'gabe-' . (int) $gabe['stich_id'] . '-' . (int) $gabe['gaben_id']; ?>
+                                                                    <label class="form-check d-flex align-items-start gap-2 mb-0">
+                                                                        <input
+                                                                            id="<?= htmlspecialchars($inputId) ?>"
+                                                                            class="form-check-input mt-1"
+                                                                            type="checkbox"
+                                                                            name="gaben[<?= htmlspecialchars((string) $gabe['stich_id']) ?>][]"
+                                                                            value="<?= htmlspecialchars((string) $gabe['gaben_id']) ?>"
+                                                                            <?= !empty($gabe['selected']) ? 'checked' : '' ?>
+                                                                            <?= empty($gabe['erreicht']) ? 'disabled' : '' ?>
+                                                                        >
+                                                                        <span class="form-check-label flex-grow-1">
+                                                                            <span class="d-flex justify-content-between gap-2">
+                                                                                <span class="fw-semibold"><?= htmlspecialchars((string) $gabe['name']) ?></span>
+                                                                                <span class="badge <?= !empty($gabe['erreicht']) ? 'text-bg-success' : 'text-bg-secondary' ?>">
+                                                                                    <?= !empty($gabe['erreicht']) ? 'erreicht' : htmlspecialchars($formatNumber(abs((float) $gabe['differenz']))) . ' fehlt' ?>
+                                                                                </span>
+                                                                            </span>
+                                                                            <span class="small text-body-secondary d-block">
+                                                                                Anzahl <?= htmlspecialchars((string) $gabe['anzahl']) ?> · ab <?= htmlspecialchars($formatNumber((float) $gabe['limit'])) ?> Pkt.
+                                                                            </span>
+                                                                        </span>
+                                                                    </label>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
                                                     </div>
-                                                    <?php if (!empty($gabe['erreicht'])): ?>
-                                                        <span class="badge text-bg-success">erreicht</span>
-                                                    <?php else: ?>
-                                                        <span class="badge text-bg-secondary">
-                                                            <?= htmlspecialchars($formatNumber(abs((float) $gabe['differenz']))) ?> fehlt
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100 mt-3">
+                                                Gaben speichern
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
                             </div>

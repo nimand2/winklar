@@ -72,6 +72,8 @@ CREATE TABLE gaben (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     punktwert DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    preis DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    anzahl INT UNSIGNED NOT NULL DEFAULT 0,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -170,6 +172,7 @@ CREATE TABLE standblatt (
     id_adresse INT UNSIGNED NOT NULL,
     datum DATE NULL,
     kosten DECIMAL(10,2) NULL,
+    gaben_geprueft TINYINT(1) NOT NULL DEFAULT 0,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -216,6 +219,7 @@ CREATE TABLE gaben_abgaben (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     gaben_id INT UNSIGNED NOT NULL,
     standblatt_id INT UNSIGNED NOT NULL,
+    stich_id INT UNSIGNED NOT NULL,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -226,13 +230,16 @@ CREATE TABLE gaben_abgaben (
     CONSTRAINT fk_gaben_abgaben_standblatt
         FOREIGN KEY (standblatt_id) REFERENCES standblatt(id)
         ON DELETE CASCADE,
+    CONSTRAINT fk_gaben_abgaben_stich
+        FOREIGN KEY (stich_id) REFERENCES stich(id)
+        ON DELETE CASCADE,
     CONSTRAINT fk_gaben_abgaben_created_by
         FOREIGN KEY (created_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
     CONSTRAINT fk_gaben_abgaben_updated_by
         FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
-    UNIQUE KEY uq_gaben_abgaben (gaben_id, standblatt_id)
+    UNIQUE KEY uq_gaben_abgaben (gaben_id, standblatt_id, stich_id)
 );
 
 CREATE TABLE schussdaten (

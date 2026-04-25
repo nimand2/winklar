@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Response;
 use App\Models\Adressen;
 use App\Models\Gaben;
 use App\Models\Schussdaten;
@@ -33,9 +34,71 @@ final class AbrechnenController extends Controller
         $stiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
         $schuesse = $this->schussdatenModel->findByStartNrAndIdAnlass((int) $standblatt['id'], (int) $anlass['id']);
         $auswertung = $this->buildAuswertung($stiche, $schuesse);
-        $gaben = $this->buildGabenVergleich($auswertung['total'], $this->gabenModel->getAll());
+        $regeln = $this->gabenModel->findRegelnForStiche($this->stichIdsFromAuswertung($auswertung));
+        $savedAbgaben = $this->gabenModel->findAbgabenForStandblatt((int) $standblatt['id']);
+        $defaultSelected = !$this->gabenModel->areAbgabenGeprueft((int) $standblatt['id']);
+        $gaben = $this->buildGabenVergleich($auswertung['rows'], $regeln, $savedAbgaben, $defaultSelected);
 
         $this->render('abrechnen/abrechnen', [
+            'user' => $user,
+            'anlass' => $anlass,
+            'adresse' => $adresse,
+            'standblatt' => $standblatt,
+            'stiche' => $stiche,
+            'schuesse' => $schuesse,
+            'auswertung' => $auswertung,
+            'gabenVergleich' => $gaben,
+        ]);
+    }
+
+    public function speichern(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $stiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
+        $schuesse = $this->schussdatenModel->findByStartNrAndIdAnlass((int) $standblatt['id'], (int) $anlass['id']);
+        $auswertung = $this->buildAuswertung($stiche, $schuesse);
+        $regeln = $this->gabenModel->findRegelnForStiche($this->stichIdsFromAuswertung($auswertung));
+        $selectable = $this->buildSelectableAbgaben($auswertung['rows'], $regeln);
+        $posted = (array) ($_POST['gaben'] ?? []);
+        $items = [];
+
+        foreach ($posted as $stichId => $gabenIds) {
+            foreach ((array) $gabenIds as $gabenId) {
+                $key = (int) $stichId . ':' . (int) $gabenId;
+
+                if (!isset($selectable[$key])) {
+                    continue;
+                }
+
+                $items[$key] = [
+                    'stich_id' => (int) $stichId,
+                    'gaben_id' => (int) $gabenId,
+                ];
+            }
+        }
+
+        $this->gabenModel->replaceAbgabenForStandblatt((int) $standblatt['id'], array_values($items), (int) $user['id']);
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    public function druck(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse']);
+        $stiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
+        $schuesse = $this->schussdatenModel->findByStartNrAndIdAnlass((int) $standblatt['id'], (int) $anlass['id']);
+        $auswertung = $this->buildAuswertung($stiche, $schuesse);
+        $regeln = $this->gabenModel->findRegelnForStiche($this->stichIdsFromAuswertung($auswertung));
+        $savedAbgaben = $this->gabenModel->findAbgabenForStandblatt((int) $standblatt['id']);
+        $defaultSelected = !$this->gabenModel->areAbgabenGeprueft((int) $standblatt['id']);
+        $gaben = $this->buildGabenVergleich($auswertung['rows'], $regeln, $savedAbgaben, $defaultSelected);
+
+        $this->render('abrechnen/abrechnenPrint', [
             'user' => $user,
             'anlass' => $anlass,
             'adresse' => $adresse,
@@ -116,31 +179,94 @@ final class AbrechnenController extends Controller
             $total += $wert;
         }
 
+        $anzahlSchuss = (int) ($stich['anzahl_schuss'] ?? 0);
+        $anzahlSchuss = $anzahlSchuss > 0 ? $anzahlSchuss : count($werte);
+
         return [
+            'stich_id' => (int) ($stich['id'] ?? 0),
             'bezeichnung' => (string) ($stich['name'] ?? 'Stich'),
             'kurzname' => (string) ($stich['short_name'] ?? ''),
+            'preis' => (float) ($stich['preis'] ?? 0),
+            'anzahl_schuss' => max(1, $anzahlSchuss),
+            'anzahl_stiche' => max(1, (int) ($stich['anzahl_stiche'] ?? 1)),
             'erwartet' => max(0, (int) ($stich['anzahl_schuss'] ?? 0) * max(1, (int) ($stich['anzahl_stiche'] ?? 1))),
             'total' => $total,
             'schuesse' => $werte,
         ];
     }
 
-    private function buildGabenVergleich(float $total, array $gaben): array
+    private function buildGabenVergleich(array $rows, array $regeln, array $savedAbgaben, bool $defaultSelected = false): array
     {
-        usort($gaben, static fn (array $left, array $right): int => (float) $left['punktwert'] <=> (float) $right['punktwert']);
+        $saved = [];
+        foreach ($savedAbgaben as $abgabe) {
+            $saved[(int) $abgabe['stich_id'] . ':' . (int) $abgabe['gaben_id']] = true;
+        }
 
-        $rows = [];
-        foreach ($gaben as $gabe) {
-            $limit = (float) ($gabe['punktwert'] ?? 0);
-            $rows[] = [
-                'name' => (string) ($gabe['name'] ?? ''),
-                'limit' => $limit,
-                'erreicht' => $total >= $limit,
-                'differenz' => $total - $limit,
+        $regelnByStich = [];
+        foreach ($regeln as $regel) {
+            $regelnByStich[(int) $regel['stich_id']][] = $regel;
+        }
+
+        $gruppen = [];
+        foreach ($rows as $row) {
+            $stichId = (int) ($row['stich_id'] ?? 0);
+            $stichTotal = (float) ($row['total'] ?? 0);
+            $gaben = [];
+
+            foreach ($regelnByStich[$stichId] ?? [] as $regel) {
+                $minWert = $regel['min_wert'] !== null ? (float) $regel['min_wert'] : (float) ($regel['punktwert'] ?? 0);
+                $maxWert = $regel['max_wert'] !== null ? (float) $regel['max_wert'] : null;
+                $erreicht = $stichTotal >= $minWert && ($maxWert === null || $stichTotal <= $maxWert);
+                $key = $stichId . ':' . (int) $regel['gaben_id'];
+                $gaben[] = [
+                    'stich_id' => $stichId,
+                    'gaben_id' => (int) $regel['gaben_id'],
+                    'name' => (string) ($regel['name'] ?? ''),
+                    'anzahl' => (int) ($regel['anzahl'] ?? 0),
+                    'limit' => $minWert,
+                    'max_wert' => $maxWert,
+                    'erreicht' => $erreicht,
+                    'selected' => isset($saved[$key]) || ($defaultSelected && $erreicht),
+                    'differenz' => $stichTotal - $minWert,
+                ];
+            }
+
+            $gruppen[] = [
+                'stich_id' => $stichId,
+                'bezeichnung' => (string) ($row['bezeichnung'] ?? 'Stich'),
+                'kurzname' => (string) ($row['kurzname'] ?? ''),
+                'total' => $stichTotal,
+                'gaben' => $gaben,
             ];
         }
 
-        return $rows;
+        return $gruppen;
+    }
+
+    private function buildSelectableAbgaben(array $rows, array $regeln): array
+    {
+        $gruppen = $this->buildGabenVergleich($rows, $regeln, []);
+        $selectable = [];
+
+        foreach ($gruppen as $gruppe) {
+            foreach ($gruppe['gaben'] as $gabe) {
+                if (empty($gabe['erreicht'])) {
+                    continue;
+                }
+
+                $selectable[(int) $gabe['stich_id'] . ':' . (int) $gabe['gaben_id']] = true;
+            }
+        }
+
+        return $selectable;
+    }
+
+    private function stichIdsFromAuswertung(array $auswertung): array
+    {
+        return array_values(array_unique(array_map(
+            static fn (array $row): int => (int) ($row['stich_id'] ?? 0),
+            (array) ($auswertung['rows'] ?? [])
+        )));
     }
 
     private function stichIndex(array $stich, int $position): int

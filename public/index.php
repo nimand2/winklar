@@ -44,6 +44,8 @@ $router->get('/anlass/{id}/loesen', [$loesenController, 'open']);
 $router->get('/anlass/{id}/loesen/neu', [$loesenController, 'create']);
 $router->post('/anlass/{id}/loesen/neu', [$loesenController, 'store']);
 $router->get('/anlass/{id}/loesen/{standblattId}/abrechnen', [$abrechnenController, 'show']);
+$router->post('/anlass/{id}/loesen/{standblattId}/abrechnen', [$abrechnenController, 'speichern']);
+$router->get('/anlass/{id}/loesen/{standblattId}/abrechnen/druck', [$abrechnenController, 'druck']);
 $router->get('/anlass/{id}/loesen/{standblattId}/druck', [$loesenController, 'druck']);
 $router->get('/anlass/{id}/loesen/{standblattId}', [$loesenController, 'show']);
 $router->post('/anlass/{id}/loesen/{standblattId}', [$loesenController, 'update']);

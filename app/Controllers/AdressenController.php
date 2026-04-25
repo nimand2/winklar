@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Core\Response;
 use App\Models\Adressen;
+use App\Models\Plz;
 use App\Services\AnlassService;
 use App\Services\AuthService;
 
@@ -16,6 +17,7 @@ final class AdressenController extends Controller
         private readonly AuthService $authService,
         private readonly AnlassService $anlassService,
         private readonly Adressen $adressenModel,
+        private readonly Plz $plzModel,
     ) {
     }
 
@@ -29,6 +31,7 @@ final class AdressenController extends Controller
             'user' => $user,
             'anlass' => $anlass,
             'adressen' => $this->adressenModel->search($query),
+            'plzOptions' => $this->plzModel->getActiveOptions(),
             'query' => $query,
             'errors' => [],
             'old' => [],
@@ -40,6 +43,8 @@ final class AdressenController extends Controller
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $data = $this->addressDataFromRequest($user);
+        $plz = $this->plzModel->findByLookup((string) ($_POST['plz_lookup'] ?? ''));
+        $data['plz_id'] = $plz['id'] ?? null;
         $errors = $this->validateAddressData($data);
 
         if ($errors !== []) {
@@ -47,6 +52,7 @@ final class AdressenController extends Controller
                 'user' => $user,
                 'anlass' => $anlass,
                 'adressen' => $this->adressenModel->getAll(),
+                'plzOptions' => $this->plzModel->getActiveOptions(),
                 'query' => '',
                 'errors' => $errors,
                 'old' => $data,
@@ -89,6 +95,7 @@ final class AdressenController extends Controller
             'strasse' => trim((string) ($_POST['strasse'] ?? '')),
             'postfach' => trim((string) ($_POST['postfach'] ?? '')),
             'nation' => trim((string) ($_POST['nation'] ?? '')),
+            'plz_lookup' => trim((string) ($_POST['plz_lookup'] ?? '')),
             'telefon' => trim((string) ($_POST['telefon'] ?? '')),
             'email' => trim((string) ($_POST['email'] ?? '')),
             'notiz' => trim((string) ($_POST['notiz'] ?? '')),
@@ -103,6 +110,10 @@ final class AdressenController extends Controller
     {
         if ((string) $data['nachname'] === '') {
             return ['Bitte gib mindestens einen Nachnamen ein.'];
+        }
+
+        if ((string) ($data['plz_lookup'] ?? '') !== '' && empty($data['plz_id'])) {
+            return ['Bitte waehle eine gueltige PLZ aus der Liste aus.'];
         }
 
         return [];

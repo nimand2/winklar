@@ -57,8 +57,11 @@ $anlassId = (int) $anlass['id'];
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen')) ?>" class="btn btn-outline-secondary">
                                 Adressverwaltung öffnen
                             </a>
+                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/kasse')) ?>" class="btn btn-outline-secondary">
+                                Kassen-Abrechnung
+                            </a>
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/abschliessen')) ?>" class="btn btn-outline-danger">
-                                Anlass Abschliessen
+                                Rangliste anzeigen
                             </a>
                         </div>
 

@@ -8,6 +8,7 @@ $anlassId = (int) $anlass['id'];
 $old = $old ?? [];
 $errors = $errors ?? [];
 $query = trim((string) ($query ?? ''));
+$plzOptions = $plzOptions ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -127,12 +128,43 @@ $query = trim((string) ($query ?? ''));
                                                 <input id="nachname" name="nachname" class="form-control" required value="<?= htmlspecialchars((string) ($old['nachname'] ?? '')) ?>">
                                             </div>
                                             <div class="col-12">
-                                                <label for="firmen_anrede" class="form-label">Firma/Verein</label>
+                                                <label for="firmen_anrede" class="form-label">Firma</label>
                                                 <input id="firmen_anrede" name="firmen_anrede" class="form-control" value="<?= htmlspecialchars((string) ($old['firmen_anrede'] ?? '')) ?>">
+                                            </div>
+                                            <div class="col-12">
+                                                <label for="zusatz" class="form-label">Zusatz</label>
+                                                <input id="zusatz" name="zusatz" class="form-control" value="<?= htmlspecialchars((string) ($old['zusatz'] ?? '')) ?>">
                                             </div>
                                             <div class="col-12">
                                                 <label for="strasse" class="form-label">Strasse</label>
                                                 <input id="strasse" name="strasse" class="form-control" value="<?= htmlspecialchars((string) ($old['strasse'] ?? '')) ?>">
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label for="postfach" class="form-label">Postfach</label>
+                                                <input id="postfach" name="postfach" class="form-control" value="<?= htmlspecialchars((string) ($old['postfach'] ?? '')) ?>">
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label for="nation" class="form-label">Nation</label>
+                                                <input id="nation" name="nation" class="form-control" value="<?= htmlspecialchars((string) ($old['nation'] ?? '')) ?>">
+                                            </div>
+                                            <div class="col-12">
+                                                <label for="plz_lookup" class="form-label">PLZ / Ort</label>
+                                                <input
+                                                    id="plz_lookup"
+                                                    name="plz_lookup"
+                                                    class="form-control"
+                                                    list="plz-options"
+                                                    autocomplete="off"
+                                                    placeholder="z.B. 8000 Zürich"
+                                                    value="<?= htmlspecialchars((string) ($old['plz_lookup'] ?? '')) ?>"
+                                                >
+                                                <datalist id="plz-options">
+                                                    <?php foreach ($plzOptions as $plz): ?>
+                                                        <option value="<?= htmlspecialchars(trim((string) (($plz['plz4'] ?? '') . ' ' . ($plz['ortschaftsname'] ?? '')))) ?>">
+                                                            <?= htmlspecialchars((string) (($plz['kantonskuerzel'] ?? '') ?: '')) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </datalist>
                                             </div>
                                             <div class="col-12 col-md-6">
                                                 <label for="telefon" class="form-label">Telefon</label>

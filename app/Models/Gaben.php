@@ -111,6 +111,27 @@ final class Gaben
         return $statement->fetchAll();
     }
 
+    public function findAbgabenForAnlass(int $anlassId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT ga.id, ga.gaben_id, ga.standblatt_id, ga.stich_id,
+                    g.name, g.punktwert, g.preis, g.anzahl,
+                    st.name AS stich_name,
+                    s.gaben_geprueft,
+                    a.vorname, a.nachname, a.firmen_anrede, a.zusatz
+             FROM gaben_abgaben ga
+             INNER JOIN gaben g ON g.id = ga.gaben_id
+             INNER JOIN standblatt s ON s.id = ga.standblatt_id
+             INNER JOIN adressen a ON a.id = s.id_adresse
+             LEFT JOIN stich st ON st.id = ga.stich_id
+             WHERE s.id_anlass = :anlass_id
+             ORDER BY g.name ASC, st.name ASC, a.nachname ASC, a.vorname ASC, ga.id ASC'
+        );
+        $statement->execute(['anlass_id' => $anlassId]);
+
+        return $statement->fetchAll();
+    }
+
     public function areAbgabenGeprueft(int $standblattId): bool
     {
         $statement = Database::connection()->prepare(

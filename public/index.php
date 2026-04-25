@@ -23,7 +23,7 @@ $clientApiController = new ClientApiController(
     new App\Models\User()
 );
 $anlassController = new AnlassController(app_auth(), app_anlass_service(), new App\Models\Gaben(), new App\Models\Stich(), new App\Models\Auszeichnungslimitten(), new App\Models\Standblatt(), new App\Models\Schussdaten());
-$adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen());
+$adressenController = new AdressenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Plz());
 $loesenController = new LoesenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Stich(), new App\Models\Gaben());
 $abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Schussdaten(), new App\Models\Gaben());
 $dashboardController = new DashboardController(app_auth());
@@ -48,6 +48,7 @@ $router->post('/anlass/{id}/konfiguration/gaben/{gabeId}/loeschen', [$anlassCont
 $router->post('/anlass/{id}/konfiguration/gaben-regeln', [$anlassController, 'storeRegel']);
 $router->post('/anlass/{id}/konfiguration/gaben-regeln/{regelId}/loeschen', [$anlassController, 'deleteRegel']);
 $router->get('/anlass/{id}/abschliessen', [$anlassController, 'abschliessen']);
+$router->get('/anlass/{id}/kasse', [$anlassController, 'kasse']);
 $router->get('/anlass/{id}/schuetzen', [$adressenController, 'index']);
 $router->get('/anlass/{id}/schuetzen/neu', [$adressenController, 'index']);
 $router->post('/anlass/{id}/schuetzen/neu', [$adressenController, 'store']);

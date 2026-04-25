@@ -46,13 +46,31 @@ final class Standblatt
     public function findForAnlassWithAdresse(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
-            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.created_by_user_id,
+            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.gaben_geprueft, s.created_by_user_id,
                     s.created_at, s.updated_by_user_id, s.updated_at,
                     a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon, a.geburtsdatum
              FROM standblatt s
              INNER JOIN adressen a ON a.id = s.id_adresse
              WHERE s.id_anlass = :anlass_id
              ORDER BY s.datum DESC, s.id DESC'
+        );
+        $statement->execute(['anlass_id' => $anlassId]);
+
+        return $statement->fetchAll();
+    }
+
+    public function findEinnahmenByStichForAnlass(int $anlassId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT st.id AS stich_id, st.name, st.short_name, st.preis,
+                    SUM(ss.anzahl_stiche) AS anzahl_stiche,
+                    SUM(ss.anzahl_stiche * COALESCE(st.preis, 0)) AS total
+             FROM standblatt_stich ss
+             INNER JOIN standblatt s ON s.id = ss.id_standblatt
+             INNER JOIN stich st ON st.id = ss.id_stich
+             WHERE s.id_anlass = :anlass_id
+             GROUP BY st.id, st.name, st.short_name, st.preis
+             ORDER BY st.name ASC, st.id ASC'
         );
         $statement->execute(['anlass_id' => $anlassId]);
 

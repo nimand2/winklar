@@ -22,22 +22,17 @@ final class Plz
         return $statement->fetchAll();
     }
 
-    public function create(array $data): int
+    public function getActiveOptions(): array
     {
         $statement = Database::connection()->prepare(
-            'INSERT INTO plz (
-                ortschaftsname, plz4, zusatzziffer, zip_id, gemeindename, bfs_nr,
-                kantonskuerzel, adressenanteil, e, n, ist_eintrag_aktiv, sprache,
-                validity_from, validity_to
-             ) VALUES (
-                :ortschaftsname, :plz4, :zusatzziffer, :zip_id, :gemeindename, :bfs_nr,
-                :kantonskuerzel, :adressenanteil, :e, :n, :ist_eintrag_aktiv, :sprache,
-                :validity_from, :validity_to
-             )'
+            'SELECT id, plz4, ortschaftsname, kantonskuerzel
+             FROM plz
+             WHERE ist_eintrag_aktiv = 1
+             ORDER BY plz4 ASC, ortschaftsname ASC, id ASC'
         );
-        $statement->execute($this->buildPayload($data));
+        $statement->execute();
 
-        return (int) Database::connection()->lastInsertId();
+        return $statement->fetchAll();
     }
 
     public function findById(int $id): ?array
@@ -55,33 +50,6 @@ final class Plz
         $plz = $statement->fetch();
 
         return $plz ?: null;
-    }
-
-    public function update(int $id, array $data): bool
-    {
-        $statement = Database::connection()->prepare(
-            'UPDATE plz
-             SET ortschaftsname = :ortschaftsname,
-                 plz4 = :plz4,
-                 zusatzziffer = :zusatzziffer,
-                 zip_id = :zip_id,
-                 gemeindename = :gemeindename,
-                 bfs_nr = :bfs_nr,
-                 kantonskuerzel = :kantonskuerzel,
-                 adressenanteil = :adressenanteil,
-                 e = :e,
-                 n = :n,
-                 ist_eintrag_aktiv = :ist_eintrag_aktiv,
-                 sprache = :sprache,
-                 validity_from = :validity_from,
-                 validity_to = :validity_to
-             WHERE id = :id'
-        );
-
-        $payload = $this->buildPayload($data);
-        $payload['id'] = $id;
-
-        return $statement->execute($payload);
     }
 
     public function delete(int $id): bool
@@ -105,6 +73,60 @@ final class Plz
 
         return $statement->fetchAll();
     }
+
+    public function findByLookup(string $lookup): ?array
+    {
+        $lookup = trim($lookup);
+
+        if ($lookup === '') {
+            return null;
+        }
+
+        preg_match('/^(\d{4})\s*(.*)$/', $lookup, $matches);
+        $plz4 = $matches[1] ?? null;
+        $ortschaftsname = trim((string) ($matches[2] ?? ''));
+
+        if ($plz4 === null) {
+            return null;
+        }
+
+        if ($ortschaftsname !== '') {
+            $statement = Database::connection()->prepare(
+                'SELECT id, plz4, ortschaftsname
+                 FROM plz
+                 WHERE plz4 = :plz4
+                   AND ortschaftsname = :ortschaftsname
+                   AND ist_eintrag_aktiv = 1
+                 ORDER BY id ASC
+                 LIMIT 1'
+            );
+            $statement->execute([
+                'plz4' => $plz4,
+                'ortschaftsname' => $ortschaftsname,
+            ]);
+
+            $plz = $statement->fetch();
+
+            if ($plz) {
+                return $plz;
+            }
+        }
+
+        $statement = Database::connection()->prepare(
+            'SELECT id, plz4, ortschaftsname
+             FROM plz
+             WHERE plz4 = :plz4
+               AND ist_eintrag_aktiv = 1
+             ORDER BY adressenanteil DESC, ortschaftsname ASC, id ASC
+             LIMIT 1'
+        );
+        $statement->execute(['plz4' => $plz4]);
+
+        $plz = $statement->fetch();
+
+        return $plz ?: null;
+    }
+
     public function find_by_ortschaftsname(string $ortschaftsname): ?array
     {
         $statement = Database::connection()->prepare(

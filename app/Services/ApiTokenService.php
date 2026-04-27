@@ -6,7 +6,7 @@ namespace App\Services;
 
 final class ApiTokenService
 {
-    private const LIFETIME_SECONDS = 3600;
+    private const LIFETIME_SECONDS = 60*60*24*7; // 7 days
 
     public function createToken(int $userId): string
     {

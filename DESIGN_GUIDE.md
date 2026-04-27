@@ -1,263 +1,327 @@
 # Design Guide
 
-Diese Beschreibung definiert das aktuelle Design des Projekts, damit neue Seiten optisch konsistent aufgebaut werden.
+Diese Datei beschreibt den aktuellen visuellen und strukturellen Stil der Webapplikation. Neue Seiten sollen sich daran orientieren, damit Login, Dashboard, Anlassverwaltung, Schuetzenverwaltung, Standblaetter, Abrechnung und Ranglisten wie ein zusammenhaengendes System wirken.
 
 ## Ziel des Designs
 
-Das Design soll:
+Die Anwendung ist eine Arbeitsoberflaeche fuer einen Schiessanlass. Das Design soll deshalb ruhig, klar und effizient sein:
 
-- sauber und modern wirken
-- leicht, freundlich und technisch ordentlich aussehen
-- mit wenig eigenem CSS auskommen
-- auf Bootstrap 5 als Basis setzen
-- Inhalte in klaren Kartenflaechen praesentieren
+- schnelle Orientierung fuer Personen im Buero oder an der Kasse
+- gute Lesbarkeit von Namen, Startnummern, Preisen, Daten und Resultaten
+- klare Primaeraktionen wie "Neuer Anlass", "Neuer Schuetz", "Abrechnen" oder "Drucken"
+- einheitliche Seitenstruktur mit Bootstrap 5
+- moeglichst wenig eigenes CSS, aber genug Projektcharakter
 
-## Grundprinzipien
+Die Webapp ist keine Marketing-Seite. Neue Ansichten sollen direkt die eigentliche Arbeit ermoeglichen.
 
-- Bootstrap 5 ist das Basis-Framework fuer Layout, Abstaende, Buttons, Formulare und Grid.
-- Eigenes CSS wird nur fuer den Projekt-Charakter verwendet.
-- Jede Seite nutzt denselben Hintergrundstil, dieselbe Kartenlogik und dieselben Abstaende.
-- Inhalte stehen nie lose auf dem Hintergrund, sondern fast immer in einer `card`.
+## Technische Basis
 
-## Dateien
-
-Fuer neue Seiten sollen immer diese Dateien genutzt werden:
+Fuer neue Seiten immer diese Grundlagen verwenden:
 
 - Bootstrap CSS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css`
-- Eigenes CSS: [public/assets/css/app.css](/var/www/html/public/assets/css/app.css) als Datei, im Browser unter `/assets/css/app.css`
-- Optional Bootstrap JS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js`
-- Optional eigenes JS: [public/assets/js/login.js](/var/www/html/public/assets/js/login.js) oder spaeter weitere JS-Dateien, im Browser unter `/assets/js/login.js`
+- Projekt-CSS: [public/assets/css/app.css](/var/www/html/public/assets/css/app.css), im Browser unter `/assets/css/app.css`
+- Bootstrap JS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js`
+- Gemeinsamer Head: [app/Views/partials/head.php](/var/www/html/app/Views/partials/head.php)
+- Gemeinsames Bootstrap-Script: [app/Views/partials/bootstrap-script.php](/var/www/html/app/Views/partials/bootstrap-script.php)
 
-## Layout-Stil
+Neue PHP-Views sollen den vorhandenen MVC-Stil nutzen und Links ueber `App\Core\Url::app()` bzw. Assets ueber `App\Core\Url::asset()` erzeugen.
 
-### Seitenhintergrund
+## Grundlayout
 
-Der Body verwendet die Klasse `app-shell`.
+Jede normale Seite nutzt:
 
-Eigenschaften:
+- `body class="app-shell"`
+- `main class="container py-5"`
+- Bootstrap Grid mit `row justify-content-center`
+- eine klare maximale Inhaltsbreite
 
-- volle Hoehe ueber die gesamte Viewport-Hoehe
-- heller Verlauf als Grundflaeche
-- zwei weiche farbige Radialverlaeufe fuer mehr Tiefe
-- keine dunklen oder harten Flaechen
+Empfohlene Spalten:
 
-Wirkung:
+- Login und schmale Formulare: `col-12 col-md-8 col-lg-5`
+- Standardseiten: `col-12 col-lg-8`
+- Uebersichten mit mehreren Spalten oder vielen Aktionen: `col-12 col-xl-10`
 
-- freundlich
-- modern
-- luftig
+Beispiel:
 
-### Inhaltsbreite
-
-Neue Seiten sollen immer in einem Bootstrap-`container` liegen.
-
-Empfohlene Struktur:
-
-```html
+```php
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Seitentitel']); ?>
+</head>
 <body class="app-shell">
     <main class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
-                ...
+            <div class="col-12 col-xl-10">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        ...
+                    </div>
+                </div>
             </div>
         </div>
     </main>
+
+    <?php \App\Core\View::partial('partials/bootstrap-script'); ?>
 </body>
+</html>
 ```
 
-Fuer schmale Formulare:
+## Seitenaufbau
 
-- `col-12 col-md-8 col-lg-5`
+Eine Seite besteht typischerweise aus:
 
-Fuer normale Inhaltsseiten:
+1. Kopfbereich mit `brand-badge`, Titel und kurzem Beschreibungstext
+2. Aktionsbereich mit den wichtigsten Buttons
+3. Inhalt: Tabelle, Liste, Formular, Detaildaten oder Druckansicht
+4. Statusmeldungen mit Bootstrap Alerts
 
-- `col-12 col-lg-8`
-
-## Kartenstil
-
-Fast alle Inhalte sollen innerhalb einer Karte angezeigt werden.
-
-Verwendete Klassen:
-
-- `card auth-card`
-- `card dashboard-card`
-
-Gemeinsame Eigenschaften:
-
-- kein harter Rahmen
-- grosse Rundungen
-- weicher Schatten
-- grosszuegiges Innenpadding
-
-Die Karte ist der visuelle Hauptcontainer einer Seite.
-
-## Typografie
-
-Es wird die Standard-Typografie von Bootstrap genutzt.
-
-Regeln:
-
-- Haupttitel mit `h1` und Klasse `h2`
-- kurze Einleitung darunter
-- Nebentexte mit `muted-copy`
-- kleine Labels fuer Metadaten mit `small text-body-secondary`
-
-Beispiel:
+Der Kopfbereich soll auf Desktop horizontal funktionieren und auf Mobile sauber untereinander umbrechen:
 
 ```html
-<h1 class="h2 mb-2">Dashboard</h1>
-<p class="muted-copy mb-0">Diese Seite ist nur nach erfolgreichem Login erreichbar.</p>
-```
-
-## Brand-Badge
-
-Oben in der Karte steht eine kleine Kennzeichnung mit der Klasse `brand-badge`.
-
-Beispiele:
-
-- `Login-Modul`
-- `Geschuetzter Bereich`
-- `Profil`
-- `Einstellungen`
-
-Die Badge dient als kleine visuelle Ueberschrift vor dem eigentlichen Seitentitel.
-
-## Farben
-
-Das Design nutzt hauptsaechlich Bootstrap-Farben und nur wenig eigene Akzentgestaltung.
-
-Primäre Richtung:
-
-- Blau als Hauptfarbe
-- Gruen nur als zweiter Hintergrundakzent
-- neutrales Hellgrau fuer Flaechen und ruhige Texte
-
-Wichtige Rollen:
-
-- Primar-Buttons: `btn btn-primary`
-- Sekundaere Aktionen: `btn btn-outline-secondary`
-- Gefaehrliche Aktionen: `btn btn-outline-danger`
-- Hinweise: Bootstrap `alert-success`, `alert-danger`, `alert-warning`
-
-## Formulare
-
-Formulare sollen immer im Bootstrap-Stil gebaut werden.
-
-Regeln:
-
-- Inputs mit `form-control`
-- wichtige Inputs gross mit `form-control-lg`
-- Labels immer mit `form-label`
-- vertikale Abstaende ueber `vstack gap-3` oder Bootstrap-Margins
-- Checkboxen mit `form-check`
-- Hauptbutton immer volle Breite bei Login-Formularen
-
-Beispiel:
-
-```html
-<form class="vstack gap-3">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
     <div>
-        <label for="email" class="form-label">E-Mail</label>
-        <input type="email" id="email" class="form-control form-control-lg">
+        <div class="brand-badge mb-3">Anlass</div>
+        <h1 class="h2 mb-2">Anlasstitel</h1>
+        <p class="muted-copy mb-0">Kurze Einordnung der Ansicht.</p>
     </div>
 
-    <button type="submit" class="btn btn-primary btn-lg w-100">Speichern</button>
-</form>
-```
-
-## Buttons
-
-Buttons sollen klar nach Bedeutung getrennt werden:
-
-- Hauptaktion: `btn btn-primary`
-- Abbrechen oder neutrale Aktion: `btn btn-outline-secondary`
-- Logout oder Loeschen: `btn btn-outline-danger`
-
-Keine eigenen wilden Button-Farben einfuehren, solange es keinen klaren Grund dafuer gibt.
-
-## Inhaltsboxen und Listen
-
-Fuer Daten oder Profilinformationen sollen innerhalb der Karte weitere strukturierte Bereiche genutzt werden.
-
-Aktuell wird dafuer `list-group` verwendet.
-
-Empfehlung:
-
-- einzelne Datenpunkte in `list-group-item`
-- jede Box mit etwas Padding
-- Label klein und grau
-- Wert etwas staerker gewichtet
-
-Beispiel:
-
-```html
-<div class="list-group">
-    <div class="list-group-item p-3">
-        <div class="small text-body-secondary mb-1">E-Mail</div>
-        <div class="fw-semibold">demo@example.com</div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="#" class="btn btn-primary">Primaeraktion</a>
+        <a href="#" class="btn btn-outline-secondary">Zurueck</a>
     </div>
 </div>
 ```
 
-## Responsives Verhalten
+## Karten und Flaechen
 
-Das Design soll auf Mobilgeraeten und Desktop gleich sauber wirken.
+Der Hauptinhalt liegt aktuell in einer Bootstrap-Karte:
+
+- `card auth-card` fuer Login
+- `card dashboard-card` fuer geschuetzte Arbeitsseiten
+
+Eigenschaften:
+
+- kein harter Rahmen
+- weicher Schatten
+- grosszuegiges Innenpadding
+- helle, ruhige Flaeche auf dem Hintergrund
+
+Innerhalb einer Hauptkarte sollen wiederholte Inhalte als Listen, Tabellen oder einzelne `list-group-item`-Elemente dargestellt werden. Keine verschachtelten dekorativen Karten bauen, wenn eine Liste oder ein Grid reicht.
+
+## Typografie
+
+Die Anwendung nutzt die Standard-Typografie von Bootstrap.
 
 Regeln:
 
-- Inhalte immer im Grid zentrieren
-- auf Mobile volle Breite
-- auf Desktop begrenzte Spaltenbreite
-- Kartenpadding wird auf kleinen Geraeten automatisch reduziert
+- Seitentitel: `h1` mit Klasse `h2`
+- Beschreibungstext: `p.muted-copy`
+- Metadatenlabels: `small text-body-secondary`
+- Werte: `fw-semibold`
+- Keine sehr grossen Hero-Schriften in Arbeitsansichten
+- Texte kurz halten, besonders in Buttons und Badges
 
-Das ist bereits in [public/assets/css/app.css](/var/www/html/public/assets/css/app.css) vorgesehen.
+Beispiel:
 
-## Verhalten von JavaScript
+```html
+<div class="brand-badge mb-3">Kasse</div>
+<h1 class="h2 mb-2">Kassen-Abrechnung</h1>
+<p class="muted-copy mb-0">Uebersicht der offenen und bezahlten Standblaetter.</p>
+```
 
-JavaScript bleibt minimal.
+## Farben
 
-Es soll nur fuer kleine UX-Verbesserungen genutzt werden, zum Beispiel:
+Die Farbwelt bleibt bewusst zurueckhaltend:
+
+- Blau fuer Primaeraktionen und aktive Elemente
+- Gruen nur sparsam fuer positive Zustaende oder Hintergrundakzente
+- Rot nur fuer Logout, Loeschen oder gefaehrliche Aktionen
+- Grau fuer Metadaten, Hinweise und neutrale Navigation
+- Weiss fuer Arbeitsflaechen
+
+Buttons:
+
+- Hauptaktion: `btn btn-primary`
+- Zweite wichtige Aktion: `btn btn-outline-primary`
+- Neutrale Navigation: `btn btn-outline-secondary`
+- Logout/Loeschen/Abbruch mit Risiko: `btn btn-outline-danger`
+
+Alerts:
+
+- Erfolg: `alert alert-success`
+- Fehler: `alert alert-danger`
+- Warnung: `alert alert-warning`
+- Leerer Zustand: `alert alert-light border`
+
+## Formulare
+
+Formulare folgen Bootstrap 5.
+
+Regeln:
+
+- Inputs: `form-control`
+- grosse Login-Inputs: `form-control form-control-lg`
+- Labels: `form-label`
+- Gruppenabstand: `vstack gap-3` oder Bootstrap Margins
+- Checkboxen: `form-check`
+- Hauptbutton bei Login und schmalen Formularen: `w-100`
+- Pflichtfelder im Label oder Hilfetext klar machen
+- Fehlermeldungen ueber Bootstrap Alerts anzeigen
+
+Beispiel:
+
+```html
+<form class="vstack gap-3" method="post">
+    <div>
+        <label for="name_anlass" class="form-label">Name des Anlasses</label>
+        <input type="text" id="name_anlass" name="name_anlass" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Speichern</button>
+</form>
+```
+
+## Listen, Tabellen und Uebersichten
+
+Fuer Datensaetze wie Anlaesse, Schuetzen, Standblaetter oder Abrechnungspositionen:
+
+- bei wenigen Eintraegen: `list-group`
+- bei vielen vergleichbaren Spalten: Bootstrap `table`
+- bei Auswahlkarten: `anlass-card list-group-item`
+- auf Mobile sollen Zeilen umbrechen duerfen
+- IDs, Startnummern, Datum und Kosten gut sichtbar machen
+
+Leere Zustaende immer ausdruecklich anzeigen:
+
+```html
+<div class="alert alert-light border mb-0">
+    Fuer diesen Anlass wurde noch kein Standblatt erstellt.
+</div>
+```
+
+## Navigation und Aktionen
+
+Aktionsbuttons sollen inhaltlich gruppiert werden:
+
+- oben rechts: Navigation, Zurueck, Dashboard, Logout
+- unter dem Seitentitel: fachliche Aktionen der aktuellen Seite
+- in Listenzeilen: Aktionen, die genau diesen Eintrag betreffen
+
+Wichtige vorhandene Arbeitsbereiche:
+
+- `/login`: Anmeldung
+- `/dashboard`: Einstieg nach Login
+- `/anlass`: Anlassauswahl
+- `/anlass/neu`: neuen Anlass erstellen
+- `/anlass/{id}`: Anlassdetails und Navigation
+- `/anlass/{id}/konfiguration`: Stiche, Gaben und Regeln konfigurieren
+- `/anlass/{id}/schuetzen`: Adress- und Schuetzenverwaltung
+- `/anlass/{id}/loesen`: Standblatt auswaehlen
+- `/anlass/{id}/loesen/neu`: neues Standblatt loesen
+- `/anlass/{id}/loesen/{standblattId}/abrechnen`: Standblatt abrechnen
+- `/anlass/{id}/abschliessen`: Rangliste anzeigen
+- `/anlass/{id}/kasse`: Kassenuebersicht
+
+## Authentifizierung und geschuetzte Seiten
+
+Geschuetzte Seiten muessen ueber den Controller die Authentifizierung erzwingen. In Views soll keine eigene Loginlogik entstehen.
+
+UI-Regeln:
+
+- Login-Seite schlicht und fokussiert
+- Nach Login immer klare Ruecknavigation anbieten
+- Logout als `btn btn-outline-danger`
+- Fehlermeldungen nicht technisch formulieren, sondern handlungsorientiert
+
+## Druckansichten
+
+Fuer Standblaetter und Abrechnungen gibt es Druckansichten. Diese sollen:
+
+- reduzierter gestaltet sein als Arbeitsseiten
+- keine unnoetigen Navigationselemente enthalten
+- klare Tabellen und Summen zeigen
+- auf A4 gut lesbar sein
+- Bootstrap nur verwenden, wenn es den Druck nicht stoert
+
+## JavaScript
+
+JavaScript bleibt minimal und unterstuetzt die Bedienung:
 
 - Submit-Button beim Absenden deaktivieren
-- Text eines Buttons waehrend eines Requests aendern
-- spaeter einfache Toasts oder Modals mit Bootstrap
+- Buttontext waehrend Requests anpassen
+- Bootstrap Modals oder Toasts nur bei echtem Nutzen
+- keine komplexe Frontend-Architektur einfuehren, solange serverseitige PHP-Views reichen
 
-Kein unnötig komplexes Frontend-Framework verwenden.
+Vorhandenes Beispiel:
 
-## Standardstruktur fuer neue Seiten
+- [public/assets/js/login.js](/var/www/html/public/assets/js/login.js)
 
-Diese Struktur soll fuer neue Seiten als Vorlage dienen:
+## Responsives Verhalten
+
+Alle Seiten muessen auf Mobile und Desktop nutzbar sein.
+
+Regeln:
+
+- Buttons duerfen umbrechen: `d-flex flex-wrap gap-2`
+- Tabellen bei Bedarf mit `table-responsive` umschliessen
+- Formulare auf Mobile volle Breite
+- Keine festen Breiten fuer Textbereiche
+- Lange Namen, Vereine oder E-Mail-Adressen duerfen das Layout nicht sprengen
+
+## Sprache und Begriffe
+
+Die Anwendung verwendet deutschsprachige Fachbegriffe aus dem Schiessanlass:
+
+- Anlass
+- Schuetz / Schuetzin oder Schuetzen
+- Standblatt
+- Stich
+- Gabe
+- Auszeichnungslimite
+- Rangliste
+- Kasse / Abrechnung
+- Schussdaten
+
+Wichtig: Bestehende Dateien nutzen teilweise ASCII-Schreibweisen wie `auswaehlen`, `zurueck`, `Anlaesse`. Neue Texte sollen konsistent mit der jeweiligen Datei bleiben. Wenn eine Datei bereits Umlaute verwendet, duerfen neue sichtbare Texte ebenfalls Umlaute verwenden.
+
+## Standardstruktur fuer neue Arbeitsseiten
 
 ```php
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/app/bootstrap.php';
+use App\Core\Url;
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neue Seite</title>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('css/app.css')) ?>">
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Neue Seite']); ?>
 </head>
 <body class="app-shell">
     <main class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-xl-10">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <div class="brand-badge mb-3">Bereich</div>
-                        <h1 class="h2 mb-2">Seitentitel</h1>
-                        <p class="muted-copy mb-4">Kurze Beschreibung der Seite.</p>
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
+                            <div>
+                                <div class="brand-badge mb-3">Bereich</div>
+                                <h1 class="h2 mb-2">Seitentitel</h1>
+                                <p class="muted-copy mb-0">Kurze Beschreibung der Seite.</p>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="<?= htmlspecialchars(Url::app('/dashboard')) ?>" class="btn btn-outline-secondary">
+                                    Dashboard
+                                </a>
+                            </div>
+                        </div>
 
                         <div class="list-group">
                             <div class="list-group-item p-3">
-                                <div class="small text-body-secondary mb-1">Beispiel</div>
-                                <div class="fw-semibold">Inhalt</div>
+                                <div class="small text-body-secondary mb-1">Label</div>
+                                <div class="fw-semibold">Wert</div>
                             </div>
                         </div>
                     </div>
@@ -266,19 +330,18 @@ require_once __DIR__ . '/app/bootstrap.php';
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php \App\Core\View::partial('partials/bootstrap-script'); ?>
 </body>
 </html>
 ```
 
 ## Kurzregel fuer neue Seiten
 
-Wenn du neue Seiten baust, halte dich an diese 7 Punkte:
-
-1. Immer Bootstrap 5 + die Datei `public/assets/css/app.css` einbinden, die im Browser als `/assets/css/app.css` ausgeliefert wird.
-2. Immer `body class="app-shell"` verwenden.
-3. Inhalte in einem `container` und zentrierten `row` aufbauen.
-4. Den Hauptinhalt immer in einer `card` darstellen.
-5. Oben eine `brand-badge`, dann Titel und kurzen Beschreibungstext platzieren.
-6. Formulare und Buttons nur mit Bootstrap-Klassen gestalten.
-7. Eigenes CSS nur dann erweitern, wenn es wirklich dem gesamten Projekt hilft.
+1. Gemeinsamen Head-Partial und Bootstrap verwenden.
+2. `body class="app-shell"` setzen.
+3. Inhalt in `container`, `row` und passende Bootstrap-Spalte legen.
+4. Arbeitsinhalt in `card dashboard-card` oder Login in `card auth-card` darstellen.
+5. Kopfbereich immer mit `brand-badge`, `h1.h2`, `muted-copy` und Aktionsgruppe aufbauen.
+6. Formulare, Tabellen, Alerts und Buttons mit Bootstrap-Klassen loesen.
+7. Eigenes CSS nur erweitern, wenn es mehreren Seiten hilft.
+8. Mobile Umbrueche und lange Fachwerte immer mitdenken.

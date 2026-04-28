@@ -25,7 +25,7 @@ $regeln = $regeln ?? [];
                                 <div class="brand-badge mb-3">Konfiguration</div>
                                 <h1 class="h2 mb-2"><?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
                                 <p class="muted-copy mb-0">
-                                    Anlassdaten, Gaben und Auszeichnungsregeln zentral pflegen.
+                                    Anlassdaten, Stiche, Gaben und Auszeichnungsregeln zentral pflegen.
                                 </p>
                             </div>
 
@@ -62,6 +62,57 @@ $regeln = $regeln ?? [];
 
                         <div class="row g-4">
                             <div class="col-12 col-lg-5">
+                                <div class="list-group-item p-4 bg-white rounded-4 mb-4">
+                                    <h2 class="h5 mb-3">Neuer Stich</h2>
+                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche')) ?>">
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label for="stich_name" class="form-label">Name</label>
+                                                <input id="stich_name" name="name" class="form-control" required>
+                                            </div>
+                                            <div class="col-12 col-md-4">
+                                                <label for="stich_short_name" class="form-label">Kurzname</label>
+                                                <input id="stich_short_name" name="short_name" class="form-control">
+                                            </div>
+                                            <div class="col-12 col-md-4">
+                                                <label for="stich_anzeige_id" class="form-label">Anzeige-ID</label>
+                                                <input id="stich_anzeige_id" name="anzeige_id" class="form-control">
+                                            </div>
+                                            <div class="col-12 col-md-4">
+                                                <label for="stich_scheibe" class="form-label">Scheibe</label>
+                                                <input id="stich_scheibe" name="scheibe" class="form-control">
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label for="stich_wertigkeit" class="form-label">Wertigkeit</label>
+                                                <input id="stich_wertigkeit" name="wertigkeit" type="number" step="0.01" min="0" class="form-control">
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label for="stich_anzahl_schuss" class="form-label">Schuss</label>
+                                                <input id="stich_anzahl_schuss" name="anzahl_schuss" type="number" min="0" class="form-control">
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label for="stich_anzahl_passen" class="form-label">Max. Passen</label>
+                                                <input id="stich_anzahl_passen" name="anzahl_passen" type="number" min="0" class="form-control">
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <label for="stich_preis" class="form-label">Preis</label>
+                                                <input id="stich_preis" name="preis" type="number" step="0.01" min="0" class="form-control">
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label for="stich_id_disziplin" class="form-label">Disziplin-ID</label>
+                                                <input id="stich_id_disziplin" name="id_disziplin" type="number" min="0" class="form-control">
+                                            </div>
+                                            <div class="col-12 col-md-6">
+                                                <label for="stich_verbindung" class="form-label">Verbindung</label>
+                                                <input id="stich_verbindung" name="verbindung" class="form-control">
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary w-100">Stich erstellen</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
                                 <div class="list-group-item p-4 bg-white rounded-4 mb-4">
                                     <h2 class="h5 mb-3">Neue Gabe</h2>
                                     <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben')) ?>">
@@ -144,6 +195,70 @@ $regeln = $regeln ?? [];
                             </div>
 
                             <div class="col-12 col-lg-7">
+                                <h2 class="h5 mb-3">Stiche</h2>
+                                <div class="list-group mb-4">
+                                    <?php foreach ($stiche as $stich): ?>
+                                        <div class="list-group-item p-3">
+                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'])) ?>">
+                                                <div class="row g-2 align-items-end">
+                                                    <div class="col-12 col-md-4">
+                                                        <label class="form-label">Name</label>
+                                                        <input name="name" class="form-control" required value="<?= htmlspecialchars((string) $stich['name']) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Kurzname</label>
+                                                        <input name="short_name" class="form-control" value="<?= htmlspecialchars((string) ($stich['short_name'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Anzeige-ID</label>
+                                                        <input name="anzeige_id" class="form-control" value="<?= htmlspecialchars((string) ($stich['anzeige_id'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Scheibe</label>
+                                                        <input name="scheibe" class="form-control" value="<?= htmlspecialchars((string) ($stich['scheibe'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Preis</label>
+                                                        <input name="preis" type="number" step="0.01" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['preis'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Wertigkeit</label>
+                                                        <input name="wertigkeit" type="number" step="0.01" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['wertigkeit'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Schuss</label>
+                                                        <input name="anzahl_schuss" type="number" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['anzahl_schuss'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Max. Passen</label>
+                                                        <input name="anzahl_passen" type="number" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['anzahl_passen'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-6 col-md-2">
+                                                        <label class="form-label">Disziplin-ID</label>
+                                                        <input name="id_disziplin" type="number" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['id_disziplin'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-12 col-md-2">
+                                                        <label class="form-label">Verbindung</label>
+                                                        <input name="verbindung" class="form-control" value="<?= htmlspecialchars((string) ($stich['verbindung'] ?? '')) ?>">
+                                                    </div>
+                                                    <div class="col-12 col-md-2 d-grid">
+                                                        <button type="submit" class="btn btn-outline-primary">Speichern</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'] . '/loeschen')) ?>" class="mt-2">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Stich loeschen</button>
+                                            </form>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <?php if ($stiche === []): ?>
+                                    <div class="alert alert-light border">
+                                        Es sind noch keine Stiche fuer diesen Anlass hinterlegt.
+                                    </div>
+                                <?php endif; ?>
+
                                 <h2 class="h5 mb-3">Gaben</h2>
                                 <div class="list-group mb-4">
                                     <?php foreach ($gaben as $gabe): ?>

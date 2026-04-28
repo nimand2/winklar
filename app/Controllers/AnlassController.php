@@ -171,6 +171,49 @@ final class AnlassController extends Controller
         ]);
     }
 
+    public function storeStich(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $data = $this->sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id']);
+
+        if ($this->validateStichData($data) === []) {
+            $this->stichModel->create($data);
+        }
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+    }
+
+    public function updateStich(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $stich = $this->stichModel->findById((int) ($params['stichId'] ?? 0));
+
+        if ($stich !== null && (int) $stich['id_anlass'] === (int) $anlass['id']) {
+            $data = $this->sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id'], $stich);
+
+            if ($this->validateStichData($data) === []) {
+                $this->stichModel->update((int) $stich['id'], $data);
+            }
+        }
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+    }
+
+    public function deleteStich(array $params): void
+    {
+        $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $stich = $this->stichModel->findById((int) ($params['stichId'] ?? 0));
+
+        if ($stich !== null && (int) $stich['id_anlass'] === (int) $anlass['id']) {
+            $this->stichModel->delete((int) $stich['id']);
+        }
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+    }
+
     public function storeGabe(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -294,6 +337,36 @@ final class AnlassController extends Controller
             && $data['end_anlass'] < $data['start_anlass']
         ) {
             $errors[] = 'Das Enddatum darf nicht vor dem Startdatum liegen.';
+        }
+
+        return $errors;
+    }
+
+    private function sanitizeStichData(array $source, int $anlassId, int $userId, array $existing = []): array
+    {
+        return [
+            'id_anlass' => $anlassId,
+            'id_disziplin' => $this->nullableInt($source['id_disziplin'] ?? null),
+            'name' => trim((string) ($source['name'] ?? '')),
+            'short_name' => $this->nullableString($source['short_name'] ?? null),
+            'anzeige_id' => $this->nullableString($source['anzeige_id'] ?? null),
+            'scheibe' => $this->nullableString($source['scheibe'] ?? null),
+            'wertigkeit' => $this->nullableDecimal($source['wertigkeit'] ?? null),
+            'anzahl_schuss' => $this->nullableInt($source['anzahl_schuss'] ?? null),
+            'anzahl_passen' => $this->nullableInt($source['anzahl_passen'] ?? null),
+            'preis' => $this->nullableDecimal($source['preis'] ?? null),
+            'verbindung' => $this->nullableString($source['verbindung'] ?? null),
+            'created_by_user_id' => $existing['created_by_user_id'] ?? $userId,
+            'updated_by_user_id' => $userId,
+        ];
+    }
+
+    private function validateStichData(array $data): array
+    {
+        $errors = [];
+
+        if ($data['name'] === '') {
+            $errors[] = 'Bitte gib einen Namen fuer den Stich ein.';
         }
 
         return $errors;

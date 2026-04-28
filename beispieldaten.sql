@@ -101,13 +101,13 @@ INSERT INTO schussdaten (
     schuss_zeit, mouche, x_koordinate, y_koordinate, in_time, time_since_change,
     sweep_direction, demonstration, match_index, stich_index, ins_del, total_art, gruppe,
     feuerart, log_event, log_typ, zeit_seit_jahresanfang, abloesung, waffe, position,
-    target_id, externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+    target_id, externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
 ) VALUES
-(1, 1, '1001', 9.80, 'Probe', '1', 98.00, 45.30, '2026-04-10 09:00:00', 1, 0.1250, -0.2450, 1, 12, 'left', 0, 1, 1, 0, 'Total', 'Gruppe A', 'Einzelfeuer', 'SHOT', 'INFO', 8640000, 'Abl. 1', 'Stgw 90', 'stehend', 'T-001', 'EXT-1001', 1, '2026-02-04 08:00:00', 1, '2026-02-04 08:00:00'),
-(2, 2, '1002', 9.50, 'Wertung', '2', 95.00, 62.10, '2026-06-20 10:15:00', 0, -0.3340, 0.1180, 1, 18, 'right', 0, 1, 2, 0, 'Total', 'Gruppe B', 'Serie', 'SHOT', 'INFO', 14774400, 'Abl. 2', 'Karabiner', 'kniend', 'T-002', 'EXT-1002', 2, '2026-02-04 08:10:00', 2, '2026-02-04 08:10:00'),
-(3, 3, '1003', 10.20, 'Wertung', '3', 102.00, 21.75, '2026-09-05 11:30:00', 1, 0.0520, 0.0410, 1, 9, 'left', 0, 2, 3, 0, 'Total', 'Gruppe C', 'Serie', 'SHOT', 'INFO', 21340800, 'Abl. 3', 'Freigewehr', 'liegend', 'T-003', 'EXT-1003', 3, '2026-02-04 08:20:00', 3, '2026-02-04 08:20:00'),
-(4, 4, '1004', 8.70, 'Final', '4', 87.00, 88.40, '2026-10-17 20:45:00', 0, -0.4410, -0.3890, 0, 25, 'right', 1, 2, 4, 0, 'Total', 'Gruppe D', 'Schnellfeuer', 'TIMEOUT', 'WARN', 25029900, 'Abl. 1', 'Pistole', 'stehend', 'T-004', 'EXT-1004', 4, '2026-02-04 08:30:00', 4, '2026-02-04 08:30:00'),
-(5, 5, '1005', 10.50, 'Final', '5', 105.00, 10.05, '2026-11-14 14:05:00', 1, 0.0100, -0.0150, 1, 6, 'left', 0, 3, 5, 0, 'Total', 'Gruppe E', 'Einzelfeuer', 'SHOT', 'INFO', 27453900, 'Abl. 2', 'Stgw 57', 'stehend', 'T-005', 'EXT-1005', 5, '2026-02-04 08:40:00', 5, '2026-02-04 08:40:00');
+(1, 1, '1001', 9.80, 'Probe', '1', 98.00, 45.30, '2026-04-10 09:00:00', 1, 0.1250, -0.2450, 1, 12, 'left', 0, 1, 1, 0, 'Total', 'Gruppe A', 'Einzelfeuer', 'SHOT', 'INFO', 8640000, 'Abl. 1', 'Stgw 90', 'stehend', 'T-001', 'EXT-1001', '1111111111111111111111111111111111111111111111111111111111111111', 1, '2026-02-04 08:00:00', 1, '2026-02-04 08:00:00'),
+(2, 2, '1002', 9.50, 'Wertung', '2', 95.00, 62.10, '2026-06-20 10:15:00', 0, -0.3340, 0.1180, 1, 18, 'right', 0, 1, 2, 0, 'Total', 'Gruppe B', 'Serie', 'SHOT', 'INFO', 14774400, 'Abl. 2', 'Karabiner', 'kniend', 'T-002', 'EXT-1002', '2222222222222222222222222222222222222222222222222222222222222222', 2, '2026-02-04 08:10:00', 2, '2026-02-04 08:10:00'),
+(3, 3, '1003', 10.20, 'Wertung', '3', 102.00, 21.75, '2026-09-05 11:30:00', 1, 0.0520, 0.0410, 1, 9, 'left', 0, 2, 3, 0, 'Total', 'Gruppe C', 'Serie', 'SHOT', 'INFO', 21340800, 'Abl. 3', 'Freigewehr', 'liegend', 'T-003', 'EXT-1003', '3333333333333333333333333333333333333333333333333333333333333333', 3, '2026-02-04 08:20:00', 3, '2026-02-04 08:20:00'),
+(4, 4, '1004', 8.70, 'Final', '4', 87.00, 88.40, '2026-10-17 20:45:00', 0, -0.4410, -0.3890, 0, 25, 'right', 1, 2, 4, 0, 'Total', 'Gruppe D', 'Schnellfeuer', 'TIMEOUT', 'WARN', 25029900, 'Abl. 1', 'Pistole', 'stehend', 'T-004', 'EXT-1004', '4444444444444444444444444444444444444444444444444444444444444444', 4, '2026-02-04 08:30:00', 4, '2026-02-04 08:30:00'),
+(5, 5, '1005', 10.50, 'Final', '5', 105.00, 10.05, '2026-11-14 14:05:00', 1, 0.0100, -0.0150, 1, 6, 'left', 0, 3, 5, 0, 'Total', 'Gruppe E', 'Einzelfeuer', 'SHOT', 'INFO', 27453900, 'Abl. 2', 'Stgw 57', 'stehend', 'T-005', 'EXT-1005', '5555555555555555555555555555555555555555555555555555555555555555', 5, '2026-02-04 08:40:00', 5, '2026-02-04 08:40:00');
 
 INSERT INTO user_remember_tokens (
     id, user_id, selector, validator_hash, expires_at, created_by_user_id, created_at,

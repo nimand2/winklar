@@ -54,7 +54,7 @@ final class ClientApiService
                 continue;
             }
 
-            $rows[] = [
+            $row = [
                 'id_anlass' => $anlassId,
                 'start_nr' => $this->stringValue($shot, 'StartNr'),
                 'primaerwertung' => $this->decimalValue($shot, 'Primaerwertung'),
@@ -87,6 +87,9 @@ final class ClientApiService
                 'created_by_user_id' => $userId,
                 'updated_by_user_id' => $userId,
             ];
+            $row['import_hash'] = $this->importHash($row);
+
+            $rows[] = $row;
         }
 
         return $this->schussdatenModel->createMany($rows);
@@ -134,5 +137,47 @@ final class ClientApiService
         }
 
         return date('Y-m-d H:i:s', $timestamp);
+    }
+
+    private function importHash(array $row): string
+    {
+        $fields = [
+            'id_anlass',
+            'start_nr',
+            'bahn_nr',
+            'schuss_zeit',
+            'match_index',
+            'stich_index',
+            'log_event',
+            'log_typ',
+            'zeit_seit_jahresanfang',
+            'target_id',
+            'primaerwertung',
+            'sekundaerwertung',
+            'teiler',
+            'x_koordinate',
+            'y_koordinate',
+        ];
+
+        $parts = [];
+        foreach ($fields as $field) {
+            $parts[] = $field . '=' . $this->hashValue($row, $field);
+        }
+
+        return hash('sha256', implode('|', $parts));
+    }
+
+    private function hashValue(array $row, string $field): string
+    {
+        $value = $row[$field] ?? null;
+        if ($value === null) {
+            return '<null>';
+        }
+
+        return match ($field) {
+            'primaerwertung', 'sekundaerwertung', 'teiler' => number_format((float) $value, 2, '.', ''),
+            'x_koordinate', 'y_koordinate' => number_format((float) $value, 4, '.', ''),
+            default => (string) $value,
+        };
     }
 }

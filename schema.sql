@@ -273,10 +273,12 @@ CREATE TABLE schussdaten (
     position VARCHAR(50) NULL,
     target_id VARCHAR(100) NULL,
     externe_nummer VARCHAR(100) NULL,
+    import_hash CHAR(64) NOT NULL,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_schussdaten_anlass_import_hash (id_anlass, import_hash),
     CONSTRAINT fk_schussdaten_anlass
         FOREIGN KEY (id_anlass) REFERENCES anlass(id)
         ON DELETE CASCADE,

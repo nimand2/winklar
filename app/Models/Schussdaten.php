@@ -16,7 +16,7 @@ final class Schussdaten
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
                     ins_del, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
-                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+                    externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
              ORDER BY schuss_zeit DESC, id DESC'
         );
@@ -34,19 +34,20 @@ final class Schussdaten
                 time_since_change, sweep_direction, demonstration, match_index, stich_index,
                 ins_del, total_art, gruppe, feuerart, log_event, log_typ,
                 zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
-                externe_nummer, created_by_user_id, updated_by_user_id
+                externe_nummer, import_hash, created_by_user_id, updated_by_user_id
              ) VALUES (
                 :id_anlass, :start_nr, :primaerwertung, :schussart, :bahn_nr, :sekundaerwertung,
                 :teiler, :schuss_zeit, :mouche, :x_koordinate, :y_koordinate, :in_time,
                 :time_since_change, :sweep_direction, :demonstration, :match_index, :stich_index,
                 :ins_del, :total_art, :gruppe, :feuerart, :log_event, :log_typ,
                 :zeit_seit_jahresanfang, :abloesung, :waffe, :position, :target_id,
-                :externe_nummer, :created_by_user_id, :updated_by_user_id
-             )'
+                :externe_nummer, :import_hash, :created_by_user_id, :updated_by_user_id
+             )
+             ON DUPLICATE KEY UPDATE id = id'
         );
         $statement->execute($this->buildPayload($data));
 
-        return (int) Database::connection()->lastInsertId();
+        return $statement->rowCount() > 0 ? (int) Database::connection()->lastInsertId() : 0;
     }
 
     public function createMany(array $rows): int
@@ -61,8 +62,9 @@ final class Schussdaten
 
         try {
             foreach ($rows as $row) {
-                $this->create($row);
-                $created++;
+                if ($this->create($row) > 0) {
+                    $created++;
+                }
             }
 
             $connection->commit();
@@ -82,7 +84,7 @@ final class Schussdaten
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
                     ins_del, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
-                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+                    externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
              WHERE id = :id
              LIMIT 1'
@@ -102,7 +104,7 @@ final class Schussdaten
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
                     ins_del, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
-                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+                    externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
              WHERE start_nr = :start_nr AND id_anlass = :id_anlass  
              ORDER BY schuss_zeit DESC'
@@ -120,7 +122,7 @@ final class Schussdaten
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
                     ins_del, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
-                    externe_nummer, created_by_user_id, created_at, updated_by_user_id, updated_at
+                    externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
              WHERE id_anlass = :id_anlass
              ORDER BY start_nr ASC, match_index ASC, stich_index ASC, schuss_zeit ASC, id ASC'
@@ -162,6 +164,7 @@ final class Schussdaten
             'position' => $data['position'] ?? null,
             'target_id' => $data['target_id'] ?? null,
             'externe_nummer' => $data['externe_nummer'] ?? null,
+            'import_hash' => $data['import_hash'],
             'created_by_user_id' => $data['created_by_user_id'] ?? null,
             'updated_by_user_id' => $data['updated_by_user_id'] ?? null,
         ];

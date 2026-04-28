@@ -243,7 +243,7 @@ Bei keinen neuen Schützen wird ein leeres Array zurückgegeben:
 
 Importiert eine Liste von SIUS-Schussdatensätzen für einen Anlass.
 
-Der Client sendet nur neu erkannte Schüsse. Duplikate werden clientseitig anhand von `LogEvent` und der kompletten CSV-Zeile reduziert. Serverseitig werden die empfangenen Schüsse ohne zusätzliche Duplikatprüfung eingefügt.
+Der Client sendet nur neu erkannte Schüsse. Zusätzlich verhindert der Server doppelte Einträge über einen Import-Hash aus den relevanten SIUS-Schussfeldern. Dadurch bleiben Daten auch dann eindeutig, wenn der Client neu gestartet wird und dieselbe Datei nochmals sendet.
 
 **Pfadparameter**
 
@@ -302,7 +302,7 @@ Der Server akzeptiert für `AnlassId` und `Shots` auch `anlassId` und `shots`. I
 }
 ```
 
-`imported` enthält die Anzahl erfolgreich eingefügter Datensätze.
+`imported` enthält die Anzahl neu eingefügter Datensätze. Bereits vorhandene Schüsse werden übersprungen und nicht mitgezählt.
 
 **Fehler `400 Bad Request`: Anlass passt nicht**
 

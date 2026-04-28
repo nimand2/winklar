@@ -390,7 +390,7 @@ namespace SiusClient
             if (!File.Exists(pfad))
                 return;
 
-            string[] alleZeilen = File.ReadAllLines(pfad, Encoding.UTF8);
+            string[] alleZeilen = File.ReadAllLines(pfad, Encoding.GetEncoding("ISO-8859-1"));
 
             if (alleZeilen.Length <= _letzteImportierteZeilenAnzahl)
                 return;
@@ -508,7 +508,7 @@ namespace SiusClient
 
             if (neueCsvZeilen.Count > 0)
             {
-                File.AppendAllLines(exportPfad, neueCsvZeilen, Encoding.UTF8);
+                File.AppendAllLines(exportPfad, neueCsvZeilen, Encoding.GetEncoding("ISO-8859-1"));
             }
 
             _anzahlSchuetzen += neueCsvZeilen.Count;

@@ -1,490 +1,491 @@
-# SIUS WebServer - Dokumentation für KI-Codegenerator
+# SIUS-Client Schnittstellendokumentation
 
-## Projekt-Übersicht
-- **Projekt-Name**: SiusClient WebServer
-- **Framework**: ASP.NET Web API (für .NET Framework 4.7.2)
-- **Zweck**: REST-API für Schießanlage-Verwaltung (Anlässe, Schützen, Schussdaten)
-- **Authentifizierung**: Token-basiert (Bearer Token)
+Diese Datei beschreibt die aktuell implementierte Schnittstelle zwischen dem Windows-Client (`client/Form1.cs`) und der Webapplikation.
 
----
+Die Dokumentation ist bewusst auf die Endpunkte beschränkt, die der Client wirklich nutzt. Es gibt aktuell keine generische CRUD-API für Anlässe, Schützen oder Schussdaten.
 
-## 1. Projektstruktur (zu generieren)
+## Überblick
 
+- **Client**: Windows Forms Anwendung in C#.
+- **Server**: PHP-Webapplikation mit JSON-API unter `/api/...`.
+- **Transport**: HTTP oder HTTPS.
+- **Datenformat**: JSON für API-Aufrufe, CSV für den lokalen SIUS-Dateiaustausch.
+- **Authentifizierung**: Bearer Token im HTTP-Header `Authorization`.
+- **Polling**: Der Client prüft alle 3 Sekunden die Importdatei und neue Schützen.
+
+## Ablauf im Client
+
+1. Benutzer gibt Server-Adresse, Benutzername, Passwort, Importdatei und Exportdatei ein.
+2. Client meldet sich mit `POST /api/login` am Server an.
+3. Server liefert ein Bearer Token.
+4. Client setzt `Authorization: Bearer <token>` für alle weiteren API-Aufrufe.
+5. Client lädt alle Anlässe über `GET /api/anlaesse`.
+6. Benutzer wählt einen Anlass.
+7. Client exportiert die Schützen dieses Anlasses in die lokale Export-CSV.
+8. Hintergrundprozess startet:
+   - neue SIUS-Schusszeilen aus der Import-CSV lesen,
+   - Schüsse an den Server senden,
+   - neue Schützen vom Server holen und an die Export-CSV anhängen.
+
+## Basis-URL
+
+Die Server-Adresse wird im Client eingegeben, zum Beispiel:
+
+```text
+https://example.ch
+http://localhost
 ```
-WebServerProject/
-├── Controllers/
-│   ├── AnlassController.cs
-│   ├── ScheuetzenController.cs
-│   ├── SchussdatenController.cs
-│   └── AuthController.cs
-├── Models/
-│   ├── Anlass.cs
-│   ├── Schuetze.cs
-│   ├── Schussdaten.cs
-│   ├── LoginRequest.cs
-│   └── ApiResponse.cs
-├── Services/
-│   └── TokenService.cs
-├── Web.config
-└── Global.asax.cs
-```
 
----
+Die Adresse muss mit `http://` oder `https://` beginnen. Der Client entfernt ein abschließendes `/` automatisch.
 
-## 2. Datenmodelle
+## Authentifizierung
 
-### 2.1 Anlass (Veranstaltung)
+### POST `/api/login`
+
+Meldet den Client an und gibt ein API-Token zurück.
+
+Dieser Endpunkt benötigt noch keinen Bearer Token.
+
+**Request**
+
 ```json
 {
-  "id": "int",
-  "name": "string",
-  "datum": "DateTime",
-  "beschreibung": "string",
-  "ort": "string"
+  "Username": "admin",
+  "Password": "secret"
 }
 ```
 
-### 2.2 Schütze
-```json
-{
-  "id": "int",
-  "schuetzennummer": "int",
-  "vorname": "string",
-  "nachname": "string",
-  "anlassId": "int"
-}
-```
+Der Server akzeptiert auch kleingeschriebene Feldnamen:
 
-### 2.3 Schussdaten
-```json
-{
-  "id": "long",
-  "schuetzennummer": "int",
-  "seriennummer": "string",
-  "schuss": "int",
-  "schussdatum": "DateTime",
-  "ergebnis": "int"
-}
-```
-
-### 2.4 Login Request
-```json
-{
-  "username": "string",
-  "password": "string"
-}
-```
-
-### 2.5 API Response (Standard)
-```json
-{
-  "success": "bool",
-  "message": "string",
-  "data": "object (optional)"
-}
-```
-
----
-
-## 3. API-Endpunkte
-
-### 3.1 Authentifizierung
-
-#### POST /api/auth/login
-**Beschreibung**: Benutzer authentifizieren und Token erhalten
-
-**Request**:
 ```json
 {
   "username": "admin",
-  "password": "password123"
+  "password": "secret"
 }
 ```
 
-**Response (200 OK)**:
+**Response `200 OK`**
+
 ```json
 {
-  "success": true,
-  "message": "Login erfolgreich",
-  "data": {
-    "token": "eyJhbGc...",
-    "expiresIn": 3600
-  }
+  "token": "base64urlPayload.hmacSignature",
+  "expiresIn": 604800
 }
 ```
 
-**Error Response (401 Unauthorized)**:
-```json
-{
-  "success": false,
-  "message": "Ungültige Anmeldedaten"
-}
-```
+`expiresIn` ist die Gültigkeit in Sekunden. Aktuell sind das 7 Tage.
 
----
+**Fehler `400 Bad Request`**
 
-### 3.2 Anlässe (Veranstaltungen)
-
-#### GET /api/anlass
-**Beschreibung**: Alle Anlässe auflisten
-**Authentifizierung**: Erforderlich (Bearer Token)
-**Response (200 OK)**: Array von Anlass-Objekten
-
-#### GET /api/anlass/{id}
-**Beschreibung**: Details eines Anlasses abrufen
-**Authentifizierung**: Erforderlich
-**Parameter**: id (int)
-**Response (200 OK)**: Anlass-Objekt
-
-#### POST /api/anlass
-**Beschreibung**: Neuen Anlass anlegen
-**Authentifizierung**: Erforderlich
-**Request Body**:
-```json
-{
-  "name": "Landesmeisterschaft 2024",
-  "datum": "2024-06-15T10:00:00",
-  "beschreibung": "Landesmeisterschaft im Schießsport",
-  "ort": "Schützenplatz München"
-}
-```
-**Response (201 Created)**: Neu erstelltes Anlass-Objekt
-
-#### PUT /api/anlass/{id}
-**Beschreibung**: Anlass aktualisieren
-**Authentifizierung**: Erforderlich
-**Request Body**: Anlass-Objekt mit aktualisierten Werten
-**Response (200 OK)**: Aktualisiertes Anlass-Objekt
-
-#### DELETE /api/anlass/{id}
-**Beschreibung**: Anlass löschen
-**Authentifizierung**: Erforderlich
-**Response (204 No Content)**
-
----
-
-### 3.3 Schützen
-
-#### GET /api/schuetze?anlassId={id}
-**Beschreibung**: Schützen für einen Anlass auflisten
-**Authentifizierung**: Erforderlich
-**Query-Parameter**: anlassId (int)
-**Response (200 OK)**: Array von Schütze-Objekten
-
-#### GET /api/schuetze/{id}
-**Beschreibung**: Details eines Schützen abrufen
-**Authentifizierung**: Erforderlich
-**Response (200 OK)**: Schütze-Objekt
-
-#### POST /api/schuetze
-**Beschreibung**: Neuen Schützen anlegen
-**Authentifizierung**: Erforderlich
-**Request Body**:
-```json
-{
-  "schuetzennummer": 1,
-  "vorname": "Max",
-  "nachname": "Mustermann",
-  "anlassId": 1
-}
-```
-**Response (201 Created)**: Neu erstellter Schütze
-
-#### PUT /api/schuetze/{id}
-**Beschreibung**: Schütze aktualisieren
-**Authentifizierung**: Erforderlich
-**Response (200 OK)**: Aktualisierter Schütze
-
-#### DELETE /api/schuetze/{id}
-**Beschreibung**: Schützen löschen
-**Authentifizierung**: Erforderlich
-**Response (204 No Content)**
-
----
-
-### 3.4 Schussdaten
-
-#### GET /api/schussdaten?schuetzennummer={num}&anlassId={id}
-**Beschreibung**: Schussdaten abrufen (optional gefiltert)
-**Authentifizierung**: Erforderlich
-**Query-Parameter**: schuetzennummer (optional), anlassId (optional)
-**Response (200 OK)**: Array von Schussdaten-Objekten
-
-#### GET /api/schussdaten/{id}
-**Beschreibung**: Einzelne Schussdaten abrufen
-**Authentifizierung**: Erforderlich
-**Response (200 OK)**: Schussdaten-Objekt
-
-#### POST /api/schussdaten
-**Beschreibung**: Neue Schussdaten hinzufügen (Batch-Import möglich)
-**Authentifizierung**: Erforderlich
-**Request Body (Single)**:
-```json
-{
-  "schuetzennummer": 1,
-  "seriennummer": "SN001",
-  "schuss": 1,
-  "schussdatum": "2024-06-15T10:30:00",
-  "ergebnis": 10
-}
-```
-
-**Request Body (Batch - Array)**:
-```json
-[
-  {
-    "schuetzennummer": 1,
-    "seriennummer": "SN001",
-    "schuss": 1,
-    "schussdatum": "2024-06-15T10:30:00",
-    "ergebnis": 10
-  },
-  {
-    "schuetzennummer": 1,
-    "seriennummer": "SN001",
-    "schuss": 2,
-    "schussdatum": "2024-06-15T10:31:00",
-    "ergebnis": 9
-  }
-]
-```
-
-**Response (201 Created)**: Neu erstellte Schussdaten / Array von Objekten
-
-#### PUT /api/schussdaten/{id}
-**Beschreibung**: Schussdaten aktualisieren
-**Authentifizierung**: Erforderlich
-**Response (200 OK)**: Aktualisierte Schussdaten
-
-#### DELETE /api/schussdaten/{id}
-**Beschreibung**: Schussdaten löschen
-**Authentifizierung**: Erforderlich
-**Response (204 No Content)**
-
----
-
-## 4. Authentifizierung & Autorisierung
-
-### Header-Format
-```
-Authorization: Bearer <token>
-```
-
-### Token-Eigenschaften
-- **Typ**: JWT (JSON Web Token)
-- **Ablaufzeit**: 1 Stunde (3600 Sekunden)
-- **Algorithmus**: HS256
-
-### Beispiel Bearer Token Header
-```
-GET /api/anlass HTTP/1.1
-Host: localhost:5000
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
----
-
-## 5. HTTP Status Codes
-
-| Code | Beschreibung |
-|------|-------------|
-| 200 | OK - Anfrage erfolgreich |
-| 201 | Created - Ressource erstellt |
-| 204 | No Content - Erfolgreich gelöscht |
-| 400 | Bad Request - Ungültige Anfrage |
-| 401 | Unauthorized - Authentifizierung erforderlich |
-| 403 | Forbidden - Zugriff verweigert |
-| 404 | Not Found - Ressource nicht gefunden |
-| 409 | Conflict - Datenkonflikt (z.B. Duplikat) |
-| 500 | Internal Server Error - Serverfehler |
-
----
-
-## 6. Fehlerbehandlung
-
-### Standard-Fehler-Response
 ```json
 {
   "success": false,
-  "message": "Beschreibung des Fehlers",
-  "errorCode": "ERROR_CODE"
-}
-```
-
-### Häufige Fehler
-
-**Anlass nicht gefunden**:
-```json
-{
-  "success": false,
-  "message": "Anlass mit ID 999 nicht gefunden",
-  "errorCode": "ANLASS_NOT_FOUND"
-}
-```
-
-**Ungültige Eingabedaten**:
-```json
-{
-  "success": false,
-  "message": "Schützennummer muss eine positive Ganzzahl sein",
+  "message": "Benutzername und Passwort sind erforderlich.",
   "errorCode": "INVALID_INPUT"
 }
 ```
 
-**Duplikat-Eintrag**:
+**Fehler `401 Unauthorized`**
+
 ```json
 {
   "success": false,
-  "message": "Schütze mit Nummer 1 existiert bereits in diesem Anlass",
-  "errorCode": "DUPLICATE_ENTRY"
+  "message": "Ungueltige Anmeldedaten.",
+  "errorCode": "INVALID_CREDENTIALS"
 }
 ```
 
----
+## Header für geschützte Endpunkte
 
-## 7. Validierungsregeln
+Alle folgenden Endpunkte benötigen:
 
-### Anlass
-- name: erforderlich, max. 200 Zeichen
-- datum: erforderlich, zukunftsdatum
-- beschreibung: optional, max. 1000 Zeichen
-- ort: erforderlich, max. 200 Zeichen
-
-### Schütze
-- schuetzennummer: erforderlich, positive Ganzzahl, eindeutig pro Anlass
-- vorname: erforderlich, max. 100 Zeichen
-- nachname: erforderlich, max. 100 Zeichen
-- anlassId: erforderlich, muss existierender Anlass sein
-
-### Schussdaten
-- schuetzennummer: erforderlich, positive Ganzzahl
-- seriennummer: erforderlich, max. 50 Zeichen
-- schuss: erforderlich, positive Ganzzahl
-- schussdatum: erforderlich, keine zukünftigen Daten
-- ergebnis: erforderlich, 0-10 Punkte
-
----
-
-## 8. Datenbankschema
-
-```sql
-CREATE TABLE Anlass (
-  id INT PRIMARY KEY IDENTITY(1,1),
-  name NVARCHAR(200) NOT NULL,
-  datum DATETIME NOT NULL,
-  beschreibung NVARCHAR(1000),
-  ort NVARCHAR(200) NOT NULL
-);
-
-CREATE TABLE Schuetze (
-  id INT PRIMARY KEY IDENTITY(1,1),
-  schuetzennummer INT NOT NULL,
-  vorname NVARCHAR(100) NOT NULL,
-  nachname NVARCHAR(100) NOT NULL,
-  anlassId INT NOT NULL,
-  FOREIGN KEY (anlassId) REFERENCES Anlass(id),
-  UNIQUE (schuetzennummer, anlassId)
-);
-
-CREATE TABLE Schussdaten (
-  id BIGINT PRIMARY KEY IDENTITY(1,1),
-  schuetzennummer INT NOT NULL,
-  seriennummer NVARCHAR(50) NOT NULL,
-  schuss INT NOT NULL,
-  schussdatum DATETIME NOT NULL,
-  ergebnis INT NOT NULL,
-  CHECK (ergebnis >= 0 AND ergebnis <= 10)
-);
-
-CREATE TABLE Benutzer (
-  id INT PRIMARY KEY IDENTITY(1,1),
-  username NVARCHAR(100) NOT NULL UNIQUE,
-  passwordHash NVARCHAR(MAX) NOT NULL
-);
+```http
+Authorization: Bearer <token>
+Accept: application/json
 ```
 
----
+JSON-Requests verwenden zusätzlich:
 
-## 9. CORS-Konfiguration
-
-**Erlaubte Origins**:
-- http://localhost:3000
-- http://localhost:5000
-
-**Erlaubte Methoden**: GET, POST, PUT, DELETE, OPTIONS
-
-**Erlaubte Header**: Content-Type, Authorization
-
----
-
-## 10. Logging & Monitoring
-
-- Alle API-Calls protokollieren (Timestamp, Benutzer, Methode, Pfad, Status)
-- Performance-Metriken erfassen (Response-Zeit)
-- Fehler in Error-Log speichern
-
----
-
-## 11. Konfiguration (Web.config)
-
-```xml
-<configuration>
-  <appSettings>
-    <add key="JwtSecret" value="your-secret-key-min-32-chars"/>
-    <add key="JwtExpireMinutes" value="60"/>
-    <add key="DatabaseConnectionString" value="Server=localhost;Database=SiusDB;..."/>
-  </appSettings>
-  <system.webServer>
-    <httpProtocol>
-      <customHeaders>
-        <add name="X-Content-Type-Options" value="nosniff"/>
-      </customHeaders>
-    </httpProtocol>
-  </system.webServer>
-</configuration>
+```http
+Content-Type: application/json; charset=utf-8
 ```
 
----
+Wenn der Token fehlt, ungültig oder abgelaufen ist, antwortet der Server mit:
 
-## 12. Verwendungsbeispiele (cURL)
+```json
+{
+  "success": false,
+  "message": "Authentifizierung erforderlich.",
+  "errorCode": "UNAUTHORIZED"
+}
+```
+
+## Anlässe
+
+### GET `/api/anlaesse`
+
+Lädt alle Anlässe für die Auswahl im Client.
+
+**Response `200 OK`**
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Feldschiessen 2026"
+  }
+]
+```
+
+**Felder**
+
+| Feld | Typ | Beschreibung |
+| --- | --- | --- |
+| `id` | int | ID des Anlasses aus der Datenbank. |
+| `name` | string | Anzeigename des Anlasses. |
+
+## Schützenexport
+
+### GET `/api/anlaesse/{id}/shooters`
+
+Lädt alle Schützen beziehungsweise Standblätter eines Anlasses. Der Client schreibt daraus die lokale Export-CSV für SIUS.
+
+**Pfadparameter**
+
+| Parameter | Typ | Beschreibung |
+| --- | --- | --- |
+| `id` | int | Anlass-ID. |
+
+**Response `200 OK`**
+
+```json
+[
+  {
+    "id": 12,
+    "startnummer": 12,
+    "name": "Muster",
+    "vorname": "Max",
+    "verein": "Schützenverein Beispiel",
+    "bahn": 0,
+    "abloesung": 0,
+    "aktiv": true
+  }
+]
+```
+
+**Felder**
+
+| Feld | Typ | Beschreibung |
+| --- | --- | --- |
+| `id` | int | ID des Standblatts. |
+| `startnummer` | int | Startnummer für SIUS. Aktuell identisch mit der Standblatt-ID. |
+| `name` | string | Nachname. |
+| `vorname` | string | Vorname. |
+| `verein` | string | Verein/Zusatz/Firmenanrede aus der Adresse. |
+| `bahn` | int | Aktuell immer `0`. |
+| `abloesung` | int | Aktuell immer `0`. |
+| `aktiv` | bool | Aktuell immer `true`. |
+
+**Fehler `400 Bad Request`**
+
+```json
+{
+  "success": false,
+  "message": "Ungueltiger Anlass.",
+  "errorCode": "INVALID_ANLASS"
+}
+```
+
+## Neue Schützen
+
+### GET `/api/anlaesse/{id}/shooters/new?sinceId={lastId}`
+
+Lädt nur Schützen/Standblätter, deren ID größer als `sinceId` ist. Der Client nutzt diesen Endpunkt im Hintergrund und hängt neue Zeilen an die Export-CSV an.
+
+**Pfadparameter**
+
+| Parameter | Typ | Beschreibung |
+| --- | --- | --- |
+| `id` | int | Anlass-ID. |
+
+**Queryparameter**
+
+| Parameter | Typ | Beschreibung |
+| --- | --- | --- |
+| `sinceId` | int | Letzte bereits bekannte Standblatt-ID. Fehlt der Parameter, wird `0` verwendet. |
+
+**Response `200 OK`**
+
+```json
+[
+  {
+    "id": 13,
+    "startnummer": 13,
+    "name": "Beispiel",
+    "vorname": "Erika",
+    "verein": "",
+    "bahn": 0,
+    "abloesung": 0,
+    "aktiv": true
+  }
+]
+```
+
+Bei keinen neuen Schützen wird ein leeres Array zurückgegeben:
+
+```json
+[]
+```
+
+## Schussimport
+
+### POST `/api/anlaesse/{id}/shots/import`
+
+Importiert eine Liste von SIUS-Schussdatensätzen für einen Anlass.
+
+Der Client sendet nur neu erkannte Schüsse. Duplikate werden clientseitig anhand von `LogEvent` und der kompletten CSV-Zeile reduziert. Serverseitig werden die empfangenen Schüsse ohne zusätzliche Duplikatprüfung eingefügt.
+
+**Pfadparameter**
+
+| Parameter | Typ | Beschreibung |
+| --- | --- | --- |
+| `id` | int | Anlass-ID. |
+
+**Request**
+
+```json
+{
+  "AnlassId": 1,
+  "Shots": [
+    {
+      "StartNr": 12,
+      "Primaerwertung": 10.4,
+      "Schussart": 0,
+      "BahnNr": 3,
+      "Sekundaerwertung": 10,
+      "Teiler": 123,
+      "Zeit": "2026-04-28 14:30:15",
+      "Mouche": 1,
+      "X": 0.12,
+      "Y": -0.34,
+      "InTime": 1,
+      "TimeSinceChange": 2.5,
+      "SweepDirection": 0,
+      "Demonstration": 0,
+      "Match": 1,
+      "Stich": 1,
+      "InsDel": 0,
+      "TotalArt": 0,
+      "Gruppe": 0,
+      "Feuerart": 0,
+      "LogEvent": 123456,
+      "LogTyp": 1,
+      "ZeitSeitJahresbeginn": 102030,
+      "Abloesung": 0,
+      "Waffe": 0,
+      "Position": 0,
+      "TargetId": 3,
+      "ExterneNummer": 0
+    }
+  ]
+}
+```
+
+Der Server akzeptiert für `AnlassId` und `Shots` auch `anlassId` und `shots`. Innerhalb eines Schusses akzeptiert der Server die gezeigten PascalCase-Feldnamen und zusätzlich die Variante mit kleinem Anfangsbuchstaben, zum Beispiel `startNr`.
+
+**Response `201 Created`**
+
+```json
+{
+  "success": true,
+  "imported": 1
+}
+```
+
+`imported` enthält die Anzahl erfolgreich eingefügter Datensätze.
+
+**Fehler `400 Bad Request`: Anlass passt nicht**
+
+```json
+{
+  "success": false,
+  "message": "Ungueltiger Anlass.",
+  "errorCode": "INVALID_ANLASS"
+}
+```
+
+Dieser Fehler tritt auf, wenn die Anlass-ID im Pfad ungültig ist oder `AnlassId` im Body gesetzt ist und nicht zur Pfad-ID passt.
+
+**Fehler `400 Bad Request`: Shots ist kein Array**
+
+```json
+{
+  "success": false,
+  "message": "Shots muss ein Array sein.",
+  "errorCode": "INVALID_INPUT"
+}
+```
+
+**Fehler `500 Internal Server Error`**
+
+```json
+{
+  "success": false,
+  "message": "Schussdaten konnten nicht importiert werden.",
+  "errorCode": "IMPORT_FAILED"
+}
+```
+
+## SIUS-CSV Importdatei
+
+Der Client liest die Importdatei mit `ISO-8859-1` und erwartet Semikolon als Trennzeichen.
+
+Eine gültige Schusszeile muss mindestens 28 Felder haben. Zusätzliche Felder werden ignoriert.
+
+**Reihenfolge der Felder**
+
+| Position | JSON-Feld | Typ |
+| --- | --- | --- |
+| 1 | `StartNr` | int |
+| 2 | `Primaerwertung` | decimal |
+| 3 | `Schussart` | int |
+| 4 | `BahnNr` | int |
+| 5 | `Sekundaerwertung` | decimal |
+| 6 | `Teiler` | int |
+| 7 | `Zeit` | string |
+| 8 | `Mouche` | int |
+| 9 | `X` | decimal |
+| 10 | `Y` | decimal |
+| 11 | `InTime` | int |
+| 12 | `TimeSinceChange` | decimal |
+| 13 | `SweepDirection` | int |
+| 14 | `Demonstration` | int |
+| 15 | `Match` | int |
+| 16 | `Stich` | int |
+| 17 | `InsDel` | int |
+| 18 | `TotalArt` | int |
+| 19 | `Gruppe` | int |
+| 20 | `Feuerart` | int |
+| 21 | `LogEvent` | long |
+| 22 | `LogTyp` | int |
+| 23 | `ZeitSeitJahresbeginn` | long |
+| 24 | `Abloesung` | int |
+| 25 | `Waffe` | int |
+| 26 | `Position` | int |
+| 27 | `TargetId` | int |
+| 28 | `ExterneNummer` | int |
+
+Dezimalwerte dürfen in der CSV ein Komma oder einen Punkt verwenden. Der Client normalisiert Kommas vor dem JSON-Versand zu Punkten.
+
+## SIUS-CSV Exportdatei
+
+Der Client schreibt beim Auswählen eines Anlasses die komplette Schützenliste in die Exportdatei.
+
+**Header**
+
+```csv
+Id;Startnummer;Name;Vorname;Verein;Bahn;Abloesung;Aktiv
+```
+
+**Beispiel**
+
+```csv
+Id;Startnummer;Name;Vorname;Verein;Bahn;Abloesung;Aktiv
+12;12;Muster;Max;Schützenverein Beispiel;0;0;1
+```
+
+Beim initialen Export schreibt der Client UTF-8. Beim Anhängen neuer Schützen verwendet der aktuelle Client `ISO-8859-1`.
+
+Semikolons in Textfeldern werden durch Kommas ersetzt.
+
+## Datenzuordnung auf dem Server
+
+Beim Schussimport werden die JSON-Felder in die Tabelle `schussdaten` übertragen.
+
+| JSON-Feld | Datenbankfeld |
+| --- | --- |
+| `AnlassId` oder Pfad-ID | `id_anlass` |
+| `StartNr` | `start_nr` |
+| `Primaerwertung` | `primaerwertung` |
+| `Schussart` | `schussart` |
+| `BahnNr` | `bahn_nr` |
+| `Sekundaerwertung` | `sekundaerwertung` |
+| `Teiler` | `teiler` |
+| `Zeit` | `schuss_zeit` |
+| `Mouche` | `mouche` |
+| `X` | `x_koordinate` |
+| `Y` | `y_koordinate` |
+| `InTime` | `in_time` |
+| `TimeSinceChange` | `time_since_change` |
+| `SweepDirection` | `sweep_direction` |
+| `Demonstration` | `demonstration` |
+| `Match` | `match_index` |
+| `Stich` | `stich_index` |
+| `InsDel` | `ins_del` |
+| `TotalArt` | `total_art` |
+| `Gruppe` | `gruppe` |
+| `Feuerart` | `feuerart` |
+| `LogEvent` | `log_event` |
+| `LogTyp` | `log_typ` |
+| `ZeitSeitJahresbeginn` | `zeit_seit_jahresanfang` |
+| `Abloesung` | `abloesung` |
+| `Waffe` | `waffe` |
+| `Position` | `position` |
+| `TargetId` | `target_id` |
+| `ExterneNummer` | `externe_nummer` |
+
+`created_by_user_id` und `updated_by_user_id` werden aus dem angemeldeten API-Benutzer gesetzt.
+
+## Implementierte Routen
+
+Aktuell sind für den SIUS-Client diese API-Routen registriert:
+
+| Methode | Route | Zweck |
+| --- | --- | --- |
+| POST | `/api/login` | Login und Tokenausgabe |
+| GET | `/api/anlaesse` | Anlassliste |
+| GET | `/api/anlaesse/{id}/shooters` | Alle Schützen eines Anlasses |
+| GET | `/api/anlaesse/{id}/shooters/new?sinceId=...` | Neue Schützen seit letzter ID |
+| POST | `/api/anlaesse/{id}/shots/import` | Schussdaten importieren |
+
+Nicht implementiert sind zum Beispiel:
+
+- `POST /api/auth/login`
+- `GET /api/anlass`
+- `POST /api/anlass`
+- `GET /api/schuetze`
+- `GET /api/schussdaten`
+- `PUT`- oder `DELETE`-Endpunkte für diese API
+
+## Beispiel mit curl
 
 ### Login
+
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST http://localhost/api/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"password123"}'
+  -d '{"Username":"admin","Password":"secret"}'
 ```
 
-### Alle Anlässe abrufen
+### Anlässe laden
+
 ```bash
-curl -X GET http://localhost:5000/api/anlass \
-  -H "Authorization: Bearer YOUR_TOKEN"
+curl http://localhost/api/anlaesse \
+  -H "Authorization: Bearer TOKEN"
 ```
 
-### Neuen Anlass erstellen
+### Schützen laden
+
 ```bash
-curl -X POST http://localhost:5000/api/anlass \
+curl http://localhost/api/anlaesse/1/shooters \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### Schüsse importieren
+
+```bash
+curl -X POST http://localhost/api/anlaesse/1/shots/import \
+  -H "Authorization: Bearer TOKEN" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{
-    "name":"Landesmeisterschaft 2024",
-    "datum":"2024-06-15T10:00:00",
-    "beschreibung":"Landesmeisterschaft",
-    "ort":"Schützenplatz München"
-  }'
+  -d '{"AnlassId":1,"Shots":[{"StartNr":12,"Primaerwertung":10.4,"Schussart":0,"BahnNr":3,"Sekundaerwertung":10,"Teiler":123,"Zeit":"2026-04-28 14:30:15","Mouche":1,"X":0.12,"Y":-0.34,"InTime":1,"TimeSinceChange":2.5,"SweepDirection":0,"Demonstration":0,"Match":1,"Stich":1,"InsDel":0,"TotalArt":0,"Gruppe":0,"Feuerart":0,"LogEvent":123456,"LogTyp":1,"ZeitSeitJahresbeginn":102030,"Abloesung":0,"Waffe":0,"Position":0,"TargetId":3,"ExterneNummer":0}]}'
 ```
-
-### Schussdaten batch-importieren
-```bash
-curl -X POST http://localhost:5000/api/schussdaten \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '[
-    {"schuetzennummer":1,"seriennummer":"SN001","schuss":1,"schussdatum":"2024-06-15T10:30:00","ergebnis":10},
-    {"schuetzennummer":1,"seriennummer":"SN001","schuss":2,"schussdatum":"2024-06-15T10:31:00","ergebnis":9}
-  ]'
-```
-
----
-
-Diese Dokumentation enthält **alles**, was eine KI benötigt, um einen lauffähigen WebServer zu generieren!

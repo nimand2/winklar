@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<int, array<string, mixed>> $gaben */
+/** @var array<int, array<string, mixed>> $stiche */
+/** @var array<int, array<string, mixed>> $regeln */
+
 $anlassId = (int) $anlass['id'];
 $gaben = $gaben ?? [];
 $stiche = $stiche ?? [];
@@ -36,27 +41,6 @@ $regeln = $regeln ?? [];
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
                                     Zurueck zum Anlass
                                 </a>
-                            </div>
-                        </div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-12 col-md-4">
-                                <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Kurzname</div>
-                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($anlass['shortname_anlass'] ?: 'Kein Kurzname')) ?></div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Start</div>
-                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($anlass['start_anlass'] ?: 'Nicht gesetzt')) ?></div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Ende</div>
-                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($anlass['end_anlass'] ?: 'Nicht gesetzt')) ?></div>
-                                </div>
                             </div>
                         </div>
 

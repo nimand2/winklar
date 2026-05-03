@@ -15,6 +15,9 @@ final class KassenService
     ) {
     }
 
+    /**
+     * Berechnet Einnahmen, Gabenwerte und Detailzeilen fuer die Kassenansicht.
+     */
     public function buildAbrechnung(int $anlassId): array
     {
         $standblaetter = $this->standblattModel->findForAnlassWithAdresse($anlassId);
@@ -77,6 +80,9 @@ final class KassenService
         ];
     }
 
+    /**
+     * Normalisiert optionale Zahlenwerte aus Datenbankfeldern.
+     */
     private function numericValue(mixed $value): float
     {
         if ($value === null || $value === '') {

@@ -19,17 +19,26 @@ final class AuthService
     ) {
     }
 
+    /**
+     * Initialisiert die Session und versucht eine automatische Remember-Me-Anmeldung.
+     */
     public function boot(): void
     {
         Session::start();
         $this->attemptRememberMeLogin();
     }
 
+    /**
+     * Prueft, ob in der aktuellen Session ein Benutzer angemeldet ist.
+     */
     public function isLoggedIn(): bool
     {
         return isset($_SESSION['user_id']) && is_int($_SESSION['user_id']);
     }
 
+    /**
+     * Liefert den aktuellen Benutzer aus Session oder Datenbank.
+     */
     public function currentUser(): ?array
     {
         if (!$this->isLoggedIn()) {
@@ -46,6 +55,9 @@ final class AuthService
         return $this->currentUser;
     }
 
+    /**
+     * Erzwingt eine Anmeldung und leitet sonst zur Login-Seite weiter.
+     */
     public function requireUser(): array
     {
         $user = $this->currentUser();
@@ -59,11 +71,17 @@ final class AuthService
         Response::redirect('/login');
     }
 
+    /**
+     * Sucht einen Benutzer anhand von Benutzername oder E-Mail-Adresse.
+     */
     public function findUserByLogin(string $login): ?array
     {
         return $this->userModel->findByLogin($login);
     }
 
+    /**
+     * Prueft Login-Daten und startet bei Erfolg die Benutzersession.
+     */
     public function attemptLogin(string $login, string $password, bool $rememberMe = false): bool
     {
         $user = $this->findUserByLogin($login);
@@ -77,6 +95,9 @@ final class AuthService
         return true;
     }
 
+    /**
+     * Meldet einen bekannten Benutzer an und verwaltet optional Remember-Me.
+     */
     public function loginUser(array $user, bool $rememberMe = false): void
     {
         $this->finalizeLogin($user);
@@ -95,6 +116,9 @@ final class AuthService
         $this->clearRememberMeCookie();
     }
 
+    /**
+     * Beendet die Session und entfernt vorhandene Remember-Me-Tokens.
+     */
     public function logout(): void
     {
         $selector = $this->rememberMeSelectorFromCookie();
@@ -108,6 +132,9 @@ final class AuthService
         Session::destroy();
     }
 
+    /**
+     * Validiert das Remember-Me-Cookie und rotiert den Token bei Erfolg.
+     */
     public function attemptRememberMeLogin(): void
     {
         if ($this->isLoggedIn() || empty($_COOKIE[REMEMBER_ME_COOKIE])) {
@@ -157,6 +184,9 @@ final class AuthService
         $this->createRememberMeToken((int) $token['user_id_real']);
     }
 
+    /**
+     * Schreibt die minimalen Benutzerdaten in Session und lokalen Cache.
+     */
     private function finalizeLogin(array $user): void
     {
         Session::regenerate();
@@ -169,6 +199,9 @@ final class AuthService
         ];
     }
 
+    /**
+     * Erstellt ein neues Remember-Me-Tokenpaar und speichert es als Cookie.
+     */
     private function createRememberMeToken(int $userId): void
     {
         $selector = bin2hex(random_bytes(12));
@@ -180,6 +213,9 @@ final class AuthService
         $this->setRememberMeCookie($selector, $validator);
     }
 
+    /**
+     * Liest den Selector-Anteil aus dem Remember-Me-Cookie.
+     */
     private function rememberMeSelectorFromCookie(): ?string
     {
         if (empty($_COOKIE[REMEMBER_ME_COOKIE])) {
@@ -191,6 +227,9 @@ final class AuthService
         return $selector !== '' ? $selector : null;
     }
 
+    /**
+     * Setzt das Remember-Me-Cookie mit Selector und Validator.
+     */
     private function setRememberMeCookie(string $selector, string $validator): void
     {
         setcookie(
@@ -207,6 +246,9 @@ final class AuthService
         );
     }
 
+    /**
+     * Entfernt das Remember-Me-Cookie aus Browser und Request-Kontext.
+     */
     private function clearRememberMeCookie(): void
     {
         setcookie(

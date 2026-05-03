@@ -4,12 +4,25 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed>|null $anlass */
+/** @var array<int, array<string, mixed>> $adressen */
 $anlass = $anlass ?? null;
-$hasAnlass = is_array($anlass);
-$anlassId = $hasAnlass ? (int) $anlass['id'] : null;
-$basePath = $hasAnlass ? '/anlass/' . $anlassId . '/schuetzen' : '/schuetzen';
+$adressen = $adressen ?? [];
 $errors = $errors ?? [];
 $query = trim((string) ($query ?? ''));
+
+if (is_array($anlass)) {
+    $anlassId = (int) $anlass['id'];
+    $basePath = '/anlass/' . $anlassId . '/schuetzen';
+    $contextLabel = (string) $anlass['name_anlass'];
+    $backPath = '/anlass/' . $anlassId;
+    $backLabel = 'Zurück zum Anlass';
+} else {
+    $basePath = '/schuetzen';
+    $contextLabel = 'Globale Personenverwaltung';
+    $backPath = '/dashboard';
+    $backLabel = 'Zurück zum Dashboard';
+}
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -27,7 +40,7 @@ $query = trim((string) ($query ?? ''));
                                 <div class="brand-badge mb-3">Adressverwaltung</div>
                                 <h1 class="h2 mb-2">Schützen verwalten</h1>
                                 <p class="muted-copy mb-0">
-                                    <?= $hasAnlass ? htmlspecialchars((string) $anlass['name_anlass']) : 'Globale Personenverwaltung' ?>
+                                    <?= htmlspecialchars($contextLabel) ?>
                                 </p>
                             </div>
 
@@ -35,8 +48,8 @@ $query = trim((string) ($query ?? ''));
                                 <a href="<?= htmlspecialchars(Url::app($basePath . '/neu')) ?>" class="btn btn-primary">
                                     Neuer Schütz
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app($hasAnlass ? '/anlass/' . $anlassId : '/dashboard')) ?>" class="btn btn-outline-secondary">
-                                    <?= $hasAnlass ? 'Zurück zum Anlass' : 'Zurück zum Dashboard' ?>
+                                <a href="<?= htmlspecialchars(Url::app($backPath)) ?>" class="btn btn-outline-secondary">
+                                    <?= htmlspecialchars($backLabel) ?>
                                 </a>
                             </div>
                         </div>

@@ -22,6 +22,9 @@ final class ClientApiController extends Controller
     ) {
     }
 
+    /**
+     * Authentifiziert externe Clients und liefert einen Bearer-Token.
+     */
     public function login(): void
     {
         $payload = $this->jsonPayload();
@@ -45,6 +48,9 @@ final class ClientApiController extends Controller
         ]);
     }
 
+    /**
+     * Liefert alle Anlaesse fuer authentifizierte API-Clients.
+     */
     public function anlaesse(): void
     {
         if (!$this->requireApiUser()) {
@@ -54,6 +60,9 @@ final class ClientApiController extends Controller
         JsonResponse::send($this->clientApiService->listAnlaesse());
     }
 
+    /**
+     * Liefert alle Schuetzen beziehungsweise Standblaetter eines Anlasses.
+     */
     public function shooters(array $params): void
     {
         if (!$this->requireApiUser()) {
@@ -69,6 +78,9 @@ final class ClientApiController extends Controller
         JsonResponse::send($this->clientApiService->listShooters($anlassId));
     }
 
+    /**
+     * Liefert nur seit einer Start-ID neu hinzugekommene Schuetzen.
+     */
     public function newShooters(array $params): void
     {
         if (!$this->requireApiUser()) {
@@ -86,6 +98,9 @@ final class ClientApiController extends Controller
         JsonResponse::send($this->clientApiService->listShooters($anlassId, $sinceId));
     }
 
+    /**
+     * Importiert Schussdaten eines Clients fuer einen Anlass.
+     */
     public function importShots(array $params): void
     {
         $user = $this->requireApiUser();
@@ -121,6 +136,9 @@ final class ClientApiController extends Controller
         ], 201);
     }
 
+    /**
+     * Validiert den Bearer-Token und liefert den zugehoerigen Benutzer.
+     */
     private function requireApiUser(): ?array
     {
         $userId = $this->tokenService->userIdFromAuthorizationHeader($this->authorizationHeader());
@@ -138,6 +156,9 @@ final class ClientApiController extends Controller
         return $user;
     }
 
+    /**
+     * Liest den JSON-Requestbody als Array.
+     */
     private function jsonPayload(): array
     {
         $rawBody = file_get_contents('php://input');
@@ -150,6 +171,9 @@ final class ClientApiController extends Controller
         return is_array($payload) ? $payload : [];
     }
 
+    /**
+     * Ermittelt den Authorization-Header auch hinter Redirect/FastCGI Setups.
+     */
     private function authorizationHeader(): ?string
     {
         if (isset($_SERVER['HTTP_AUTHORIZATION'])) {

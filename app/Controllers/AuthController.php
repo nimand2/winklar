@@ -14,6 +14,9 @@ final class AuthController extends Controller
     {
     }
 
+    /**
+     * Zeigt das Loginformular oder leitet angemeldete Benutzer zum Dashboard.
+     */
     public function showLogin(): void
     {
         if ($this->authService->isLoggedIn()) {
@@ -25,6 +28,9 @@ final class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Verarbeitet den Login-POST und setzt passende Flash-Meldungen.
+     */
     public function login(): void
     {
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -49,6 +55,9 @@ final class AuthController extends Controller
         $this->redirect('/dashboard');
     }
 
+    /**
+     * Meldet den Benutzer ab und fuehrt zur Login-Seite zurueck.
+     */
     public function logout(): void
     {
         $this->authService->logout();

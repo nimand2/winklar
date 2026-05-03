@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Plz
 {
+    /**
+     * Laedt alle PLZ-Eintraege.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -22,6 +25,9 @@ final class Plz
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt aktive PLZ-Optionen fuer Auswahlfelder.
+     */
     public function getActiveOptions(): array
     {
         $statement = Database::connection()->prepare(
@@ -35,6 +41,9 @@ final class Plz
         return $statement->fetchAll();
     }
 
+    /**
+     * Findet einen PLZ-Eintrag anhand seiner ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -52,6 +61,9 @@ final class Plz
         return $plz ?: null;
     }
 
+    /**
+     * Loescht einen PLZ-Eintrag.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -62,6 +74,9 @@ final class Plz
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Sucht PLZ-Eintraege ueber die vierstellige Postleitzahl.
+     */
     public function search_by_plz(string $query): array
     {
         $statement = Database::connection()->prepare(
@@ -74,6 +89,9 @@ final class Plz
         return $statement->fetchAll();
     }
 
+    /**
+     * Loest eine Eingabe wie "3000 Bern" auf den besten aktiven PLZ-Eintrag auf.
+     */
     public function findByLookup(string $lookup): ?array
     {
         $lookup = trim($lookup);
@@ -127,6 +145,9 @@ final class Plz
         return $plz ?: null;
     }
 
+    /**
+     * Findet einen PLZ-Eintrag ueber den Ortschaftsnamen.
+     */
     public function find_by_ortschaftsname(string $ortschaftsname): ?array
     {
         $statement = Database::connection()->prepare(
@@ -141,6 +162,9 @@ final class Plz
         return $plz ?: null;
     }
 
+    /**
+     * Normalisiert PLZ-Daten auf die Datenbankspalten.
+     */
     private function buildPayload(array $data): array
     {
         return [

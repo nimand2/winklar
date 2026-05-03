@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Adressen
 {
+    /**
+     * Laedt alle Adressen mit zugehoeriger PLZ.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -24,6 +27,9 @@ final class Adressen
         return $statement->fetchAll();
     }
 
+    /**
+     * Sucht Adressen ueber mehrere Namens-, Kontakt- und PLZ-Felder.
+     */
     public function search(string $query): array
     {
         $query = trim($query);
@@ -78,6 +84,9 @@ final class Adressen
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt einen paginierten Ausschnitt der Adressen.
+     */
     public function getArea(int $start, int $limit): array
     {
         $statement = Database::connection()->prepare(
@@ -97,7 +106,10 @@ final class Adressen
 
         return $statement->fetchAll();
     }
-    
+
+    /**
+     * Erstellt eine Adresse und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -148,6 +160,9 @@ final class Adressen
         return (int)Database::connection()->lastInsertId();
     }
 
+    /**
+     * Findet eine Adresse inklusive PLZ-Daten.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -167,6 +182,9 @@ final class Adressen
         return $adresse ?: null;
     }
 
+    /**
+     * Aktualisiert eine bestehende Adresse.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -199,6 +217,9 @@ final class Adressen
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht eine Adresse.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -209,6 +230,9 @@ final class Adressen
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Normalisiert Formularwerte auf die Datenbankspalten der Adresse.
+     */
     private function buildPayload(array $data): array
     {
         return [

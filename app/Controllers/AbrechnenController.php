@@ -25,6 +25,9 @@ final class AbrechnenController extends Controller
     ) {
     }
 
+    /**
+     * Zeigt die Abrechnung eines Standblatts mit Resultaten und Gabenvergleich.
+     */
     public function show(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -41,6 +44,9 @@ final class AbrechnenController extends Controller
         ], $abrechnung));
     }
 
+    /**
+     * Speichert die ausgewaehlten Gaben fuer ein Standblatt.
+     */
     public function speichern(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -57,6 +63,9 @@ final class AbrechnenController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
 
+    /**
+     * Rendert die druckoptimierte Abrechnung eines Standblatts.
+     */
     public function druck(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -73,6 +82,9 @@ final class AbrechnenController extends Controller
         ], $abrechnung));
     }
 
+    /**
+     * Sucht ein Standblatt innerhalb eines Anlasses oder bricht mit 404 ab.
+     */
     private function findStandblattOrFail(int $id, int $anlassId): array
     {
         if ($id <= 0) {
@@ -88,6 +100,9 @@ final class AbrechnenController extends Controller
         return $standblatt;
     }
 
+    /**
+     * Sucht einen Anlass oder bricht mit 404 ab.
+     */
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
@@ -103,6 +118,9 @@ final class AbrechnenController extends Controller
         return $anlass;
     }
 
+    /**
+     * Sucht eine Adresse oder bricht mit 404 ab.
+     */
     private function findAdresseOrFail(int $id): array
     {
         if ($id <= 0) {

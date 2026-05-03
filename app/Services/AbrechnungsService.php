@@ -17,6 +17,9 @@ final class AbrechnungsService
     ) {
     }
 
+    /**
+     * Baut alle Daten fuer die Abrechnungsansicht eines Standblatts auf.
+     */
     public function buildViewData(int $anlassId, int $standblattId): array
     {
         $stiche = $this->standblattModel->findSticheForStandblatt($standblattId);
@@ -35,6 +38,9 @@ final class AbrechnungsService
         ];
     }
 
+    /**
+     * Filtert gepostete Gaben auf tatsaechlich erreichbare und waehbare Abgaben.
+     */
     public function itemsFromPostedGaben(int $anlassId, int $standblattId, array $postedGaben): array
     {
         $viewData = $this->buildViewData($anlassId, $standblattId);
@@ -60,6 +66,9 @@ final class AbrechnungsService
         return array_values($items);
     }
 
+    /**
+     * Gruppiert Schussdaten nach Stich und berechnet Totalwerte fuer die Abrechnung.
+     */
     private function buildAuswertung(array $stiche, array $schuesse): array
     {
         usort($schuesse, static function (array $left, array $right): int {
@@ -136,6 +145,9 @@ final class AbrechnungsService
         ];
     }
 
+    /**
+     * Erstellt eine auswertbare Zeile fuer einen Stich mit seinen Schuessen.
+     */
     private function buildStichRow(array $stich, array $schuesse): array
     {
         $werte = [];
@@ -168,6 +180,9 @@ final class AbrechnungsService
         ];
     }
 
+    /**
+     * Vergleicht erreichte Resultate mit Gabenregeln und markiert waehlbare Gaben.
+     */
     private function buildGabenVergleich(array $rows, array $regeln, array $savedAbgaben, bool $defaultSelected = false): array
     {
         $saved = [];
@@ -216,6 +231,9 @@ final class AbrechnungsService
         return $gruppen;
     }
 
+    /**
+     * Ermittelt die Menge aller Gaben, die fuer die gepostete Auswahl erlaubt sind.
+     */
     private function buildSelectableAbgaben(array $rows, array $regeln): array
     {
         $gruppen = $this->buildGabenVergleich($rows, $regeln, []);
@@ -234,6 +252,9 @@ final class AbrechnungsService
         return $selectable;
     }
 
+    /**
+     * Extrahiert eindeutige Stich-IDs aus der berechneten Auswertung.
+     */
     private function stichIdsFromAuswertung(array $auswertung): array
     {
         return array_values(array_unique(array_map(
@@ -242,6 +263,9 @@ final class AbrechnungsService
         )));
     }
 
+    /**
+     * Normalisiert externe Schussnummern fuer die Anzeige.
+     */
     private function externalNumber(mixed $value): string
     {
         if ($value === null) {
@@ -251,6 +275,9 @@ final class AbrechnungsService
         return trim((string) $value);
     }
 
+    /**
+     * Normalisiert optionale Zahlenwerte aus Import- und Datenbankfeldern.
+     */
     private function numericValue(mixed $value): float
     {
         if ($value === null || $value === '') {

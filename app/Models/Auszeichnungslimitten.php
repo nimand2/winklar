@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Auszeichnungslimitten
 {
+    /**
+     * Findet eine einzelne Auszeichnungsregel.
+     */
     public function getById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -23,6 +26,9 @@ final class Auszeichnungslimitten
         return $regel ?: null;
     }
 
+    /**
+     * Laedt alle Auszeichnungsregeln eines Anlasses mit Stich- und Gabennamen.
+     */
     public function findByAnlassId(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
@@ -41,6 +47,9 @@ final class Auszeichnungslimitten
         return $statement->fetchAll();
     }
 
+    /**
+     * Erstellt eine Auszeichnungsregel und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -57,6 +66,9 @@ final class Auszeichnungslimitten
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Loescht eine Auszeichnungsregel.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -67,6 +79,9 @@ final class Auszeichnungslimitten
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Normalisiert Regelwerte fuer die Datenbank.
+     */
     private function buildPayload(array $data): array
     {
         return [

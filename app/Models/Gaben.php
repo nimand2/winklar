@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Gaben
 {
+    /**
+     * Laedt alle Gaben alphabetisch sortiert.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -20,6 +23,9 @@ final class Gaben
         return $statement->fetchAll();
     }
 
+    /**
+     * Erstellt eine Gabe und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -31,6 +37,9 @@ final class Gaben
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Findet eine Gabe anhand ihrer ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -46,6 +55,9 @@ final class Gaben
         return $gabe ?: null;
     }
 
+    /**
+     * Aktualisiert eine Gabe.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -65,6 +77,9 @@ final class Gaben
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht eine Gabe.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -75,6 +90,9 @@ final class Gaben
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Laedt die passenden Gabenregeln fuer mehrere Stiche.
+     */
     public function findRegelnForStiche(array $stichIds): array
     {
         $stichIds = array_values(array_unique(array_filter(array_map('intval', $stichIds))));
@@ -97,6 +115,9 @@ final class Gaben
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt die gespeicherten Gabenabgaben eines Standblatts.
+     */
     public function findAbgabenForStandblatt(int $standblattId): array
     {
         $statement = Database::connection()->prepare(
@@ -111,6 +132,9 @@ final class Gaben
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt alle Gabenabgaben eines Anlasses fuer die Kontrolle.
+     */
     public function findAbgabenForAnlass(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
@@ -132,6 +156,9 @@ final class Gaben
         return $statement->fetchAll();
     }
 
+    /**
+     * Prueft, ob die Gaben eines Standblatts bereits kontrolliert wurden.
+     */
     public function areAbgabenGeprueft(int $standblattId): bool
     {
         $statement = Database::connection()->prepare(
@@ -145,6 +172,9 @@ final class Gaben
         return (int) ($statement->fetchColumn() ?: 0) === 1;
     }
 
+    /**
+     * Ersetzt die Gabenabgaben eines Standblatts in einer Transaktion.
+     */
     public function replaceAbgabenForStandblatt(int $standblattId, array $items, int $userId): void
     {
         $connection = Database::connection();
@@ -192,6 +222,9 @@ final class Gaben
         }
     }
 
+    /**
+     * Normalisiert Gabendaten fuer INSERT und UPDATE.
+     */
     private function buildPayload(array $data): array
     {
         return [

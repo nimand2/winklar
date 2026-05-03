@@ -17,6 +17,9 @@ final class ClientApiService
     ) {
     }
 
+    /**
+     * Liefert Anlaesse im kompakten Format fuer externe Clients.
+     */
     public function listAnlaesse(): array
     {
         return array_map(
@@ -28,6 +31,9 @@ final class ClientApiService
         );
     }
 
+    /**
+     * Liefert geloeste Standblaetter als Schuetzenliste fuer den Client.
+     */
     public function listShooters(int $anlassId, int $sinceId = 0): array
     {
         return array_map(
@@ -45,6 +51,9 @@ final class ClientApiService
         );
     }
 
+    /**
+     * Normalisiert importierte Schussdaten und speichert nur neue Datensaetze.
+     */
     public function importShots(int $anlassId, array $shots, ?int $userId = null): int
     {
         $rows = [];
@@ -95,6 +104,9 @@ final class ClientApiService
         return $this->schussdatenModel->createMany($rows);
     }
 
+    /**
+     * Liest einen Stringwert aus PascalCase- oder camelCase-Clientdaten.
+     */
     private function stringValue(array $data, string $key): ?string
     {
         $value = $data[$key] ?? $data[lcfirst($key)] ?? null;
@@ -107,6 +119,9 @@ final class ClientApiService
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Liest einen Integerwert aus Clientdaten.
+     */
     private function intValue(array $data, string $key, int $default = 0): int
     {
         $value = $data[$key] ?? $data[lcfirst($key)] ?? $default;
@@ -114,6 +129,9 @@ final class ClientApiService
         return (int) $value;
     }
 
+    /**
+     * Normalisiert Dezimalwerte aus Clientdaten auf Punktnotation.
+     */
     private function decimalValue(array $data, string $key): ?string
     {
         $value = $data[$key] ?? $data[lcfirst($key)] ?? null;
@@ -124,6 +142,9 @@ final class ClientApiService
         return str_replace(',', '.', (string) $value);
     }
 
+    /**
+     * Wandelt Client-Zeitstempel in das Datenbankformat um.
+     */
     private function dateTimeValue(array $data, string $key): ?string
     {
         $value = trim((string) ($data[$key] ?? $data[lcfirst($key)] ?? ''));
@@ -139,6 +160,9 @@ final class ClientApiService
         return date('Y-m-d H:i:s', $timestamp);
     }
 
+    /**
+     * Bildet einen stabilen Hash zur Dubletten-Erkennung beim Import.
+     */
     private function importHash(array $row): string
     {
         $fields = [
@@ -167,6 +191,9 @@ final class ClientApiService
         return hash('sha256', implode('|', $parts));
     }
 
+    /**
+     * Formatiert einzelne Felder konsistent fuer den Import-Hash.
+     */
     private function hashValue(array $row, string $field): string
     {
         $value = $row[$field] ?? null;

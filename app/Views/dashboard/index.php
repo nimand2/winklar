@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Core\Url;
+
+/** @var array<string, mixed> $user */
 ?>
 <!DOCTYPE html>
 <html lang="de">

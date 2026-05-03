@@ -13,6 +13,9 @@ final class HomeController extends Controller
     {
     }
 
+    /**
+     * Verteilt die Startseite je nach Loginstatus auf Dashboard oder Login.
+     */
     public function index(): void
     {
         if ($this->authService->isLoggedIn()) {

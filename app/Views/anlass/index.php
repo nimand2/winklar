@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Core\Url;
+
+/** @var array<int, array<string, mixed>> $anlass */
+$anlass = $anlass ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="de">

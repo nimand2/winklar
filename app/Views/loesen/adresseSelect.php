@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<int, array<string, mixed>> $adressen */
 $anlassId = (int) $anlass['id'];
+$adressen = $adressen ?? [];
 $query = trim((string) ($query ?? ''));
 ?>
 <!DOCTYPE html>

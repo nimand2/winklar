@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class RememberToken
 {
+    /**
+     * Laedt alle gespeicherten Remember-me-Tokens.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -21,6 +24,9 @@ final class RememberToken
         return $statement->fetchAll();
     }
 
+    /**
+     * Erstellt einen Remember-me-Token aus Array- oder Einzelwerten.
+     */
     public function create(array|int $data, ?string $selector = null, ?string $validatorHash = null, ?string $expiresAt = null): int
     {
         $statement = Database::connection()->prepare(
@@ -35,6 +41,9 @@ final class RememberToken
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Findet einen Remember-me-Token anhand seiner ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -51,6 +60,9 @@ final class RememberToken
         return $token ?: null;
     }
 
+    /**
+     * Aktualisiert einen Remember-me-Token.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -70,6 +82,9 @@ final class RememberToken
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht einen Remember-me-Token.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -80,6 +95,9 @@ final class RememberToken
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Loescht einen Token ueber seinen Cookie-Selector.
+     */
     public function deleteBySelector(string $selector): void
     {
         $statement = Database::connection()->prepare(
@@ -89,6 +107,9 @@ final class RememberToken
         $statement->execute(['selector' => $selector]);
     }
 
+    /**
+     * Laedt Token und Benutzer fuer einen Remember-me-Selector.
+     */
     public function findBySelectorWithUser(string $selector): ?array
     {
         $statement = Database::connection()->prepare(
@@ -105,6 +126,9 @@ final class RememberToken
         return $token ?: null;
     }
 
+    /**
+     * Vereinheitlicht alte Einzelparameter und neue Arraydaten.
+     */
     private function buildPayload(array|int $data, ?string $selector = null, ?string $validatorHash = null, ?string $expiresAt = null): array
     {
         if (is_array($data)) {

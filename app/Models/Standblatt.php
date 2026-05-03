@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Standblatt
 {
+    /**
+     * Laedt alle Standblaetter.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -21,6 +24,9 @@ final class Standblatt
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt Schuetzendaten fuer die Client-API eines Anlasses.
+     */
     public function findShootersForAnlass(int $anlassId, int $sinceId = 0): array
     {
         $statement = Database::connection()->prepare(
@@ -43,6 +49,9 @@ final class Standblatt
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt Standblaetter eines Anlasses mit Adressdaten.
+     */
     public function findForAnlassWithAdresse(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
@@ -59,6 +68,9 @@ final class Standblatt
         return $statement->fetchAll();
     }
 
+    /**
+     * Aggregiert Einnahmen pro Stich fuer die Kassenansicht.
+     */
     public function findEinnahmenByStichForAnlass(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
@@ -77,6 +89,9 @@ final class Standblatt
         return $statement->fetchAll();
     }
 
+    /**
+     * Erstellt ein Standblatt und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -91,6 +106,9 @@ final class Standblatt
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Erstellt ein Standblatt inklusive der geloesten Stiche.
+     */
     public function createWithStiche(array $data, array $stichCounts, int $userId): int
     {
         $connection = Database::connection();
@@ -125,6 +143,9 @@ final class Standblatt
         }
     }
 
+    /**
+     * Findet ein Standblatt anhand seiner ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -141,6 +162,9 @@ final class Standblatt
         return $standblatt ?: null;
     }
 
+    /**
+     * Laedt die geloesten Stiche eines Standblatts.
+     */
     public function findSticheForStandblatt(int $standblattId): array
     {
         $statement = Database::connection()->prepare(
@@ -156,6 +180,9 @@ final class Standblatt
         return $statement->fetchAll();
     }
 
+    /**
+     * Aktualisiert ein Standblatt und ersetzt seine geloesten Stiche.
+     */
     public function updateWithStiche(int $id, array $data, array $stichCounts, int $userId): bool
     {
         $connection = Database::connection();
@@ -197,6 +224,9 @@ final class Standblatt
         }
     }
 
+    /**
+     * Aktualisiert die Grunddaten eines Standblatts.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -216,6 +246,9 @@ final class Standblatt
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht ein Standblatt.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -226,6 +259,9 @@ final class Standblatt
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Normalisiert Standblattdaten fuer INSERT und UPDATE.
+     */
     private function buildPayload(array $data): array
     {
         return [

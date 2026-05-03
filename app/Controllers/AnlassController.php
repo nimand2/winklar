@@ -28,6 +28,9 @@ final class AnlassController extends Controller
     {
     }
 
+    /**
+     * Zeigt die Anlassauswahl.
+     */
     public function index(): void
     {
         $user = $this->authService->requireUser();
@@ -39,6 +42,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt Detail- und Aktionsseite eines Anlasses.
+     */
     public function show(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -60,6 +66,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt das Formular fuer einen neuen Anlass.
+     */
     public function create(): void
     {
         $user = $this->authService->requireUser();
@@ -73,6 +82,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Validiert und erstellt einen neuen Anlass.
+     */
     public function store(): void
     {
         $user = $this->authService->requireUser();
@@ -95,6 +107,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . $id . '/konfiguration');
     }
 
+    /**
+     * Zeigt das Bearbeitungsformular fuer Anlassgrunddaten.
+     */
     public function edit(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -109,6 +124,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Aktualisiert Anlassgrunddaten.
+     */
     public function update(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -132,6 +150,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Zeigt die Konfiguration von Stichen, Gaben und Gabenregeln.
+     */
     public function konfiguration(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -147,6 +168,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt die Rangliste fuer einen Anlass.
+     */
     public function abschliessen(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -162,6 +186,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt die Kassenabrechnung fuer einen Anlass.
+     */
     public function kasse(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -174,6 +201,9 @@ final class AnlassController extends Controller
         ]);
     }
 
+    /**
+     * Erstellt einen neuen Stich fuer den Anlass.
+     */
     public function storeStich(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -187,6 +217,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Aktualisiert einen Stich des Anlasses.
+     */
     public function updateStich(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -204,6 +237,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Loescht einen Stich des Anlasses.
+     */
     public function deleteStich(array $params): void
     {
         $this->authService->requireUser();
@@ -217,6 +253,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Erstellt eine neue Gabe.
+     */
     public function storeGabe(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -237,6 +276,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Aktualisiert eine bestehende Gabe.
+     */
     public function updateGabe(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -257,6 +299,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Loescht eine Gabe.
+     */
     public function deleteGabe(array $params): void
     {
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
@@ -266,6 +311,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Erstellt eine neue Regel zur Gabenvergabe.
+     */
     public function storeRegel(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -288,6 +336,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Loescht eine Regel zur Gabenvergabe.
+     */
     public function deleteRegel(array $params): void
     {
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
@@ -297,6 +348,9 @@ final class AnlassController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
+    /**
+     * Sucht einen Anlass oder bricht mit 404 ab.
+     */
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
@@ -312,6 +366,9 @@ final class AnlassController extends Controller
         return $anlass;
     }
 
+    /**
+     * Normalisiert Anlassdaten aus Formularwerten.
+     */
     private function sanitizeAnlassData(array $source, int $userId, array $existing = []): array
     {
         return [
@@ -326,6 +383,9 @@ final class AnlassController extends Controller
         ];
     }
 
+    /**
+     * Validiert Pflichtfelder und Datumslogik eines Anlasses.
+     */
     private function validateAnlassData(array $data): array
     {
         $errors = [];
@@ -345,6 +405,9 @@ final class AnlassController extends Controller
         return $errors;
     }
 
+    /**
+     * Normalisiert Stichdaten aus Formularwerten.
+     */
     private function sanitizeStichData(array $source, int $anlassId, int $userId, array $existing = []): array
     {
         return [
@@ -364,6 +427,9 @@ final class AnlassController extends Controller
         ];
     }
 
+    /**
+     * Validiert Pflichtfelder eines Stiches.
+     */
     private function validateStichData(array $data): array
     {
         $errors = [];
@@ -375,6 +441,9 @@ final class AnlassController extends Controller
         return $errors;
     }
 
+    /**
+     * Wandelt leere Formularwerte in null um.
+     */
     private function nullableString(mixed $value): ?string
     {
         $value = trim((string) $value);
@@ -382,6 +451,9 @@ final class AnlassController extends Controller
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Wandelt optionale Dezimalwerte aus Formularen um.
+     */
     private function nullableDecimal(mixed $value): ?float
     {
         $value = trim((string) $value);
@@ -389,6 +461,9 @@ final class AnlassController extends Controller
         return $value === '' ? null : (float) str_replace(',', '.', $value);
     }
 
+    /**
+     * Wandelt optionale Ganzzahlen aus Formularen um.
+     */
     private function nullableInt(mixed $value): ?int
     {
         $value = trim((string) $value);

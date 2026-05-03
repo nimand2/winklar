@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<string, mixed> $adresse */
+/** @var array<int, array<string, mixed>> $stiche */
 $anlassId = (int) $anlass['id'];
 $adresseId = (int) $adresse['id'];
 $old = $old ?? [];
 $errors = $errors ?? [];
+$stiche = $stiche ?? [];
 $selectedStichIds = array_map('intval', (array) ($old['stich_ids'] ?? []));
 $stichCounts = (array) ($old['stich_counts'] ?? []);
 $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname'] ?? '')));

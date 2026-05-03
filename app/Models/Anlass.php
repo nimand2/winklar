@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Anlass
 {
+    /**
+     * Laedt alle Anlaesse nach Datum sortiert.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -20,6 +23,9 @@ final class Anlass
 
         return $statement->fetchAll();
     }
+    /**
+     * Erstellt einen Anlass und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -48,6 +54,9 @@ final class Anlass
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Findet einen Anlass anhand seiner ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -64,6 +73,9 @@ final class Anlass
         return $anlass ?: null;
     }
 
+    /**
+     * Aktualisiert die Grunddaten eines Anlasses.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -85,6 +97,9 @@ final class Anlass
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht einen Anlass.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -95,6 +110,9 @@ final class Anlass
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Normalisiert Anlassdaten fuer INSERT und UPDATE.
+     */
     private function buildPayload(array $data): array
     {
         return [

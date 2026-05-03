@@ -4,17 +4,33 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed>|null $anlass */
+/** @var array<string, mixed>|null $adresse */
+/** @var array<string, mixed> $old */
+/** @var array<int, array<string, mixed>> $plzOptions */
 $anlass = $anlass ?? null;
-$hasAnlass = is_array($anlass);
-$anlassId = $hasAnlass ? (int) $anlass['id'] : null;
 $adresse = $adresse ?? null;
 $isEdit = is_array($adresse);
 $old = $old ?? [];
 $errors = $errors ?? [];
 $plzOptions = $plzOptions ?? [];
 $title = $isEdit ? 'Schütz bearbeiten' : 'Neue Adresse erstellen';
-$basePath = $hasAnlass ? '/anlass/' . $anlassId . '/schuetzen' : '/schuetzen';
-$action = $isEdit ? Url::app($basePath . '/' . (int) $adresse['id'] . '/bearbeiten') : Url::app($basePath . '/neu');
+
+if (is_array($anlass)) {
+    $anlassId = (int) $anlass['id'];
+    $basePath = '/anlass/' . $anlassId . '/schuetzen';
+    $contextLabel = (string) $anlass['name_anlass'];
+} else {
+    $basePath = '/schuetzen';
+    $contextLabel = 'Globale Personenverwaltung';
+}
+
+if (is_array($adresse)) {
+    $action = Url::app($basePath . '/' . (int) $adresse['id'] . '/bearbeiten');
+} else {
+    $action = Url::app($basePath . '/neu');
+}
+
 $submitLabel = $isEdit ? 'Änderungen speichern' : 'Adresse erstellen';
 ?>
 <!DOCTYPE html>
@@ -33,7 +49,7 @@ $submitLabel = $isEdit ? 'Änderungen speichern' : 'Adresse erstellen';
                                 <div class="brand-badge mb-3">Adressverwaltung</div>
                                 <h1 class="h2 mb-2"><?= htmlspecialchars($title) ?></h1>
                                 <p class="muted-copy mb-0">
-                                    <?= $hasAnlass ? htmlspecialchars((string) $anlass['name_anlass']) : 'Globale Personenverwaltung' ?>
+                                    <?= htmlspecialchars($contextLabel) ?>
                                 </p>
                             </div>
 

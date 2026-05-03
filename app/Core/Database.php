@@ -8,6 +8,9 @@ use PDO;
 
 final class Database
 {
+    /**
+     * Liefert eine wiederverwendete PDO-Verbindung zur konfigurierten MySQL-Datenbank.
+     */
     public static function connection(): PDO
     {
         static $pdo = null;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<string, mixed> $abrechnung */
 $anlassId = (int) $anlass['id'];
 $abrechnung = $abrechnung ?? [];
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<int, array<string, mixed>> $ranglisten */
 $anlassId = (int) $anlass['id'];
 $ranglisten = $ranglisten ?? [];
 $formatNumber = static function (float $value): string {

@@ -6,6 +6,9 @@ namespace App\Core;
 
 final class Session
 {
+    /**
+     * Startet die Session mit den zentralen Cookie-Einstellungen.
+     */
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
@@ -24,12 +27,18 @@ final class Session
         session_start();
     }
 
+    /**
+     * Erneuert die Session-ID nach sicherheitsrelevanten Statuswechseln.
+     */
     public static function regenerate(): void
     {
         self::start();
         session_regenerate_id(true);
     }
 
+    /**
+     * Speichert eine einmalige Statusmeldung fuer den naechsten Request.
+     */
     public static function putFlash(string $type, string $message): void
     {
         self::start();
@@ -39,6 +48,9 @@ final class Session
         ];
     }
 
+    /**
+     * Liest und entfernt die gespeicherte Flash-Meldung.
+     */
     public static function pullFlash(): ?array
     {
         self::start();
@@ -53,6 +65,9 @@ final class Session
         return is_array($flash) ? $flash : null;
     }
 
+    /**
+     * Loescht Sessiondaten und entfernt das Session-Cookie.
+     */
     public static function destroy(): void
     {
         self::start();

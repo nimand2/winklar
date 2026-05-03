@@ -8,6 +8,9 @@ final class ApiTokenService
 {
     private const LIFETIME_SECONDS = 60*60*24*7; // 7 days
 
+    /**
+     * Erstellt einen signierten Bearer-Token fuer API-Zugriffe eines Benutzers.
+     */
     public function createToken(int $userId): string
     {
         $payload = [
@@ -22,11 +25,17 @@ final class ApiTokenService
         return $payloadPart . '.' . $signature;
     }
 
+    /**
+     * Gibt die Token-Lebensdauer in Sekunden zurueck.
+     */
     public function lifetimeSeconds(): int
     {
         return self::LIFETIME_SECONDS;
     }
 
+    /**
+     * Validiert den Authorization-Header und liefert die enthaltene Benutzer-ID.
+     */
     public function userIdFromAuthorizationHeader(?string $authorizationHeader): ?int
     {
         if ($authorizationHeader === null || !str_starts_with($authorizationHeader, 'Bearer ')) {
@@ -65,6 +74,9 @@ final class ApiTokenService
         return $userId;
     }
 
+    /**
+     * Ermittelt das HMAC-Geheimnis aus Konfiguration oder Datenbankdaten.
+     */
     private function secret(): string
     {
         if (defined('API_TOKEN_SECRET')) {
@@ -78,11 +90,17 @@ final class ApiTokenService
         return hash('sha256', DB_PASS . '|' . DB_NAME);
     }
 
+    /**
+     * Kodiert Daten URL-sicher fuer Tokenbestandteile.
+     */
     private function base64UrlEncode(string $value): string
     {
         return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
     }
 
+    /**
+     * Dekodiert URL-sichere Tokenbestandteile.
+     */
     private function base64UrlDecode(string $value): ?string
     {
         $padding = strlen($value) % 4;

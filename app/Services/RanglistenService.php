@@ -17,6 +17,9 @@ final class RanglistenService
     ) {
     }
 
+    /**
+     * Erstellt Ranglisten pro Stich und Alterskategorie fuer einen Anlass.
+     */
     public function buildForAnlass(int $anlassId, ?string $anlassDatum = null): array
     {
         $stiche = $this->stichModel->findByAnlassId($anlassId);
@@ -117,6 +120,9 @@ final class RanglistenService
         return $ranglisten;
     }
 
+    /**
+     * Liefert die Standard-Kategorien fuer die Rangliste.
+     */
     private function emptyCategories(): array
     {
         return [
@@ -131,6 +137,9 @@ final class RanglistenService
         ];
     }
 
+    /**
+     * Berechnet Serienresultate eines Stiches aus den importierten Schuessen.
+     */
     private function resultateForStich(array $stich, array $schuesse): array
     {
         $anzahlSchuss = max(1, (int) ($stich['anzahl_schuss'] ?? 0));
@@ -155,6 +164,9 @@ final class RanglistenService
         return $resultate;
     }
 
+    /**
+     * Vergleicht Resultatserien fuer die Rangsortierung.
+     */
     private function compareResultate(array $leftResultate, array $rightResultate): int
     {
         $maxCount = max(count($leftResultate), count($rightResultate));
@@ -172,6 +184,9 @@ final class RanglistenService
         return 0;
     }
 
+    /**
+     * Ordnet Teilnehmende anhand des Geburtsdatums einer Alterskategorie zu.
+     */
     private function categoryForBirthdate(mixed $birthdate, ?\DateTimeImmutable $stichtag): string
     {
         if (!$stichtag instanceof \DateTimeImmutable) {
@@ -193,6 +208,9 @@ final class RanglistenService
         return $geburtsdatum->diff($stichtag)->y < 18 ? 'u18' : 'ue18';
     }
 
+    /**
+     * Erzeugt den Stichtag fuer Altersberechnungen.
+     */
     private function referenceDate(?string $value): ?\DateTimeImmutable
     {
         $value = trim((string) $value);
@@ -208,6 +226,9 @@ final class RanglistenService
         }
     }
 
+    /**
+     * Normalisiert externe Schussnummern fuer die Anzeige.
+     */
     private function externalNumber(mixed $value): string
     {
         if ($value === null) {
@@ -217,6 +238,9 @@ final class RanglistenService
         return trim((string) $value);
     }
 
+    /**
+     * Normalisiert optionale Zahlenwerte aus Import- und Datenbankfeldern.
+     */
     private function numericValue(mixed $value): float
     {
         if ($value === null || $value === '') {

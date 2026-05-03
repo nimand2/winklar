@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<string, mixed> $standblatt */
+/** @var array<string, mixed> $adresse */
+/** @var array<int, array<string, mixed>> $stiche */
+/** @var array<int, array<string, mixed>> $gaben */
 $anlassId = (int) $anlass['id'];
 $standblattId = (int) $standblatt['id'];
+$stiche = $stiche ?? [];
 $name = trim((string) (($adresse['nachname'] ?? '') . ' ' . ($adresse['vorname'] ?? '')));
 $vorname = trim((string) ($adresse['vorname'] ?? ''));
 $nachname = trim((string) ($adresse['nachname'] ?? ''));

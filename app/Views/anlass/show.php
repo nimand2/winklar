@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
 $anlassId = (int) $anlass['id'];
 ?>
 <!DOCTYPE html>

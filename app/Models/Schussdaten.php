@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Schussdaten
 {
+    /**
+     * Laedt alle importierten Schussdaten.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -25,6 +28,9 @@ final class Schussdaten
         return $statement->fetchAll();
     }
 
+    /**
+     * Speichert einen Schussdatensatz, wenn sein Import-Hash noch nicht existiert.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -50,6 +56,9 @@ final class Schussdaten
         return $statement->rowCount() > 0 ? (int) Database::connection()->lastInsertId() : 0;
     }
 
+    /**
+     * Importiert mehrere Schussdatensaetze in einer Transaktion.
+     */
     public function createMany(array $rows): int
     {
         if ($rows === []) {
@@ -76,6 +85,9 @@ final class Schussdaten
         return $created;
     }
 
+    /**
+     * Findet einen Schussdatensatz anhand seiner ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -96,6 +108,9 @@ final class Schussdaten
         return $schussdaten ?: null;
     }
 
+    /**
+     * Laedt Schussdaten fuer Startnummer und Anlass.
+     */
     public function findByStartNrAndIdAnlass(int $startNr, int $idAnlass): array
     {
         $statement = Database::connection()->prepare(
@@ -114,6 +129,9 @@ final class Schussdaten
         return $statement->fetchAll();
     }
 
+    /**
+     * Laedt alle Schussdaten eines Anlasses in Auswertungsreihenfolge.
+     */
     public function findByAnlassId(int $idAnlass): array
     {
         $statement = Database::connection()->prepare(
@@ -132,6 +150,9 @@ final class Schussdaten
         return $statement->fetchAll();
     }
 
+    /**
+     * Normalisiert importierte Schusswerte auf die Datenbankspalten.
+     */
     private function buildPayload(array $data): array
     {
         return [

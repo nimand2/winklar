@@ -21,6 +21,9 @@ final class AdressenController extends Controller
     ) {
     }
 
+    /**
+     * Zeigt die globale oder anlassbezogene Adressverwaltung mit Suche.
+     */
     public function index(array $params): void
     {
         $this->authService->requireUser();
@@ -35,6 +38,9 @@ final class AdressenController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt das Formular fuer eine neue Adresse.
+     */
     public function create(array $params): void
     {
         $this->authService->requireUser();
@@ -49,6 +55,9 @@ final class AdressenController extends Controller
         ]);
     }
 
+    /**
+     * Speichert eine neue Adresse und leitet je nach Kontext weiter.
+     */
     public function store(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -74,6 +83,9 @@ final class AdressenController extends Controller
         Response::redirect($anlass === null ? '/schuetzen' : '/anlass/' . (int) $anlass['id'] . '/loesen/neu?adresse_id=' . $adresseId);
     }
 
+    /**
+     * Zeigt das Bearbeitungsformular fuer eine bestehende Adresse.
+     */
     public function edit(array $params): void
     {
         $this->authService->requireUser();
@@ -89,6 +101,9 @@ final class AdressenController extends Controller
         ]);
     }
 
+    /**
+     * Aktualisiert eine bestehende Adresse.
+     */
     public function update(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -120,6 +135,9 @@ final class AdressenController extends Controller
         Response::redirect($anlass === null ? '/schuetzen' : '/anlass/' . (int) $anlass['id'] . '/schuetzen');
     }
 
+    /**
+     * Liefert den optionalen Anlasskontext aus Routenparametern.
+     */
     private function findOptionalAnlass(array $params): ?array
     {
         if (!isset($params['id'])) {
@@ -129,6 +147,9 @@ final class AdressenController extends Controller
         return $this->findAnlassOrFail((int) $params['id']);
     }
 
+    /**
+     * Sucht einen Anlass oder bricht mit 404 ab.
+     */
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
@@ -144,6 +165,9 @@ final class AdressenController extends Controller
         return $anlass;
     }
 
+    /**
+     * Sucht eine Adresse oder bricht mit 404 ab.
+     */
     private function findAdresseOrFail(int $id): array
     {
         if ($id <= 0) {
@@ -159,6 +183,9 @@ final class AdressenController extends Controller
         return $adresse;
     }
 
+    /**
+     * Normalisiert Adressdaten aus dem Formularrequest.
+     */
     private function addressDataFromRequest(array $user): array
     {
         return [
@@ -181,6 +208,9 @@ final class AdressenController extends Controller
         ];
     }
 
+    /**
+     * Prueft Pflichtfelder und die ausgewaehlte PLZ.
+     */
     private function validateAddressData(array $data): array
     {
         if ((string) $data['nachname'] === '') {
@@ -194,6 +224,9 @@ final class AdressenController extends Controller
         return [];
     }
 
+    /**
+     * Wandelt leere Formularwerte in null um.
+     */
     private function nullableString(mixed $value): ?string
     {
         $value = trim((string) $value);
@@ -201,6 +234,9 @@ final class AdressenController extends Controller
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Bereitet eine vorhandene Adresse fuer das Formular vor.
+     */
     private function addressDataForForm(array $adresse): array
     {
         $plzLookup = trim((string) (($adresse['plz4'] ?? '') . ' ' . ($adresse['ortschaftsname'] ?? '')));

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<int, array<string, mixed>> $standblaetter */
 $anlassId = (int) $anlass['id'];
+$standblaetter = $standblaetter ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="de">

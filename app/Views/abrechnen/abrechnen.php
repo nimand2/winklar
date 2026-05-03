@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 use App\Core\Url;
 
+/** @var array<string, mixed> $anlass */
+/** @var array<string, mixed> $standblatt */
+/** @var array<string, mixed> $adresse */
+/** @var array{rows?: array<int, array<string, mixed>>, total?: int|float|string, schussCount?: int|string} $auswertung */
+/** @var array<int, array<string, mixed>> $gabenVergleich */
 $anlassId = (int) $anlass['id'];
 $standblattId = (int) $standblatt['id'];
 $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname'] ?? '')));
 $auswertung = $auswertung ?? ['rows' => [], 'total' => 0, 'schussCount' => 0];
+$gabenVergleich = $gabenVergleich ?? [];
 $rows = (array) ($auswertung['rows'] ?? []);
 $maxSchuesse = 0;
 

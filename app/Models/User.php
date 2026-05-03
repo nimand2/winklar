@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class User
 {
+    /**
+     * Laedt alle Benutzer.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -20,6 +23,9 @@ final class User
         return $statement->fetchAll();
     }
 
+    /**
+     * Erstellt einen Benutzer und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -31,6 +37,9 @@ final class User
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Aktualisiert Benutzername, E-Mail und Passwort-Hash.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -47,6 +56,9 @@ final class User
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht einen Benutzer.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -57,6 +69,9 @@ final class User
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Findet einen Benutzer ohne Passwort-Hash.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -72,6 +87,9 @@ final class User
         return $user ?: null;
     }
 
+    /**
+     * Findet einen Benutzer fuer Login per Benutzername oder E-Mail.
+     */
     public function findByLogin(string $login): ?array
     {
         $statement = Database::connection()->prepare(
@@ -90,6 +108,9 @@ final class User
         return $user ?: null;
     }
 
+    /**
+     * Normalisiert Benutzerdaten fuer INSERT und UPDATE.
+     */
     private function buildPayload(array $data): array
     {
         return [

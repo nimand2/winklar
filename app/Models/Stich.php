@@ -8,6 +8,9 @@ use App\Core\Database;
 
 final class Stich
 {
+    /**
+     * Laedt alle Stiche.
+     */
     public function getAll(): array
     {
         $statement = Database::connection()->prepare(
@@ -22,6 +25,9 @@ final class Stich
         return $statement->fetchAll();
     }
 
+    /**
+     * Erstellt einen Stich und gibt die neue ID zurueck.
+     */
     public function create(array $data): int
     {
         $statement = Database::connection()->prepare(
@@ -38,6 +44,9 @@ final class Stich
         return (int) Database::connection()->lastInsertId();
     }
 
+    /**
+     * Findet einen Stich anhand seiner ID.
+     */
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
@@ -55,6 +64,9 @@ final class Stich
         return $stich ?: null;
     }
 
+    /**
+     * Laedt alle Stiche eines Anlasses.
+     */
     public function findByAnlassId(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
@@ -70,6 +82,9 @@ final class Stich
         return $statement->fetchAll();
     }
 
+    /**
+     * Aktualisiert einen Stich.
+     */
     public function update(int $id, array $data): bool
     {
         $statement = Database::connection()->prepare(
@@ -96,6 +111,9 @@ final class Stich
         return $statement->execute($payload);
     }
 
+    /**
+     * Loescht einen Stich.
+     */
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
@@ -106,6 +124,9 @@ final class Stich
         return $statement->execute(['id' => $id]);
     }
 
+    /**
+     * Normalisiert Stichdaten fuer INSERT und UPDATE.
+     */
     private function buildPayload(array $data): array
     {
         return [

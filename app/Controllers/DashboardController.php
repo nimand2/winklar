@@ -13,6 +13,9 @@ final class DashboardController extends Controller
     {
     }
 
+    /**
+     * Zeigt das Dashboard fuer den angemeldeten Benutzer.
+     */
     public function index(): void
     {
         $user = $this->authService->requireUser();

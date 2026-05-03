@@ -25,6 +25,9 @@ final class LoesenController extends Controller
     ) {
     }
 
+    /**
+     * Zeigt das Formular zum Loesen eines neuen Standblatts fuer eine Adresse.
+     */
     public function create(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -47,6 +50,9 @@ final class LoesenController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt die vorhandenen Standblaetter eines Anlasses zur Auswahl.
+     */
     public function open(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -59,6 +65,9 @@ final class LoesenController extends Controller
         ]);
     }
 
+    /**
+     * Zeigt die Adressauswahl vor dem Loesen eines neuen Standblatts.
+     */
     public function selectAdresse(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -73,6 +82,9 @@ final class LoesenController extends Controller
         ]);
     }
 
+    /**
+     * Erstellt ein Standblatt mit den ausgewaehlten Stichen.
+     */
     public function store(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -94,6 +106,9 @@ final class LoesenController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . $standblattId);
     }
 
+    /**
+     * Zeigt ein bestehendes Standblatt zur Bearbeitung.
+     */
     public function show(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -117,6 +132,9 @@ final class LoesenController extends Controller
         ]);
     }
 
+    /**
+     * Rendert die Druckansicht fuer ein Standblatt.
+     */
     public function druck(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -137,6 +155,9 @@ final class LoesenController extends Controller
         ]);
     }
 
+    /**
+     * Aktualisiert Datum und Stichmengen eines Standblatts.
+     */
     public function update(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -159,6 +180,9 @@ final class LoesenController extends Controller
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id']);
     }
 
+    /**
+     * Sucht ein Standblatt innerhalb eines Anlasses oder bricht mit 404 ab.
+     */
     private function findStandblattOrFail(int $id, int $anlassId): array
     {
         if ($id <= 0) {
@@ -174,6 +198,9 @@ final class LoesenController extends Controller
         return $standblatt;
     }
 
+    /**
+     * Sucht einen Anlass oder bricht mit 404 ab.
+     */
     private function findAnlassOrFail(int $id): array
     {
         if ($id <= 0) {
@@ -189,6 +216,9 @@ final class LoesenController extends Controller
         return $anlass;
     }
 
+    /**
+     * Sucht eine Adresse oder leitet zur Adressauswahl weiter.
+     */
     private function findAdresseOrFail(int $id, int $anlassId): array
     {
         if ($id <= 0) {
@@ -204,6 +234,9 @@ final class LoesenController extends Controller
         return $adresse;
     }
 
+    /**
+     * Wandelt leere Formularwerte in null um.
+     */
     private function nullableString(mixed $value): ?string
     {
         $value = trim((string) $value);
@@ -211,6 +244,9 @@ final class LoesenController extends Controller
         return $value === '' ? null : $value;
     }
 
+    /**
+     * Berechnet die Kosten anhand der gewaehlten Stiche und Mengen.
+     */
     private function calculateKosten(array $availableStiche, array $selectedStichCounts): string
     {
         $total = 0.0;
@@ -228,6 +264,9 @@ final class LoesenController extends Controller
         return number_format($total, 2, '.', '');
     }
 
+    /**
+     * Extrahiert und validiert Stichmengen aus dem Formularrequest.
+     */
     private function selectedStichCountsFromRequest(array $availableStiche): array
     {
         $availableIds = array_map(
@@ -248,6 +287,9 @@ final class LoesenController extends Controller
         return $selectedStichCounts;
     }
 
+    /**
+     * Wandelt gespeicherte Standblatt-Stiche in eine ID-zu-Menge-Map.
+     */
     private function stichCountsById(array $stiche): array
     {
         $counts = [];

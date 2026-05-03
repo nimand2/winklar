@@ -32,6 +32,37 @@ final class Adressen
             return $this->getAll();
         }
 
+        $terms = preg_split('/\s+/', $query) ?: [];
+        $terms = array_values(array_filter($terms, static fn (string $term): bool => $term !== ''));
+        $searchFields = [
+            'a.nachname',
+            'a.vorname',
+            'CONCAT_WS(\' \', a.vorname, a.nachname)',
+            'CONCAT_WS(\' \', a.nachname, a.vorname)',
+            'a.firmen_anrede',
+            'a.zusatz',
+            'a.strasse',
+            'a.telefon',
+            'a.email',
+            'a.lizenz',
+            'p.plz4',
+            'p.ortschaftsname',
+        ];
+        $whereParts = [];
+        $params = [];
+
+        foreach ($terms as $termIndex => $term) {
+            $fieldParts = [];
+
+            foreach ($searchFields as $fieldIndex => $field) {
+                $param = 'query' . $termIndex . '_' . $fieldIndex;
+                $fieldParts[] = $field . ' LIKE :' . $param;
+                $params[$param] = '%' . $term . '%';
+            }
+
+            $whereParts[] = '(' . implode(' OR ', $fieldParts) . ')';
+        }
+
         $statement = Database::connection()->prepare(
             'SELECT a.id, a.creator_adress_id, a.modifier_adress_id, a.anrede, a.firmen_anrede,
                     a.nachname, a.vorname, a.zusatz, a.strasse, a.postfach, a.nation, a.plz_id,
@@ -39,19 +70,10 @@ final class Adressen
                     a.created_by_user_id, a.created_at, a.updated_by_user_id, a.updated_at
              FROM adressen a
              LEFT JOIN plz p ON p.id = a.plz_id
-             WHERE a.nachname LIKE :query
-                OR a.vorname LIKE :query
-                OR a.firmen_anrede LIKE :query
-                OR a.zusatz LIKE :query
-                OR a.strasse LIKE :query
-                OR a.telefon LIKE :query
-                OR a.email LIKE :query
-                OR a.lizenz LIKE :query
-                OR p.plz4 LIKE :query
-                OR p.ortschaftsname LIKE :query
+             WHERE ' . implode(' AND ', $whereParts) . '
              ORDER BY a.nachname ASC, a.vorname ASC, a.id ASC'
         );
-        $statement->execute(['query' => '%' . $query . '%']);
+        $statement->execute($params);
 
         return $statement->fetchAll();
     }

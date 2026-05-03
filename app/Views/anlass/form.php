@@ -35,11 +35,11 @@ $action = $isEdit ? Url::app('/anlass/' . $anlassId . '/bearbeiten') : Url::app(
                             <div class="d-flex flex-wrap gap-2">
                                 <?php if ($isEdit): ?>
                                     <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>" class="btn btn-outline-secondary">
-                                        Zurueck zur Konfiguration
+                                        Zurück zur Konfiguration
                                     </a>
                                 <?php else: ?>
                                     <a href="<?= htmlspecialchars(Url::app('/anlass')) ?>" class="btn btn-outline-secondary">
-                                        Zurueck zur Auswahl
+                                        Zurück zur Auswahl
                                     </a>
                                 <?php endif; ?>
                             </div>

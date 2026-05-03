@@ -18,10 +18,7 @@ use App\Core\Url;
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Planung</div>
-                                <h1 class="h2 mb-2">Anlass auswaehlen</h1>
-                                <p class="muted-copy mb-0">
-                                    Waehle die passende Kategorie als Ausgangspunkt fuer Aufbau, Inhalte und naechste Schritte.
-                                </p>
+                                <h1 class="h2 mb-2">Anlass auswählen</h1>
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
@@ -29,7 +26,7 @@ use App\Core\Url;
                                     Neuer Anlass
                                 </a>
                                 <a href="<?= htmlspecialchars(Url::app('/dashboard')) ?>" class="btn btn-outline-secondary">
-                                    Zurueck zum Dashboard
+                                    Zurück zum Dashboard
                                 </a>
                                 <a href="<?= htmlspecialchars(Url::app('/logout')) ?>" class="btn btn-outline-danger">
                                     Logout
@@ -79,16 +76,8 @@ use App\Core\Url;
                         <div class="dashboard-meta">
                             <div class="list-group">
                                 <div class="list-group-item p-3">
-                                    <div class="small text-body-secondary mb-1">Empfehlung</div>
-                                    <div class="fw-semibold">Starte mit der Kategorie, die deinem Anlass am naechsten kommt.</div>
-                                </div>
-                                <div class="list-group-item p-3 mt-3">
-                                    <div class="small text-body-secondary mb-1">Hinweis</div>
-                                    <div class="fw-semibold">Die genaue Ausgestaltung kann im naechsten Schritt weiterhin individuell angepasst werden.</div>
-                                </div>
-                                <div class="list-group-item p-3 mt-3">
-                                    <div class="small text-body-secondary mb-1">Status</div>
-                                    <div class="fw-semibold">Die Seite ist als Auswahluebersicht vorbereitet und kann jetzt an deinen weiteren Flow angebunden werden.</div>
+                                    <div class="small text-body-secondary mb-1">Mögliche Aktionen:</div>
+                                    <div class="fw-semibold">Wähle einen Anlass aus oder erstelle einen neuen.</div>
                                 </div>
                             </div>
                         </div>

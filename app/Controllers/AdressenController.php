@@ -23,16 +23,27 @@ final class AdressenController extends Controller
 
     public function index(array $params): void
     {
-        $user = $this->authService->requireUser();
-        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $this->authService->requireUser();
+        $anlass = $this->findOptionalAnlass($params);
         $query = trim((string) ($_GET['q'] ?? ''));
 
         $this->render('clients/indes', [
-            'user' => $user,
             'anlass' => $anlass,
             'adressen' => $this->adressenModel->search($query),
-            'plzOptions' => $this->plzModel->getActiveOptions(),
             'query' => $query,
+            'errors' => [],
+        ]);
+    }
+
+    public function create(array $params): void
+    {
+        $this->authService->requireUser();
+        $anlass = $this->findOptionalAnlass($params);
+
+        $this->render('clients/form', [
+            'anlass' => $anlass,
+            'adresse' => null,
+            'plzOptions' => $this->plzModel->getActiveOptions(),
             'errors' => [],
             'old' => [],
         ]);
@@ -41,19 +52,17 @@ final class AdressenController extends Controller
     public function store(array $params): void
     {
         $user = $this->authService->requireUser();
-        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $anlass = $this->findOptionalAnlass($params);
         $data = $this->addressDataFromRequest($user);
         $plz = $this->plzModel->findByLookup((string) ($_POST['plz_lookup'] ?? ''));
         $data['plz_id'] = $plz['id'] ?? null;
         $errors = $this->validateAddressData($data);
 
         if ($errors !== []) {
-            $this->render('clients/indes', [
-                'user' => $user,
+            $this->render('clients/form', [
                 'anlass' => $anlass,
-                'adressen' => $this->adressenModel->getAll(),
+                'adresse' => null,
                 'plzOptions' => $this->plzModel->getActiveOptions(),
-                'query' => '',
                 'errors' => $errors,
                 'old' => $data,
             ]);
@@ -62,7 +71,62 @@ final class AdressenController extends Controller
 
         $adresseId = $this->adressenModel->create($data);
 
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/neu?adresse_id=' . $adresseId);
+        Response::redirect($anlass === null ? '/schuetzen' : '/anlass/' . (int) $anlass['id'] . '/loesen/neu?adresse_id=' . $adresseId);
+    }
+
+    public function edit(array $params): void
+    {
+        $this->authService->requireUser();
+        $anlass = $this->findOptionalAnlass($params);
+        $adresse = $this->findAdresseOrFail((int) ($params['adresseId'] ?? 0));
+
+        $this->render('clients/form', [
+            'anlass' => $anlass,
+            'adresse' => $adresse,
+            'plzOptions' => $this->plzModel->getActiveOptions(),
+            'errors' => [],
+            'old' => $this->addressDataForForm($adresse),
+        ]);
+    }
+
+    public function update(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findOptionalAnlass($params);
+        $adresse = $this->findAdresseOrFail((int) ($params['adresseId'] ?? 0));
+        $data = $this->addressDataFromRequest($user);
+        $plz = $this->plzModel->findByLookup((string) ($_POST['plz_lookup'] ?? ''));
+        $data['plz_id'] = $plz['id'] ?? null;
+        $data['creator_adress_id'] = $adresse['creator_adress_id'] ?? null;
+        $data['modifier_adress_id'] = $adresse['modifier_adress_id'] ?? null;
+        $data['passwort'] = $adresse['passwort'] ?? null;
+        $data['created_by_user_id'] = $adresse['created_by_user_id'] ?? null;
+        $data['updated_by_user_id'] = (int) $user['id'];
+        $errors = $this->validateAddressData($data);
+
+        if ($errors !== []) {
+            $this->render('clients/form', [
+                'anlass' => $anlass,
+                'adresse' => $adresse,
+                'plzOptions' => $this->plzModel->getActiveOptions(),
+                'errors' => $errors,
+                'old' => $data,
+            ]);
+            return;
+        }
+
+        $this->adressenModel->update((int) $adresse['id'], $data);
+
+        Response::redirect($anlass === null ? '/schuetzen' : '/anlass/' . (int) $anlass['id'] . '/schuetzen');
+    }
+
+    private function findOptionalAnlass(array $params): ?array
+    {
+        if (!isset($params['id'])) {
+            return null;
+        }
+
+        return $this->findAnlassOrFail((int) $params['id']);
     }
 
     private function findAnlassOrFail(int $id): array
@@ -78,6 +142,21 @@ final class AdressenController extends Controller
         }
 
         return $anlass;
+    }
+
+    private function findAdresseOrFail(int $id): array
+    {
+        if ($id <= 0) {
+            Response::notFound('Adresse nicht gefunden');
+        }
+
+        $adresse = $this->adressenModel->findById($id);
+
+        if ($adresse === null) {
+            Response::notFound('Adresse nicht gefunden');
+        }
+
+        return $adresse;
     }
 
     private function addressDataFromRequest(array $user): array
@@ -120,5 +199,27 @@ final class AdressenController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function addressDataForForm(array $adresse): array
+    {
+        $plzLookup = trim((string) (($adresse['plz4'] ?? '') . ' ' . ($adresse['ortschaftsname'] ?? '')));
+
+        return [
+            'anrede' => $adresse['anrede'] ?? '',
+            'firmen_anrede' => $adresse['firmen_anrede'] ?? '',
+            'nachname' => $adresse['nachname'] ?? '',
+            'vorname' => $adresse['vorname'] ?? '',
+            'zusatz' => $adresse['zusatz'] ?? '',
+            'strasse' => $adresse['strasse'] ?? '',
+            'postfach' => $adresse['postfach'] ?? '',
+            'nation' => $adresse['nation'] ?? '',
+            'plz_lookup' => $plzLookup,
+            'telefon' => $adresse['telefon'] ?? '',
+            'email' => $adresse['email'] ?? '',
+            'notiz' => $adresse['notiz'] ?? '',
+            'geburtsdatum' => $adresse['geburtsdatum'] ?? null,
+            'lizenz' => $adresse['lizenz'] ?? '',
+        ];
     }
 }

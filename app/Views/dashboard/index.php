@@ -17,9 +17,7 @@ use App\Core\Url;
                     <div class="card-body">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                             <div>
-                                <div class="brand-badge mb-3">Geschuetzter Bereich</div>
                                 <h1 class="h2 mb-2">Dashboard</h1>
-                                <p class="muted-copy mb-0">Diese Seite ist nur nach erfolgreichem Login erreichbar.</p>
                             </div>
 
                             <a href="<?= htmlspecialchars(Url::app('/logout')) ?>" class="btn btn-outline-danger">
@@ -33,14 +31,10 @@ use App\Core\Url;
                                     <div class="small text-body-secondary mb-1">Benutzername</div>
                                     <div class="fw-semibold"><?= htmlspecialchars((string) ($user['username'] ?? '')) ?></div>
                                 </div>
-                                <div class="list-group-item p-3 mt-3">
-                                    <div class="small text-body-secondary mb-1">E-Mail</div>
-                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($user['email'] ?? '')) ?></div>
-                                </div>
-                                
                             </div>
-                            <div>
+                            <div class="d-flex flex-wrap gap-2">
                                 <a href="<?= htmlspecialchars(Url::app('/anlass')) ?>" class="btn btn-primary">Anlass auswählen</a>
+                                <a href="<?= htmlspecialchars(Url::app('/schuetzen')) ?>" class="btn btn-outline-primary">Schützen verwalten</a>
                             </div>
                         </div>
                     </div>

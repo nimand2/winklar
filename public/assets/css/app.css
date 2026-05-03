@@ -1,9 +1,22 @@
+:root {
+    --app-primary: #334155;
+    --app-primary-rgb: 51, 65, 85;
+    --app-accent: #0ea5e9;
+    --app-accent-rgb: 14, 165, 233;
+    --app-muted: #64748b;
+    --app-surface: #ffffff;
+    --bs-primary: var(--app-primary);
+    --bs-primary-rgb: var(--app-primary-rgb);
+    --bs-link-color: var(--app-primary);
+    --bs-link-hover-color: #1f2937;
+}
+
 body.app-shell {
     min-height: 100vh;
     background:
-        radial-gradient(circle at top left, rgba(13, 110, 253, 0.18), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(25, 135, 84, 0.18), transparent 24%),
-        linear-gradient(180deg, #f8fbff 0%, #eef3f8 100%);
+        radial-gradient(circle at top left, rgba(var(--app-accent-rgb), 0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(var(--app-primary-rgb), 0.12), transparent 24%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }
 
 .auth-wrapper {
@@ -28,14 +41,14 @@ body.app-shell {
     gap: 0.5rem;
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    background: rgba(13, 110, 253, 0.1);
-    color: #0d6efd;
+    background: rgba(var(--app-accent-rgb), 0.12);
+    color: #0369a1;
     font-size: 0.875rem;
     font-weight: 600;
 }
 
 .muted-copy {
-    color: #6c757d;
+    color: var(--app-muted);
 }
 
 .dashboard-meta {
@@ -45,19 +58,84 @@ body.app-shell {
 
 .dashboard-meta .list-group-item {
     border-radius: 1rem;
-    border: 1px solid rgba(13, 110, 253, 0.08);
+    border: 1px solid rgba(var(--app-primary-rgb), 0.08);
 }
 
 .anlass-card {
-    border: 1px solid rgba(13, 110, 253, 0.08);
+    border: 1px solid rgba(var(--app-primary-rgb), 0.08);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .anlass-card:hover,
 .anlass-card:focus {
-    border-color: rgba(13, 110, 253, 0.35);
+    border-color: rgba(var(--app-accent-rgb), 0.45);
     box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.08);
     transform: translateY(-2px);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-bg: #1f2937;
+    --bs-btn-hover-border-color: #1f2937;
+    --bs-btn-active-bg: #0f172a;
+    --bs-btn-active-border-color: #0f172a;
+    --bs-btn-disabled-bg: var(--app-primary);
+    --bs-btn-disabled-border-color: var(--app-primary);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-bg: var(--app-primary);
+    --bs-btn-hover-border-color: var(--app-primary);
+    --bs-btn-active-bg: #1f2937;
+    --bs-btn-active-border-color: #1f2937;
+    --bs-btn-disabled-color: var(--app-primary);
+    --bs-btn-disabled-border-color: var(--app-primary);
+}
+
+.text-bg-primary {
+    color: #ffffff !important;
+    background-color: var(--app-primary) !important;
+}
+
+.text-primary {
+    color: var(--app-primary) !important;
+}
+
+.bg-primary {
+    background-color: var(--app-primary) !important;
+}
+
+.border-primary {
+    border-color: var(--app-primary) !important;
+}
+
+.list-group-item.active {
+    background-color: var(--app-primary);
+    border-color: var(--app-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(var(--app-accent-rgb), 0.7);
+    box-shadow: 0 0 0 0.25rem rgba(var(--app-accent-rgb), 0.2);
+}
+
+.form-check-input:checked {
+    background-color: var(--app-primary);
+    border-color: var(--app-primary);
+}
+
+.page-link {
+    color: var(--app-primary);
+}
+
+.active > .page-link,
+.page-link.active {
+    background-color: var(--app-primary);
+    border-color: var(--app-primary);
 }
 
 @media (max-width: 576px) {

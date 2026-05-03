@@ -134,11 +134,21 @@ Beispiel:
 
 Die Farbwelt bleibt bewusst zurueckhaltend:
 
-- Blau fuer Primaeraktionen und aktive Elemente
-- Gruen nur sparsam fuer positive Zustaende oder Hintergrundakzente
+- Anthrazit fuer Primaeraktionen und aktive Elemente
+- Signalblau sparsam fuer Fokus, Badges, Hover-Zustaende und Hintergrundakzente
+- Gruen nur fuer positive Zustaende wie Erfolgsmeldungen oder erreichte Gaben
 - Rot nur fuer Logout, Loeschen oder gefaehrliche Aktionen
 - Grau fuer Metadaten, Hinweise und neutrale Navigation
 - Weiss fuer Arbeitsflaechen
+
+Projektpalette:
+
+- Primaerfarbe Anthrazit: `#334155`
+- Primaerfarbe dunkel: `#1f2937`
+- Akzentfarbe Signalblau: `#0ea5e9`
+- Hintergrund hell: `#f8fafc`
+- Hintergrund Verlauf: `#eef2f7`
+- Metadaten/Hilfstext: `#64748b`
 
 Buttons:
 

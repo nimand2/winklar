@@ -251,7 +251,7 @@ Für Standblätter und Abrechnungen gibt es Druckansichten. Diese sollen:
 - reduzierter gestaltet sein als Arbeitsseiten
 - keine unnötigen Navigationselemente enthalten
 - klare Tabellen und Summen zeigen
-- auf A4 gut lesbar sein
+- auf A5 gut lesbar sein
 - Bootstrap nur verwenden, wenn es den Druck nicht stört
 
 ## JavaScript

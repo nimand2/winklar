@@ -36,12 +36,12 @@ final class AuthController extends Controller
         $rememberMe = isset($_POST['remember_me']);
 
         if ($login === '' || $password === '') {
-            Session::putFlash('error', 'Bitte Benutzername/E-Mail und Passwort ausfuellen.');
+            Session::putFlash('error', 'Bitte Benutzername/E-Mail und Passwort ausfüllen.');
             $this->redirect('/login');
         }
 
         if (!$this->authService->attemptLogin($login, $password, $rememberMe)) {
-            Session::putFlash('error', 'Die Login-Daten sind ungueltig.');
+            Session::putFlash('error', 'Die Login-Daten sind ungültig.');
             $this->redirect('/login');
         }
 

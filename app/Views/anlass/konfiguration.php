@@ -39,7 +39,7 @@ $regeln = $regeln ?? [];
                                     Anlass bearbeiten
                                 </a>
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurueck zum Anlass
+                                    Zurück zum Anlass
                                 </a>
                             </div>
                         </div>
@@ -128,7 +128,7 @@ $regeln = $regeln ?? [];
                                     <h2 class="h5 mb-3">Neue Gaben-Regel</h2>
                                     <?php if ($stiche === []): ?>
                                         <div class="alert alert-light border mb-0">
-                                            Fuer diesen Anlass sind noch keine Stiche hinterlegt.
+                                            Für diesen Anlass sind noch keine Stiche hinterlegt.
                                         </div>
                                     <?php elseif ($gaben === []): ?>
                                         <div class="alert alert-light border mb-0">
@@ -231,7 +231,7 @@ $regeln = $regeln ?? [];
                                                 </div>
                                             </form>
                                             <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'] . '/loeschen')) ?>" class="mt-2">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Stich loeschen</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Stich löschen</button>
                                             </form>
                                         </div>
                                     <?php endforeach; ?>
@@ -239,7 +239,7 @@ $regeln = $regeln ?? [];
 
                                 <?php if ($stiche === []): ?>
                                     <div class="alert alert-light border">
-                                        Es sind noch keine Stiche fuer diesen Anlass hinterlegt.
+                                        Es sind noch keine Stiche für diesen Anlass hinterlegt.
                                     </div>
                                 <?php endif; ?>
 
@@ -271,7 +271,7 @@ $regeln = $regeln ?? [];
                                                 </div>
                                             </form>
                                             <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben/' . (int) $gabe['id'] . '/loeschen')) ?>" class="mt-2">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Gabe loeschen</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Gabe löschen</button>
                                             </form>
                                         </div>
                                     <?php endforeach; ?>
@@ -298,7 +298,7 @@ $regeln = $regeln ?? [];
                                                     </div>
                                                 </div>
                                                 <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben-regeln/' . (int) $regel['id'] . '/loeschen')) ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Regel loeschen</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Regel löschen</button>
                                                 </form>
                                             </div>
                                         </div>
@@ -307,7 +307,7 @@ $regeln = $regeln ?? [];
 
                                 <?php if ($regeln === []): ?>
                                     <div class="alert alert-light border mb-0">
-                                        Es sind noch keine Gaben-Regeln fuer diesen Anlass hinterlegt.
+                                        Es sind noch keine Gaben-Regeln für diesen Anlass hinterlegt.
                                     </div>
                                 <?php endif; ?>
                             </div>

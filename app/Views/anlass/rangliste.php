@@ -45,21 +45,21 @@ $formatNumber = static function (float $value): string {
                                 <div class="brand-badge mb-3">Abschluss</div>
                                 <h1 class="h2 mb-2">Rangliste <?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
                                 <p class="muted-copy mb-0">
-                                    Auswertung pro Stich und Kategorie. Bei Punktgleichheit entscheidet das naechstbeste Resultat.
+                                    Auswertung pro Stich und Kategorie. Bei Punktgleichheit entscheidet das nächstbeste Resultat.
                                 </p>
                             </div>
 
                             <div class="d-flex flex-wrap gap-2 no-print">
                                 <button type="button" class="btn btn-primary" onclick="window.print()">Drucken</button>
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurueck zum Anlass
+                                    Zurück zum Anlass
                                 </a>
                             </div>
                         </div>
 
                         <?php if ($ranglisten === []): ?>
                             <div class="alert alert-light border mb-0">
-                                Fuer diesen Anlass sind noch keine Stiche vorhanden.
+                                Für diesen Anlass sind noch keine Stiche vorhanden.
                             </div>
                         <?php endif; ?>
 
@@ -93,7 +93,7 @@ $formatNumber = static function (float $value): string {
 
                                     <?php if ($klassiert === 0): ?>
                                         <div class="alert alert-light border mb-0">
-                                            Fuer diesen Stich sind noch keine Schussdaten vorhanden.
+                                            Für diesen Stich sind noch keine Schussdaten vorhanden.
                                         </div>
                                     <?php else: ?>
                                         <div class="d-flex flex-column gap-4">
@@ -107,7 +107,7 @@ $formatNumber = static function (float $value): string {
 
                                                     <?php if ($teilnehmer === []): ?>
                                                         <div class="alert alert-light border mb-0">
-                                                            Keine klassierten Schuetzen in dieser Kategorie.
+                                                            Keine klassierten Schützen in dieser Kategorie.
                                                         </div>
                                                     <?php else: ?>
                                                         <div class="table-responsive">
@@ -115,11 +115,11 @@ $formatNumber = static function (float $value): string {
                                                                 <thead>
                                                                     <tr>
                                                                         <th style="width: 80px;">Rang</th>
-                                                                        <th>Schuetze</th>
+                                                                        <th>Schütze</th>
                                                                         <th>Verein</th>
                                                                         <th class="text-end">Bestes</th>
                                                                         <th>Resultate</th>
-                                                                        <th class="text-end">Schuesse</th>
+                                                                        <th class="text-end">Schüsse</th>
                                                                         <th>Geburtsdatum</th>
                                                                     </tr>
                                                                 </thead>

@@ -132,7 +132,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                         href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>"
                                         class="btn btn-outline-primary"
                                     >
-                                        Standblatt abschliessen
+                                        Standblatt abschließen
                                     </a>
                                     <a
                                         href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/druck')) ?>"

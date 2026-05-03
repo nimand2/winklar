@@ -35,7 +35,7 @@ final class ClientApiController extends Controller
 
         $user = $this->authService->findUserByLogin($username);
         if ($user === null || !password_verify($password, (string) $user['password_hash'])) {
-            JsonResponse::error('Ungueltige Anmeldedaten.', 401, 'INVALID_CREDENTIALS');
+            JsonResponse::error('Ungültige Anmeldedaten.', 401, 'INVALID_CREDENTIALS');
             return;
         }
 
@@ -62,7 +62,7 @@ final class ClientApiController extends Controller
 
         $anlassId = (int) ($params['id'] ?? 0);
         if ($anlassId <= 0) {
-            JsonResponse::error('Ungueltiger Anlass.', 400, 'INVALID_ANLASS');
+            JsonResponse::error('Ungültiger Anlass.', 400, 'INVALID_ANLASS');
             return;
         }
 
@@ -79,7 +79,7 @@ final class ClientApiController extends Controller
         $sinceId = (int) ($_GET['sinceId'] ?? 0);
 
         if ($anlassId <= 0) {
-            JsonResponse::error('Ungueltiger Anlass.', 400, 'INVALID_ANLASS');
+            JsonResponse::error('Ungültiger Anlass.', 400, 'INVALID_ANLASS');
             return;
         }
 
@@ -99,7 +99,7 @@ final class ClientApiController extends Controller
         $shots = $payload['Shots'] ?? $payload['shots'] ?? [];
 
         if ($anlassId <= 0 || ($payloadAnlassId > 0 && $payloadAnlassId !== $anlassId)) {
-            JsonResponse::error('Ungueltiger Anlass.', 400, 'INVALID_ANLASS');
+            JsonResponse::error('Ungültiger Anlass.', 400, 'INVALID_ANLASS');
             return;
         }
 

@@ -28,7 +28,7 @@ $action = $isEdit ? Url::app('/anlass/' . $anlassId . '/bearbeiten') : Url::app(
                                 <div class="brand-badge mb-3">Planung</div>
                                 <h1 class="h2 mb-2"><?= htmlspecialchars($title) ?></h1>
                                 <p class="muted-copy mb-0">
-                                    Grunddaten fuer den Anlass erfassen und danach Gaben, Stiche und Regeln konfigurieren.
+                                    Grunddaten für den Anlass erfassen und danach Gaben, Stiche und Regeln konfigurieren.
                                 </p>
                             </div>
 

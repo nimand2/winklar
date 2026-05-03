@@ -37,7 +37,7 @@ $formatNumber = static function (float $value): string {
                         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Abrechnen</div>
-                                <h1 class="h2 mb-2">Standblatt abschliessen #<?= htmlspecialchars((string) $standblattId) ?></h1>
+                                <h1 class="h2 mb-2">Standblatt abschließen #<?= htmlspecialchars((string) $standblattId) ?></h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars($name) ?> · <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>
@@ -214,7 +214,7 @@ $formatNumber = static function (float $value): string {
 
                         <div class="d-flex justify-content-end mt-4">
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-primary">
-                                Abschliessen
+                                Abschließen
                             </a>
                         </div>
                     </div>

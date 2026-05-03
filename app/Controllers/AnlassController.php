@@ -331,7 +331,7 @@ final class AnlassController extends Controller
         $errors = [];
 
         if ($data['name_anlass'] === '') {
-            $errors[] = 'Bitte gib einen Namen fuer den Anlass ein.';
+            $errors[] = 'Bitte gib einen Namen für den Anlass ein.';
         }
 
         if (
@@ -369,7 +369,7 @@ final class AnlassController extends Controller
         $errors = [];
 
         if ($data['name'] === '') {
-            $errors[] = 'Bitte gib einen Namen fuer den Stich ein.';
+            $errors[] = 'Bitte gib einen Namen für den Stich ein.';
         }
 
         return $errors;

@@ -7,7 +7,7 @@ use App\Core\Url;
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Anlass auswaehlen']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Anlass auswählen']); ?>
 </head>
 <body class="app-shell">
     <main class="container py-5">
@@ -69,7 +69,7 @@ use App\Core\Url;
 
                         <?php if ($anlass === []): ?>
                             <div class="alert alert-light border mb-4">
-                                Es sind aktuell noch keine Anlaesse in der Datenbank vorhanden.
+                                Es sind aktuell noch keine Anlässe in der Datenbank vorhanden.
                             </div>
                         <?php endif; ?>
 

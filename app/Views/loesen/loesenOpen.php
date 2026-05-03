@@ -9,7 +9,7 @@ $anlassId = (int) $anlass['id'];
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt auswaehlen']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt auswählen']); ?>
 </head>
 <body class="app-shell">
     <main class="container py-5">

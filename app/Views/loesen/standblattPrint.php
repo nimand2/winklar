@@ -41,7 +41,7 @@ $gridGroups = max(1, count($printGroups));
 $gaben = (array) ($gaben ?? []);
 $gabenColumns = max(1, count($gaben));
 $barcodeError = $standblattId > 999998
-    ? 'Fehler: Standblattnummer groesser 999998. SIUS-Barcode kann nicht erzeugt werden.'
+    ? 'Fehler: Standblattnummer größer 999998. SIUS-Barcode kann nicht erzeugt werden.'
     : '';
 $barcodeNumber = '';
 

@@ -49,14 +49,14 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                 <div class="brand-badge mb-3">Kasse</div>
                                 <h1 class="h2 mb-2">Kassen-Abrechnung <?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
                                 <p class="muted-copy mb-0">
-                                    Einnahmen aus geloesten Standblaettern und Warenwert der abgegebenen Gaben.
+                                    Einnahmen aus gelösten Standblättern und Warenwert der abgegebenen Gaben.
                                 </p>
                             </div>
 
                             <div class="d-flex flex-wrap gap-2 no-print">
                                 <button type="button" class="btn btn-primary" onclick="window.print()">Drucken</button>
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurueck zum Anlass
+                                    Zurück zum Anlass
                                 </a>
                             </div>
                         </div>
@@ -82,7 +82,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                             </div>
                             <div class="col-12 col-md-3">
                                 <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Offene Gabenpruefung</div>
+                                    <div class="small text-body-secondary mb-1">Offene Gabenprüfung</div>
                                     <div class="fw-semibold fs-5"><?= (int) ($abrechnung['offene_gaben_pruefungen'] ?? 0) ?></div>
                                 </div>
                             </div>
@@ -93,7 +93,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                 <section class="list-group-item p-4 bg-white rounded-4 h-100">
                                     <h2 class="h5 mb-3">Einnahmen nach Stich</h2>
                                     <?php if ($stichEinnahmen === []): ?>
-                                        <div class="alert alert-light border mb-0">Noch keine Stiche geloest.</div>
+                                        <div class="alert alert-light border mb-0">Noch keine Stiche gelöst.</div>
                                     <?php else: ?>
                                         <div class="table-responsive">
                                             <table class="table align-middle mb-0">
@@ -155,16 +155,16 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                         </div>
 
                         <section class="list-group-item p-4 bg-white rounded-4 mt-4">
-                            <h2 class="h5 mb-3">Standblaetter</h2>
+                            <h2 class="h5 mb-3">Standblätter</h2>
                             <?php if ($standblaetter === []): ?>
-                                <div class="alert alert-light border mb-0">Noch keine Standblaetter vorhanden.</div>
+                                <div class="alert alert-light border mb-0">Noch keine Standblätter vorhanden.</div>
                             <?php else: ?>
                                 <div class="table-responsive">
                                     <table class="table align-middle mb-0">
                                         <thead>
                                             <tr>
                                                 <th>Standblatt</th>
-                                                <th>Schuetze</th>
+                                                <th>Schütze</th>
                                                 <th>Verein</th>
                                                 <th>Datum</th>
                                                 <th class="text-end">Kosten</th>
@@ -183,7 +183,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                                     <td><?= htmlspecialchars((string) ($row['verein'] ?: '-')) ?></td>
                                                     <td><?= htmlspecialchars((string) ($row['datum'] ?: '-')) ?></td>
                                                     <td class="text-end fw-semibold"><?= htmlspecialchars($money((float) $row['kosten'])) ?></td>
-                                                    <td><?= $row['gaben_geprueft'] ? 'geprueft' : 'offen' ?></td>
+                                                    <td><?= $row['gaben_geprueft'] ? 'geprüft' : 'offen' ?></td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
@@ -203,7 +203,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                             <tr>
                                                 <th>Gabe</th>
                                                 <th>Stich</th>
-                                                <th>Schuetze</th>
+                                                <th>Schütze</th>
                                                 <th class="text-end">Wert</th>
                                             </tr>
                                         </thead>

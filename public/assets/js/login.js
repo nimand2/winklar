@@ -8,6 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     loginForm.addEventListener('submit', function () {
         loginButton.disabled = true;
-        loginButton.textContent = 'Pruefe Login...';
+        loginButton.textContent = 'Prüfe Login...';
     });
 });

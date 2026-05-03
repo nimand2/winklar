@@ -51,7 +51,7 @@ $query = trim((string) ($query ?? ''));
                                 <button type="submit" class="btn btn-primary">Suchen</button>
                                 <?php if ($query !== ''): ?>
                                     <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-outline-secondary">
-                                        Zuruecksetzen
+                                        Zurücksetzen
                                     </a>
                                 <?php endif; ?>
                             </div>

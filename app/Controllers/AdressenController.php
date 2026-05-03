@@ -188,7 +188,7 @@ final class AdressenController extends Controller
         }
 
         if ((string) ($data['plz_lookup'] ?? '') !== '' && empty($data['plz_id'])) {
-            return ['Bitte waehle eine gueltige PLZ aus der Liste aus.'];
+            return ['Bitte wähle eine gültige PLZ aus der Liste aus.'];
         }
 
         return [];

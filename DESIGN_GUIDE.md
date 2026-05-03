@@ -1,22 +1,22 @@
 # Design Guide
 
-Diese Datei beschreibt den aktuellen visuellen und strukturellen Stil der Webapplikation. Neue Seiten sollen sich daran orientieren, damit Login, Dashboard, Anlassverwaltung, Schuetzenverwaltung, Standblaetter, Abrechnung und Ranglisten wie ein zusammenhaengendes System wirken.
+Diese Datei beschreibt den aktuellen visuellen und strukturellen Stil der Webapplikation. Neue Seiten sollen sich daran orientieren, damit Login, Dashboard, Anlassverwaltung, Schützenverwaltung, Standblätter, Abrechnung und Ranglisten wie ein zusammenhängendes System wirken.
 
 ## Ziel des Designs
 
-Die Anwendung ist eine Arbeitsoberflaeche fuer einen Schiessanlass. Das Design soll deshalb ruhig, klar und effizient sein:
+Die Anwendung ist eine Arbeitsoberfläche für einen Schiessanlass. Das Design soll deshalb ruhig, klar und effizient sein:
 
-- schnelle Orientierung fuer Personen im Buero oder an der Kasse
+- schnelle Orientierung für Personen im Büro oder an der Kasse
 - gute Lesbarkeit von Namen, Startnummern, Preisen, Daten und Resultaten
-- klare Primaeraktionen wie "Neuer Anlass", "Neuer Schuetz", "Abrechnen" oder "Drucken"
+- klare Primäraktionen wie "Neuer Anlass", "Neuer Schütz", "Abrechnen" oder "Drucken"
 - einheitliche Seitenstruktur mit Bootstrap 5
-- moeglichst wenig eigenes CSS, aber genug Projektcharakter
+- möglichst wenig eigenes CSS, aber genug Projektcharakter
 
-Die Webapp ist keine Marketing-Seite. Neue Ansichten sollen direkt die eigentliche Arbeit ermoeglichen.
+Die Webapp ist keine Marketing-Seite. Neue Ansichten sollen direkt die eigentliche Arbeit ermöglichen.
 
 ## Technische Basis
 
-Fuer neue Seiten immer diese Grundlagen verwenden:
+Für neue Seiten immer diese Grundlagen verwenden:
 
 - Bootstrap CSS: `https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css`
 - Projekt-CSS: [public/assets/css/app.css](/var/www/html/public/assets/css/app.css), im Browser unter `/assets/css/app.css`
@@ -24,7 +24,7 @@ Fuer neue Seiten immer diese Grundlagen verwenden:
 - Gemeinsamer Head: [app/Views/partials/head.php](/var/www/html/app/Views/partials/head.php)
 - Gemeinsames Bootstrap-Script: [app/Views/partials/bootstrap-script.php](/var/www/html/app/Views/partials/bootstrap-script.php)
 
-Neue PHP-Views sollen den vorhandenen MVC-Stil nutzen und Links ueber `App\Core\Url::app()` bzw. Assets ueber `App\Core\Url::asset()` erzeugen.
+Neue PHP-Views sollen den vorhandenen MVC-Stil nutzen und Links über `App\Core\Url::app()` bzw. Assets über `App\Core\Url::asset()` erzeugen.
 
 ## Grundlayout
 
@@ -39,7 +39,7 @@ Empfohlene Spalten:
 
 - Login und schmale Formulare: `col-12 col-md-8 col-lg-5`
 - Standardseiten: `col-12 col-lg-8`
-- Uebersichten mit mehreren Spalten oder vielen Aktionen: `col-12 col-xl-10`
+- Übersichten mit mehreren Spalten oder vielen Aktionen: `col-12 col-xl-10`
 
 Beispiel:
 
@@ -87,25 +87,25 @@ Der Kopfbereich soll auf Desktop horizontal funktionieren und auf Mobile sauber 
     </div>
 
     <div class="d-flex flex-wrap gap-2">
-        <a href="#" class="btn btn-primary">Primaeraktion</a>
-        <a href="#" class="btn btn-outline-secondary">Zurueck</a>
+        <a href="#" class="btn btn-primary">Primäraktion</a>
+        <a href="#" class="btn btn-outline-secondary">Zurück</a>
     </div>
 </div>
 ```
 
-## Karten und Flaechen
+## Karten und Flächen
 
 Der Hauptinhalt liegt aktuell in einer Bootstrap-Karte:
 
-- `card auth-card` fuer Login
-- `card dashboard-card` fuer geschuetzte Arbeitsseiten
+- `card auth-card` für Login
+- `card dashboard-card` für geschützte Arbeitsseiten
 
 Eigenschaften:
 
 - kein harter Rahmen
 - weicher Schatten
-- grosszuegiges Innenpadding
-- helle, ruhige Flaeche auf dem Hintergrund
+- grosszügiges Innenpadding
+- helle, ruhige Fläche auf dem Hintergrund
 
 Innerhalb einer Hauptkarte sollen wiederholte Inhalte als Listen, Tabellen oder einzelne `list-group-item`-Elemente dargestellt werden. Keine verschachtelten dekorativen Karten bauen, wenn eine Liste oder ein Grid reicht.
 
@@ -119,7 +119,7 @@ Regeln:
 - Beschreibungstext: `p.muted-copy`
 - Metadatenlabels: `small text-body-secondary`
 - Werte: `fw-semibold`
-- Keine sehr grossen Hero-Schriften in Arbeitsansichten
+- Keine sehr großen Hero-Schriften in Arbeitsansichten
 - Texte kurz halten, besonders in Buttons und Badges
 
 Beispiel:
@@ -127,24 +127,24 @@ Beispiel:
 ```html
 <div class="brand-badge mb-3">Kasse</div>
 <h1 class="h2 mb-2">Kassen-Abrechnung</h1>
-<p class="muted-copy mb-0">Uebersicht der offenen und bezahlten Standblaetter.</p>
+<p class="muted-copy mb-0">Übersicht der offenen und bezahlten Standblätter.</p>
 ```
 
 ## Farben
 
-Die Farbwelt bleibt bewusst zurueckhaltend:
+Die Farbwelt bleibt bewusst zurückhaltend:
 
-- Anthrazit fuer Primaeraktionen und aktive Elemente
-- Signalblau sparsam fuer Fokus, Badges, Hover-Zustaende und Hintergrundakzente
-- Gruen nur fuer positive Zustaende wie Erfolgsmeldungen oder erreichte Gaben
-- Rot nur fuer Logout, Loeschen oder gefaehrliche Aktionen
-- Grau fuer Metadaten, Hinweise und neutrale Navigation
-- Weiss fuer Arbeitsflaechen
+- Anthrazit für Primäraktionen und aktive Elemente
+- Signalblau sparsam für Fokus, Badges, Hover-Zustände und Hintergrundakzente
+- Grün nur für positive Zustände wie Erfolgsmeldungen oder erreichte Gaben
+- Rot nur für Logout, Löschen oder gefährliche Aktionen
+- Grau für Metadaten, Hinweise und neutrale Navigation
+- Weiss für Arbeitsflächen
 
 Projektpalette:
 
-- Primaerfarbe Anthrazit: `#334155`
-- Primaerfarbe dunkel: `#1f2937`
+- Primärfarbe Anthrazit: `#334155`
+- Primärfarbe dunkel: `#1f2937`
 - Akzentfarbe Signalblau: `#0ea5e9`
 - Hintergrund hell: `#f8fafc`
 - Hintergrund Verlauf: `#eef2f7`
@@ -155,7 +155,7 @@ Buttons:
 - Hauptaktion: `btn btn-primary`
 - Zweite wichtige Aktion: `btn btn-outline-primary`
 - Neutrale Navigation: `btn btn-outline-secondary`
-- Logout/Loeschen/Abbruch mit Risiko: `btn btn-outline-danger`
+- Logout/Löschen/Abbruch mit Risiko: `btn btn-outline-danger`
 
 Alerts:
 
@@ -171,13 +171,13 @@ Formulare folgen Bootstrap 5.
 Regeln:
 
 - Inputs: `form-control`
-- grosse Login-Inputs: `form-control form-control-lg`
+- große Login-Inputs: `form-control form-control-lg`
 - Labels: `form-label`
 - Gruppenabstand: `vstack gap-3` oder Bootstrap Margins
 - Checkboxen: `form-check`
 - Hauptbutton bei Login und schmalen Formularen: `w-100`
 - Pflichtfelder im Label oder Hilfetext klar machen
-- Fehlermeldungen ueber Bootstrap Alerts anzeigen
+- Fehlermeldungen über Bootstrap Alerts anzeigen
 
 Beispiel:
 
@@ -192,21 +192,21 @@ Beispiel:
 </form>
 ```
 
-## Listen, Tabellen und Uebersichten
+## Listen, Tabellen und Übersichten
 
-Fuer Datensaetze wie Anlaesse, Schuetzen, Standblaetter oder Abrechnungspositionen:
+Für Datensätze wie Anlässe, Schützen, Standblätter oder Abrechnungspositionen:
 
-- bei wenigen Eintraegen: `list-group`
+- bei wenigen Einträgen: `list-group`
 - bei vielen vergleichbaren Spalten: Bootstrap `table`
 - bei Auswahlkarten: `anlass-card list-group-item`
-- auf Mobile sollen Zeilen umbrechen duerfen
+- auf Mobile sollen Zeilen umbrechen dürfen
 - IDs, Startnummern, Datum und Kosten gut sichtbar machen
 
-Leere Zustaende immer ausdruecklich anzeigen:
+Leere Zustände immer ausdrücklich anzeigen:
 
 ```html
 <div class="alert alert-light border mb-0">
-    Fuer diesen Anlass wurde noch kein Standblatt erstellt.
+    Für diesen Anlass wurde noch kein Standblatt erstellt.
 </div>
 ```
 
@@ -214,7 +214,7 @@ Leere Zustaende immer ausdruecklich anzeigen:
 
 Aktionsbuttons sollen inhaltlich gruppiert werden:
 
-- oben rechts: Navigation, Zurueck, Dashboard, Logout
+- oben rechts: Navigation, Zurück, Dashboard, Logout
 - unter dem Seitentitel: fachliche Aktionen der aktuellen Seite
 - in Listenzeilen: Aktionen, die genau diesen Eintrag betreffen
 
@@ -226,42 +226,42 @@ Wichtige vorhandene Arbeitsbereiche:
 - `/anlass/neu`: neuen Anlass erstellen
 - `/anlass/{id}`: Anlassdetails und Navigation
 - `/anlass/{id}/konfiguration`: Stiche, Gaben und Regeln konfigurieren
-- `/anlass/{id}/schuetzen`: Adress- und Schuetzenverwaltung
-- `/anlass/{id}/loesen`: Standblatt auswaehlen
-- `/anlass/{id}/loesen/neu`: neues Standblatt loesen
+- `/anlass/{id}/schuetzen`: Adress- und Schützenverwaltung
+- `/anlass/{id}/loesen`: Standblatt auswählen
+- `/anlass/{id}/loesen/neu`: neues Standblatt lösen
 - `/anlass/{id}/loesen/{standblattId}/abrechnen`: Standblatt abrechnen
 - `/anlass/{id}/abschliessen`: Rangliste anzeigen
-- `/anlass/{id}/kasse`: Kassenuebersicht
+- `/anlass/{id}/kasse`: Kassenübersicht
 
-## Authentifizierung und geschuetzte Seiten
+## Authentifizierung und geschützte Seiten
 
-Geschuetzte Seiten muessen ueber den Controller die Authentifizierung erzwingen. In Views soll keine eigene Loginlogik entstehen.
+Geschuetzte Seiten müssen über den Controller die Authentifizierung erzwingen. In Views soll keine eigene Loginlogik entstehen.
 
 UI-Regeln:
 
 - Login-Seite schlicht und fokussiert
-- Nach Login immer klare Ruecknavigation anbieten
+- Nach Login immer klare Rücknavigation anbieten
 - Logout als `btn btn-outline-danger`
 - Fehlermeldungen nicht technisch formulieren, sondern handlungsorientiert
 
 ## Druckansichten
 
-Fuer Standblaetter und Abrechnungen gibt es Druckansichten. Diese sollen:
+Für Standblätter und Abrechnungen gibt es Druckansichten. Diese sollen:
 
 - reduzierter gestaltet sein als Arbeitsseiten
-- keine unnoetigen Navigationselemente enthalten
+- keine unnötigen Navigationselemente enthalten
 - klare Tabellen und Summen zeigen
 - auf A4 gut lesbar sein
-- Bootstrap nur verwenden, wenn es den Druck nicht stoert
+- Bootstrap nur verwenden, wenn es den Druck nicht stört
 
 ## JavaScript
 
-JavaScript bleibt minimal und unterstuetzt die Bedienung:
+JavaScript bleibt minimal und unterstützt die Bedienung:
 
 - Submit-Button beim Absenden deaktivieren
-- Buttontext waehrend Requests anpassen
+- Buttontext während Requests anpassen
 - Bootstrap Modals oder Toasts nur bei echtem Nutzen
-- keine komplexe Frontend-Architektur einfuehren, solange serverseitige PHP-Views reichen
+- keine komplexe Frontend-Architektur einführen, solange serverseitige PHP-Views reichen
 
 Vorhandenes Beispiel:
 
@@ -269,22 +269,22 @@ Vorhandenes Beispiel:
 
 ## Responsives Verhalten
 
-Alle Seiten muessen auf Mobile und Desktop nutzbar sein.
+Alle Seiten müssen auf Mobile und Desktop nutzbar sein.
 
 Regeln:
 
-- Buttons duerfen umbrechen: `d-flex flex-wrap gap-2`
-- Tabellen bei Bedarf mit `table-responsive` umschliessen
+- Buttons dürfen umbrechen: `d-flex flex-wrap gap-2`
+- Tabellen bei Bedarf mit `table-responsive` umschließen
 - Formulare auf Mobile volle Breite
-- Keine festen Breiten fuer Textbereiche
-- Lange Namen, Vereine oder E-Mail-Adressen duerfen das Layout nicht sprengen
+- Keine festen Breiten für Textbereiche
+- Lange Namen, Vereine oder E-Mail-Adressen dürfen das Layout nicht sprengen
 
 ## Sprache und Begriffe
 
 Die Anwendung verwendet deutschsprachige Fachbegriffe aus dem Schiessanlass:
 
 - Anlass
-- Schuetz / Schuetzin oder Schuetzen
+- Schütz / Schützin oder Schützen
 - Standblatt
 - Stich
 - Gabe
@@ -293,9 +293,9 @@ Die Anwendung verwendet deutschsprachige Fachbegriffe aus dem Schiessanlass:
 - Kasse / Abrechnung
 - Schussdaten
 
-Wichtig: Bestehende Dateien nutzen teilweise ASCII-Schreibweisen wie `auswaehlen`, `zurueck`, `Anlaesse`. Neue Texte sollen konsistent mit der jeweiligen Datei bleiben. Wenn eine Datei bereits Umlaute verwendet, duerfen neue sichtbare Texte ebenfalls Umlaute verwenden.
+Wichtig: Sichtbare deutsche Texte sollen Umlaute verwenden. Technische Namen wie Routen, Feldnamen und Variablen bleiben stabil, auch wenn sie ASCII-Schreibweisen wie `schuetzen`, `loesen` oder `Anlaesse` enthalten.
 
-## Standardstruktur fuer neue Arbeitsseiten
+## Standardstruktur für neue Arbeitsseiten
 
 ```php
 <?php
@@ -345,13 +345,13 @@ use App\Core\Url;
 </html>
 ```
 
-## Kurzregel fuer neue Seiten
+## Kurzregel für neue Seiten
 
 1. Gemeinsamen Head-Partial und Bootstrap verwenden.
 2. `body class="app-shell"` setzen.
 3. Inhalt in `container`, `row` und passende Bootstrap-Spalte legen.
 4. Arbeitsinhalt in `card dashboard-card` oder Login in `card auth-card` darstellen.
 5. Kopfbereich immer mit `brand-badge`, `h1.h2`, `muted-copy` und Aktionsgruppe aufbauen.
-6. Formulare, Tabellen, Alerts und Buttons mit Bootstrap-Klassen loesen.
+6. Formulare, Tabellen, Alerts und Buttons mit Bootstrap-Klassen lösen.
 7. Eigenes CSS nur erweitern, wenn es mehreren Seiten hilft.
-8. Mobile Umbrueche und lange Fachwerte immer mitdenken.
+8. Mobile Umbrüche und lange Fachwerte immer mitdenken.

@@ -33,7 +33,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-outline-secondary">
+                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-outline-secondary">
                                     Adresse wechseln
                                 </a>
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">

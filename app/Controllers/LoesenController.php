@@ -59,6 +59,20 @@ final class LoesenController extends Controller
         ]);
     }
 
+    public function selectAdresse(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $query = trim((string) ($_GET['q'] ?? ''));
+
+        $this->render('loesen/adresseSelect', [
+            'user' => $user,
+            'anlass' => $anlass,
+            'adressen' => $this->adressenModel->search($query),
+            'query' => $query,
+        ]);
+    }
+
     public function store(array $params): void
     {
         $user = $this->authService->requireUser();
@@ -178,7 +192,7 @@ final class LoesenController extends Controller
     private function findAdresseOrFail(int $id, int $anlassId): array
     {
         if ($id <= 0) {
-            Response::redirect('/anlass/' . $anlassId . '/schuetzen/neu');
+            Response::redirect('/anlass/' . $anlassId . '/loesen/adresse');
         }
 
         $adresse = $this->adressenModel->findById($id);

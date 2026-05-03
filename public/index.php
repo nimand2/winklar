@@ -63,6 +63,7 @@ $router->post('/anlass/{id}/schuetzen/neu', [$adressenController, 'store']);
 $router->get('/anlass/{id}/schuetzen/{adresseId}/bearbeiten', [$adressenController, 'edit']);
 $router->post('/anlass/{id}/schuetzen/{adresseId}/bearbeiten', [$adressenController, 'update']);
 $router->get('/anlass/{id}/loesen', [$loesenController, 'open']);
+$router->get('/anlass/{id}/loesen/adresse', [$loesenController, 'selectAdresse']);
 $router->get('/anlass/{id}/loesen/neu', [$loesenController, 'create']);
 $router->post('/anlass/{id}/loesen/neu', [$loesenController, 'store']);
 $router->get('/anlass/{id}/loesen/{standblattId}/abrechnen', [$abrechnenController, 'show']);

@@ -58,6 +58,7 @@ $formatNumber = static function (float $value): string {
                                 >
                                     Abrechnung drucken
                                 </a>
+                                
                             </div>
                         </div>
 

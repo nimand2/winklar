@@ -27,8 +27,8 @@ $anlassId = (int) $anlass['id'];
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-primary">
-                                    Neuer Schütz
+                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-primary">
+                                    Standblatt lösen
                                 </a>
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
                                     Zurück zum Anlass

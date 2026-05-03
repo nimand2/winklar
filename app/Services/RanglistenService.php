@@ -22,7 +22,7 @@ final class RanglistenService
         $stiche = $this->stichModel->findByAnlassId($anlassId);
         $standblaetter = $this->standblattModel->findForAnlassWithAdresse($anlassId);
         $schuesse = $this->schussdatenModel->findByAnlassId($anlassId);
-        $schuesseByStandblattAndStich = [];
+        $schuesseByStandblattAndExterneNummer = [];
 
         foreach ($schuesse as $schuss) {
             if ((int) ($schuss['ins_del'] ?? 0) !== 0) {
@@ -30,24 +30,32 @@ final class RanglistenService
             }
 
             $standblattId = (int) ($schuss['start_nr'] ?? 0);
-            $stichIndex = (int) ($schuss['stich_index'] ?? 0);
+            $externeNummer = $this->externalNumber($schuss['externe_nummer'] ?? null);
 
-            if ($standblattId <= 0 || $stichIndex <= 0) {
+            if ($standblattId <= 0 || $externeNummer === '') {
                 continue;
             }
 
-            $schuesseByStandblattAndStich[$standblattId][$stichIndex][] = $schuss;
+            $schuesseByStandblattAndExterneNummer[$standblattId][$externeNummer][] = $schuss;
         }
 
         $ranglisten = [];
 
-        foreach ($stiche as $position => $stich) {
-            $stichIndex = $this->stichIndex($stich, $position);
+        foreach ($stiche as $stich) {
+            $externeNummer = $this->externalNumber($stich['anzeige_id'] ?? null);
             $teilnehmer = [];
+
+            if ($externeNummer === '') {
+                $ranglisten[] = [
+                    'stich' => $stich,
+                    'teilnehmer' => [],
+                ];
+                continue;
+            }
 
             foreach ($standblaetter as $standblatt) {
                 $standblattId = (int) $standblatt['id'];
-                $stichSchuesse = $schuesseByStandblattAndStich[$standblattId][$stichIndex] ?? [];
+                $stichSchuesse = $schuesseByStandblattAndExterneNummer[$standblattId][$externeNummer] ?? [];
 
                 if ($stichSchuesse === []) {
                     continue;
@@ -97,11 +105,13 @@ final class RanglistenService
         return $ranglisten;
     }
 
-    private function stichIndex(array $stich, int $position): int
+    private function externalNumber(mixed $value): string
     {
-        $anzeigeId = (int) ($stich['anzeige_id'] ?? 0);
+        if ($value === null) {
+            return '';
+        }
 
-        return $anzeigeId > 0 ? $anzeigeId : $position + 1;
+        return trim((string) $value);
     }
 
     private function numericValue(mixed $value): float

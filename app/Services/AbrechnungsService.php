@@ -64,40 +64,63 @@ final class AbrechnungsService
     {
         usort($schuesse, static function (array $left, array $right): int {
             return ((int) ($left['match_index'] ?? 0) <=> (int) ($right['match_index'] ?? 0))
-                ?: ((int) ($left['stich_index'] ?? 0) <=> (int) ($right['stich_index'] ?? 0))
+                ?: strcmp((string) ($left['externe_nummer'] ?? ''), (string) ($right['externe_nummer'] ?? ''))
                 ?: strcmp((string) ($left['schuss_zeit'] ?? ''), (string) ($right['schuss_zeit'] ?? ''))
                 ?: ((int) $left['id'] <=> (int) $right['id']);
         });
 
-        $schuesseByStich = [];
+        $schuesseByExterneNummer = [];
         foreach ($schuesse as $schuss) {
             if ((int) ($schuss['ins_del'] ?? 0) !== 0) {
                 continue;
             }
 
-            $index = (int) ($schuss['stich_index'] ?? 0);
-            $schuesseByStich[$index][] = $schuss;
+            $externeNummer = $this->externalNumber($schuss['externe_nummer'] ?? null);
+            $schuesseByExterneNummer[$externeNummer][] = $schuss;
         }
 
         $rows = [];
-        $usedIndexes = [];
+        $usedExterneNummern = [];
+        $usedSchussCountsByExterneNummer = [];
         $total = 0.0;
 
-        foreach ($stiche as $position => $stich) {
-            $index = $this->stichIndex($stich, $position);
-            $usedIndexes[] = $index;
-            $row = $this->buildStichRow($stich, $schuesseByStich[$index] ?? []);
-            $rows[] = $row;
-            $total += $row['total'];
+        foreach ($stiche as $stich) {
+            $externeNummer = $this->externalNumber($stich['anzeige_id'] ?? null);
+            if ($externeNummer !== '') {
+                $usedExterneNummern[] = $externeNummer;
+            }
+
+            $anzahlStiche = max(1, (int) ($stich['anzahl_stiche'] ?? 1));
+            $anzahlSchuss = max(1, (int) ($stich['anzahl_schuss'] ?? 0));
+            $stichSchuesse = $externeNummer === '' ? [] : ($schuesseByExterneNummer[$externeNummer] ?? []);
+
+            for ($stichNummer = 0; $stichNummer < $anzahlStiche; $stichNummer++) {
+                $rowStich = $stich;
+                $rowStich['anzahl_stiche'] = 1;
+                $rowSchuesse = array_slice($stichSchuesse, $stichNummer * $anzahlSchuss, $anzahlSchuss);
+                $row = $this->buildStichRow($rowStich, $rowSchuesse);
+                $rows[] = $row;
+                $total += $row['total'];
+            }
+
+            if ($externeNummer !== '') {
+                $usedSchussCountsByExterneNummer[$externeNummer] = $anzahlStiche * $anzahlSchuss;
+            }
         }
 
-        foreach ($schuesseByStich as $index => $stichSchuesse) {
-            if (in_array((int) $index, $usedIndexes, true)) {
+        foreach ($schuesseByExterneNummer as $externeNummer => $stichSchuesse) {
+            if (in_array((string) $externeNummer, $usedExterneNummern, true)) {
+                $stichSchuesse = array_slice($stichSchuesse, $usedSchussCountsByExterneNummer[(string) $externeNummer] ?? 0);
+            }
+
+            if ($stichSchuesse === []) {
                 continue;
             }
 
             $row = $this->buildStichRow([
-                'name' => 'Nicht zugeordneter Stich ' . (int) $index,
+                'name' => $externeNummer === ''
+                    ? 'Nicht zugeordneter Stich ohne externe Nummer'
+                    : 'Nicht zugeordneter Stich ' . (string) $externeNummer,
                 'short_name' => '',
                 'anzahl_schuss' => count($stichSchuesse),
                 'anzahl_stiche' => 1,
@@ -219,11 +242,13 @@ final class AbrechnungsService
         )));
     }
 
-    private function stichIndex(array $stich, int $position): int
+    private function externalNumber(mixed $value): string
     {
-        $anzeigeId = (int) ($stich['anzeige_id'] ?? 0);
+        if ($value === null) {
+            return '';
+        }
 
-        return $anzeigeId > 0 ? $anzeigeId : $position + 1;
+        return trim((string) $value);
     }
 
     private function numericValue(mixed $value): float

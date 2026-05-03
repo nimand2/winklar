@@ -155,7 +155,10 @@ final class AnlassController extends Controller
         $this->render('anlass/rangliste', [
             'user' => $user,
             'anlass' => $anlass,
-            'ranglisten' => $this->ranglistenService->buildForAnlass((int) $anlass['id']),
+            'ranglisten' => $this->ranglistenService->buildForAnlass(
+                (int) $anlass['id'],
+                (string) (($anlass['start_anlass'] ?? '') ?: ($anlass['end_anlass'] ?? ''))
+            ),
         ]);
     }
 

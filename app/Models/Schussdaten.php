@@ -130,6 +130,66 @@ final class Schussdaten
     }
 
     /**
+     * Ermittelt den naechsten manuellen Sortierindex fuer ein Standblatt.
+     */
+    public function nextMatchIndex(int $startNr, int $idAnlass): int
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT COALESCE(MAX(match_index), 0) + 1 AS next_match_index
+             FROM schussdaten
+             WHERE start_nr = :start_nr AND id_anlass = :id_anlass'
+        );
+        $statement->execute(['start_nr' => $startNr, 'id_anlass' => $idAnlass]);
+
+        return max(1, (int) ($statement->fetch()['next_match_index'] ?? 1));
+    }
+
+    /**
+     * Aktualisiert korrigierbare Werte eines Schusses.
+     */
+    public function updateManualCorrection(int $id, array $data): bool
+    {
+        $statement = Database::connection()->prepare(
+            'UPDATE schussdaten
+             SET primaerwertung = :primaerwertung,
+                 sekundaerwertung = :sekundaerwertung,
+                 externe_nummer = :externe_nummer,
+                 schuss_zeit = :schuss_zeit,
+                 mouche = :mouche,
+                 updated_by_user_id = :updated_by_user_id
+             WHERE id = :id'
+        );
+
+        return $statement->execute([
+            'id' => $id,
+            'primaerwertung' => $data['primaerwertung'] ?? null,
+            'sekundaerwertung' => $data['sekundaerwertung'] ?? null,
+            'externe_nummer' => $data['externe_nummer'] ?? null,
+            'schuss_zeit' => $data['schuss_zeit'] ?? null,
+            'mouche' => $data['mouche'] ?? 0,
+            'updated_by_user_id' => $data['updated_by_user_id'] ?? null,
+        ]);
+    }
+
+    /**
+     * Markiert einen Schuss als geloescht, damit der Importverlauf erhalten bleibt.
+     */
+    public function markDeleted(int $id, int $userId): bool
+    {
+        $statement = Database::connection()->prepare(
+            'UPDATE schussdaten
+             SET ins_del = 1,
+                 updated_by_user_id = :updated_by_user_id
+             WHERE id = :id'
+        );
+
+        return $statement->execute([
+            'id' => $id,
+            'updated_by_user_id' => $userId,
+        ]);
+    }
+
+    /**
      * Laedt alle Schussdaten eines Anlasses in Auswertungsreihenfolge.
      */
     public function findByAnlassId(int $idAnlass): array

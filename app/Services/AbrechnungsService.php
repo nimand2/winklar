@@ -72,10 +72,7 @@ final class AbrechnungsService
     private function buildAuswertung(array $stiche, array $schuesse): array
     {
         usort($schuesse, static function (array $left, array $right): int {
-            return ((int) ($left['match_index'] ?? 0) <=> (int) ($right['match_index'] ?? 0))
-                ?: strcmp((string) ($left['externe_nummer'] ?? ''), (string) ($right['externe_nummer'] ?? ''))
-                ?: strcmp((string) ($left['schuss_zeit'] ?? ''), (string) ($right['schuss_zeit'] ?? ''))
-                ?: ((int) $left['id'] <=> (int) $right['id']);
+            return (int) $left['id'] <=> (int) $right['id'];
         });
 
         $schuesseByExterneNummer = [];
@@ -156,10 +153,12 @@ final class AbrechnungsService
         foreach ($schuesse as $schuss) {
             $wert = $this->numericValue($schuss['primaerwertung'] ?? null);
             $werte[] = [
+                'id' => (int) ($schuss['id'] ?? 0),
                 'primaerwertung' => $wert,
                 'sekundaerwertung' => $schuss['sekundaerwertung'] ?? null,
                 'mouche' => (int) ($schuss['mouche'] ?? 0) === 1,
                 'zeit' => $schuss['schuss_zeit'] ?? null,
+                'externe_nummer' => $this->externalNumber($schuss['externe_nummer'] ?? null),
             ];
             $total += $wert;
         }
@@ -171,6 +170,7 @@ final class AbrechnungsService
             'stich_id' => (int) ($stich['id'] ?? 0),
             'bezeichnung' => (string) ($stich['name'] ?? 'Stich'),
             'kurzname' => (string) ($stich['short_name'] ?? ''),
+            'externe_nummer' => $this->externalNumber($stich['anzeige_id'] ?? null),
             'preis' => (float) ($stich['preis'] ?? 0),
             'anzahl_schuss' => max(1, $anzahlSchuss),
             'anzahl_stiche' => max(1, (int) ($stich['anzahl_stiche'] ?? 1)),
@@ -214,7 +214,7 @@ final class AbrechnungsService
                     'limit' => $minWert,
                     'max_wert' => $maxWert,
                     'erreicht' => $erreicht,
-                    'selected' => isset($saved[$key]) || ($defaultSelected && $erreicht),
+                    'selected' => $erreicht && (isset($saved[$key]) || $defaultSelected),
                     'differenz' => $stichTotal - $minWert,
                 ];
             }

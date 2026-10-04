@@ -8,6 +8,7 @@ use App\Core\Controller;
 use App\Core\Response;
 use App\Models\Adressen;
 use App\Models\Gaben;
+use App\Models\Schussdaten;
 use App\Models\Standblatt;
 use App\Services\AbrechnungsService;
 use App\Services\AnlassService;
@@ -20,6 +21,7 @@ final class AbrechnenController extends Controller
         private readonly AnlassService $anlassService,
         private readonly Adressen $adressenModel,
         private readonly Standblatt $standblattModel,
+        private readonly Schussdaten $schussdatenModel,
         private readonly Gaben $gabenModel,
         private readonly AbrechnungsService $abrechnungsService,
     ) {
@@ -59,6 +61,120 @@ final class AbrechnenController extends Controller
         );
 
         $this->gabenModel->replaceAbgabenForStandblatt((int) $standblatt['id'], $items, (int) $user['id']);
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    /**
+     * Aktualisiert das Datum eines Standblatts aus der Abrechnung.
+     */
+    public function updateDatum(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+
+        $this->standblattModel->update((int) $standblatt['id'], [
+            'id_anlass' => (int) $anlass['id'],
+            'id_adresse' => (int) $standblatt['id_adresse'],
+            'datum' => $this->nullableString($_POST['datum'] ?? null),
+            'kosten' => $standblatt['kosten'] ?? null,
+            'updated_by_user_id' => (int) $user['id'],
+        ]);
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    /**
+     * Fuegt einen manuell korrigierten Schuss hinzu.
+     */
+    public function storeSchuss(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $primaerwertung = $this->nullableDecimal($_POST['primaerwertung'] ?? null);
+        $externeNummer = $this->nullableString($_POST['externe_nummer'] ?? null);
+
+        if ($primaerwertung !== null && $externeNummer !== null) {
+            $matchIndex = $this->schussdatenModel->nextMatchIndex((int) $standblatt['id'], (int) $anlass['id']);
+            $schussZeit = $this->datetimeValue($_POST['schuss_zeit'] ?? null) ?? date('Y-m-d H:i:s');
+
+            $this->schussdatenModel->create([
+                'id_anlass' => (int) $anlass['id'],
+                'start_nr' => (string) $standblatt['id'],
+                'primaerwertung' => $primaerwertung,
+                'sekundaerwertung' => $this->nullableDecimal($_POST['sekundaerwertung'] ?? null),
+                'schussart' => 'Korrektur',
+                'schuss_zeit' => $schussZeit,
+                'mouche' => isset($_POST['mouche']) ? 1 : 0,
+                'match_index' => $matchIndex,
+                'stich_index' => $matchIndex,
+                'ins_del' => 0,
+                'log_event' => 'MANUAL_INSERT',
+                'log_typ' => 'INFO',
+                'externe_nummer' => $externeNummer,
+                'import_hash' => hash('sha256', implode('|', [
+                    'manual',
+                    (int) $anlass['id'],
+                    (int) $standblatt['id'],
+                    $externeNummer,
+                    $primaerwertung,
+                    $schussZeit,
+                    microtime(true),
+                ])),
+                'created_by_user_id' => (int) $user['id'],
+                'updated_by_user_id' => (int) $user['id'],
+            ]);
+
+            $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
+        }
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    /**
+     * Korrigiert einen vorhandenen Schuss.
+     */
+    public function updateSchuss(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $schuss = $this->findSchussOrFail((int) ($params['schussId'] ?? 0), (int) $anlass['id'], (int) $standblatt['id']);
+        $primaerwertung = $this->nullableDecimal($_POST['primaerwertung'] ?? null);
+        $externeNummer = $this->nullableString($_POST['externe_nummer'] ?? null);
+
+        if ($primaerwertung !== null && $externeNummer !== null) {
+            $this->schussdatenModel->updateManualCorrection((int) $schuss['id'], [
+                'primaerwertung' => $primaerwertung,
+                'sekundaerwertung' => array_key_exists('sekundaerwertung', $_POST)
+                    ? $this->nullableDecimal($_POST['sekundaerwertung'])
+                    : $schuss['sekundaerwertung'],
+                'externe_nummer' => $externeNummer,
+                'schuss_zeit' => $this->datetimeValue($_POST['schuss_zeit'] ?? null) ?? $schuss['schuss_zeit'],
+                'mouche' => isset($_POST['mouche']) ? 1 : 0,
+                'updated_by_user_id' => (int) $user['id'],
+            ]);
+
+            $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
+        }
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    /**
+     * Entfernt einen Schuss aus der Auswertung.
+     */
+    public function deleteSchuss(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $schuss = $this->findSchussOrFail((int) ($params['schussId'] ?? 0), (int) $anlass['id'], (int) $standblatt['id']);
+
+        $this->schussdatenModel->markDeleted((int) $schuss['id'], (int) $user['id']);
+        $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
 
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
@@ -134,5 +250,54 @@ final class AbrechnenController extends Controller
         }
 
         return $adresse;
+    }
+
+    /**
+     * Sucht einen Schuss innerhalb des aktuellen Standblatts.
+     */
+    private function findSchussOrFail(int $id, int $anlassId, int $standblattId): array
+    {
+        if ($id <= 0) {
+            Response::notFound('Schuss nicht gefunden');
+        }
+
+        $schuss = $this->schussdatenModel->findById($id);
+
+        if (
+            $schuss === null
+            || (int) $schuss['id_anlass'] !== $anlassId
+            || (int) $schuss['start_nr'] !== $standblattId
+        ) {
+            Response::notFound('Schuss nicht gefunden');
+        }
+
+        return $schuss;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+
+        return $value === '' ? null : $value;
+    }
+
+    private function nullableDecimal(mixed $value): ?string
+    {
+        $value = trim(str_replace(',', '.', (string) ($value ?? '')));
+
+        return is_numeric($value) ? $value : null;
+    }
+
+    private function datetimeValue(mixed $value): ?string
+    {
+        $value = trim((string) ($value ?? ''));
+
+        if ($value === '') {
+            return null;
+        }
+
+        $timestamp = strtotime($value);
+
+        return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
     }
 }

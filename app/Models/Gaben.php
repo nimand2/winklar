@@ -223,6 +223,38 @@ final class Gaben
     }
 
     /**
+     * Setzt gespeicherte Gaben zurueck, wenn Schussdaten nachtraeglich korrigiert wurden.
+     */
+    public function resetAbgabenForStandblatt(int $standblattId, int $userId): void
+    {
+        $connection = Database::connection();
+        $connection->beginTransaction();
+
+        try {
+            $deleteStatement = $connection->prepare(
+                'DELETE FROM gaben_abgaben WHERE standblatt_id = :standblatt_id'
+            );
+            $deleteStatement->execute(['standblatt_id' => $standblattId]);
+
+            $checkedStatement = $connection->prepare(
+                'UPDATE standblatt
+                 SET gaben_geprueft = 0,
+                     updated_by_user_id = :updated_by_user_id
+                 WHERE id = :standblatt_id'
+            );
+            $checkedStatement->execute([
+                'standblatt_id' => $standblattId,
+                'updated_by_user_id' => $userId,
+            ]);
+
+            $connection->commit();
+        } catch (\Throwable $throwable) {
+            $connection->rollBack();
+            throw $throwable;
+        }
+    }
+
+    /**
      * Normalisiert Gabendaten fuer INSERT und UPDATE.
      */
     private function buildPayload(array $data): array

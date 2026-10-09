@@ -8,6 +8,7 @@ use App\Controllers\AuthController;
 use App\Controllers\AdressenController;
 use App\Controllers\AbrechnenController;
 use App\Controllers\AnlassController;
+use App\Controllers\FinalController;
 use App\Controllers\ClientApiController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
@@ -28,6 +29,7 @@ $loesenController = new LoesenController(app_auth(), app_anlass_service(), new A
 $abrechnenController = new AbrechnenController(app_auth(), app_anlass_service(), new App\Models\Adressen(), new App\Models\Standblatt(), new App\Models\Schussdaten(), new App\Models\Gaben(), app_abrechnungs_service(), app_ranglisten_service());
 $dashboardController = new DashboardController(app_auth());
 $homeController = new HomeController(app_auth());
+$finalController = new FinalController(app_auth(), app_anlass_service(), new App\Services\FinalService(app_ranglisten_service(), new App\Models\Standblatt()), new App\Models\Standblatt(), new App\Models\Gaben());
 $router = new Router();
 
 $router->get('/', [$homeController, 'index']);
@@ -57,6 +59,9 @@ $router->post('/anlass/{id}/konfiguration/gaben/{gabeId}/loeschen', [$anlassCont
 $router->post('/anlass/{id}/konfiguration/gaben-regeln', [$anlassController, 'storeRegel']);
 $router->post('/anlass/{id}/konfiguration/gaben-regeln/{regelId}/loeschen', [$anlassController, 'deleteRegel']);
 $router->get('/anlass/{id}/abschliessen', [$anlassController, 'abschliessen']);
+$router->get('/anlass/{id}/final', [$finalController, 'show']);
+$router->get('/anlass/{id}/final/{kategorie}/druck', [$finalController, 'druck']);
+$router->get('/anlass/{id}/final/{kategorie}/export', [$finalController, 'export']);
 $router->get('/anlass/{id}/kasse', [$anlassController, 'kasse']);
 $router->get('/anlass/{id}/schuetzen', [$adressenController, 'index']);
 $router->get('/anlass/{id}/schuetzen/neu', [$adressenController, 'create']);

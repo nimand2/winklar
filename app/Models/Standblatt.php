@@ -37,6 +37,7 @@ final class Standblatt
                     COALESCE(a.zusatz, a.firmen_anrede, "") AS verein
              FROM standblatt s
              INNER JOIN adressen a ON a.id = s.id_adresse
+             LEFT JOIN plz p ON p.id = a.plz_id
              WHERE s.id_anlass = :anlass_id
                AND s.id > :since_id
              ORDER BY s.id ASC'
@@ -60,11 +61,13 @@ final class Standblatt
 
         $nummerFilter = $nummer !== '' ? ' AND s.id = :nummer' : '';
         $statement = Database::connection()->prepare(
-            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.gaben_geprueft, s.created_by_user_id,
+            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.gaben_geprueft, s.final_teilnahme, s.created_by_user_id,
                     s.created_at, s.updated_by_user_id, s.updated_at,
-                    a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon, a.geburtsdatum
+                    a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon, a.geburtsdatum,
+                    a.lizenz, a.strasse, a.postfach, a.nation, p.plz4, p.ortschaftsname
              FROM standblatt s
              INNER JOIN adressen a ON a.id = s.id_adresse
+             LEFT JOIN plz p ON p.id = a.plz_id
              WHERE s.id_anlass = :anlass_id' . $nummerFilter . '
              ORDER BY s.datum DESC, s.id DESC'
         );

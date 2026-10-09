@@ -92,6 +92,9 @@ $anlassId = (int) $anlass['id'];
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/abschliessen')) ?>" class="btn btn-outline-secondary">
                                 Rangliste anzeigen
                             </a>
+                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/final')) ?>" class="btn btn-outline-secondary">
+                                Final auswerten
+                            </a>
                         </div>
                     </div>
                 </div>

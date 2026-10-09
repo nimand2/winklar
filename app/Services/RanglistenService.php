@@ -78,6 +78,7 @@ final class RanglistenService
                     'verein' => (string) (($standblatt['zusatz'] ?? '') ?: ($standblatt['firmen_anrede'] ?? '')),
                     'geburtsdatum' => $standblatt['geburtsdatum'] ?? null,
                     'total' => $resultate[0],
+                    'summe_beste_zwei' => array_sum(array_slice($resultate, 0, 2)),
                     'resultate' => $resultate,
                     'schuss_count' => count($stichSchuesse),
                 ];
@@ -90,6 +91,12 @@ final class RanglistenService
                 $teilnehmer = $kategorie['teilnehmer'];
 
                 usort($teilnehmer, function (array $left, array $right): int {
+                    $sumCompare = $right['summe_beste_zwei'] <=> $left['summe_beste_zwei'];
+
+                    if ($sumCompare !== 0) {
+                        return $sumCompare;
+                    }
+
                     $resultCompare = $this->compareResultate($left['resultate'] ?? [], $right['resultate'] ?? []);
 
                     if ($resultCompare !== 0) {
@@ -131,7 +138,7 @@ final class RanglistenService
                 'teilnehmer' => [],
             ],
             'ue18' => [
-                'label' => 'Ue18',
+                'label' => 'Ü18',
                 'teilnehmer' => [],
             ],
         ];
@@ -185,7 +192,7 @@ final class RanglistenService
     }
 
     /**
-     * Ordnet Teilnehmende anhand des Geburtsdatums einer Alterskategorie zu.
+     * Ordnet Teilnehmende anhand des Jahrgangs im Anlassjahr einer Alterskategorie zu.
      */
     private function categoryForBirthdate(mixed $birthdate, ?\DateTimeImmutable $stichtag): string
     {
@@ -205,7 +212,9 @@ final class RanglistenService
             return 'ue18';
         }
 
-        return $geburtsdatum->diff($stichtag)->y < 18 ? 'u18' : 'ue18';
+        $alterImAnlassjahr = (int) $stichtag->format('Y') - (int) $geburtsdatum->format('Y');
+
+        return $alterImAnlassjahr < 18 ? 'u18' : 'ue18';
     }
 
     /**

@@ -47,7 +47,9 @@ $formatNumber = static function (float $value): string {
                                 <div class="brand-badge mb-3">Abschluss</div>
                                 <h1 class="h2 mb-2">Rangliste <?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
                                 <p class="muted-copy mb-0">
-                                    Auswertung pro Stich und Kategorie. Bei Punktgleichheit entscheidet das nächstbeste Resultat.
+                                    Rangierung nach der Summe der besten zwei Resultate pro Stich und Kategorie.
+                                    Bei gleicher Summe entscheiden die Einzelresultate, beginnend mit dem besten.
+                                    Die Alterskategorie richtet sich nach dem Jahrgang im Anlassjahr (U18: unter 18, Ü18: ab 18).
                                 </p>
                             </div>
 
@@ -120,6 +122,7 @@ $formatNumber = static function (float $value): string {
                                                                         <th>Schütze</th>
                                                                         <th>Verein</th>
                                                                         <th class="text-end">Bestes</th>
+                                                                        <th class="text-end">Summe beste 2</th>
                                                                         <th>Resultate</th>
                                                                         <th class="text-end">Schüsse</th>
                                                                         <th>Geburtsdatum</th>
@@ -145,6 +148,7 @@ $formatNumber = static function (float $value): string {
                                                                             </td>
                                                                             <td><?= htmlspecialchars((string) ($row['verein'] ?: '-')) ?></td>
                                                                             <td class="text-end fw-semibold"><?= htmlspecialchars($formatNumber((float) $row['total'])) ?></td>
+                                                                            <td class="text-end fw-semibold"><?= htmlspecialchars($formatNumber((float) $row['summe_beste_zwei'])) ?></td>
                                                                             <td><?= htmlspecialchars($resultate === [] ? '-' : implode(' / ', $resultate)) ?></td>
                                                                             <td class="text-end"><?= (int) $row['schuss_count'] ?></td>
                                                                             <td><?= htmlspecialchars((string) ($row['geburtsdatum'] ?: '-')) ?></td>

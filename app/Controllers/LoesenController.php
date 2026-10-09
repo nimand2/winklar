@@ -57,11 +57,13 @@ final class LoesenController extends Controller
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $nummer = trim((string) ($_GET['nummer'] ?? ''));
 
         $this->render('loesen/loesenOpen', [
             'user' => $user,
             'anlass' => $anlass,
-            'standblaetter' => $this->standblattModel->findForAnlassWithAdresse((int) $anlass['id']),
+            'standblaetter' => $this->standblattModel->findForAnlassWithAdresse((int) $anlass['id'], $nummer),
+            'nummer' => $nummer,
         ]);
     }
 

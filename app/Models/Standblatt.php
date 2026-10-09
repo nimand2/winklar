@@ -52,18 +52,27 @@ final class Standblatt
     /**
      * Laedt Standblaetter eines Anlasses mit Adressdaten.
      */
-    public function findForAnlassWithAdresse(int $anlassId): array
+    public function findForAnlassWithAdresse(int $anlassId, string $nummer = ''): array
     {
+        if ($nummer !== '' && !ctype_digit($nummer)) {
+            return [];
+        }
+
+        $nummerFilter = $nummer !== '' ? ' AND s.id = :nummer' : '';
         $statement = Database::connection()->prepare(
             'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.gaben_geprueft, s.created_by_user_id,
                     s.created_at, s.updated_by_user_id, s.updated_at,
                     a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon, a.geburtsdatum
              FROM standblatt s
              INNER JOIN adressen a ON a.id = s.id_adresse
-             WHERE s.id_anlass = :anlass_id
+             WHERE s.id_anlass = :anlass_id' . $nummerFilter . '
              ORDER BY s.datum DESC, s.id DESC'
         );
-        $statement->execute(['anlass_id' => $anlassId]);
+        $parameters = ['anlass_id' => $anlassId];
+        if ($nummer !== '') {
+            $parameters['nummer'] = $nummer;
+        }
+        $statement->execute($parameters);
 
         return $statement->fetchAll();
     }

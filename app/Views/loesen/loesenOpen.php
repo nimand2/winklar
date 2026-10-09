@@ -8,6 +8,7 @@ use App\Core\Url;
 /** @var array<int, array<string, mixed>> $standblaetter */
 $anlassId = (int) $anlass['id'];
 $standblaetter = $standblaetter ?? [];
+$nummer = $nummer ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -39,9 +40,34 @@ $standblaetter = $standblaetter ?? [];
                             </div>
                         </div>
 
+                        <form method="get" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="mb-3">
+                            <label for="standblattnummer" class="form-label">Standblattnummer suchen</label>
+                            <div class="input-group">
+                                <input
+                                    id="standblattnummer"
+                                    name="nummer"
+                                    type="text"
+                                    inputmode="numeric"
+                                    pattern="[0-9]+"
+                                    class="form-control"
+                                    value="<?= htmlspecialchars($nummer) ?>"
+                                    placeholder="Standblattnummer eingeben"
+                                    autocomplete="off"
+                                >
+                                <button type="submit" class="btn btn-primary">Suchen</button>
+                                <?php if ($nummer !== ''): ?>
+                                    <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="btn btn-outline-secondary">Zurücksetzen</a>
+                                <?php endif; ?>
+                            </div>
+                        </form>
+
                         <?php if ($standblaetter === []): ?>
                             <div class="alert alert-light border mb-0">
-                                Für diesen Anlass wurde noch kein Standblatt erstellt.
+                                <?php if ($nummer !== ''): ?>
+                                    Kein Standblatt mit der Nummer "<?= htmlspecialchars($nummer) ?>" für diesen Anlass gefunden.
+                                <?php else: ?>
+                                    Für diesen Anlass wurde noch kein Standblatt erstellt.
+                                <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <div class="list-group">

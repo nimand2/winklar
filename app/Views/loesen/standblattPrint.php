@@ -22,6 +22,17 @@ if (!empty($adresse['geburtsdatum'])) {
     $geburtsjahr = substr((string) $adresse['geburtsdatum'], 0, 4);
 }
 
+$alterskategorie = 'Ü18';
+$anlassDatum = trim((string) (($anlass['start_anlass'] ?? '') ?: ($anlass['end_anlass'] ?? '')));
+if ($geburtsjahr !== '' && $anlassDatum !== '') {
+    try {
+        $anlassJahr = (int) (new \DateTimeImmutable($anlassDatum))->format('Y');
+        $alterskategorie = $anlassJahr - (int) $geburtsjahr < 18 ? 'U18' : 'Ü18';
+    } catch (\Throwable) {
+        // Wie in der Rangliste bleiben fehlende oder ungueltige Anlassdaten in Ü18.
+    }
+}
+
 $kosten = (float) ($standblatt['kosten'] ?? 0);
 $formatMoney = static fn (float $value): string => number_format($value, 2, '.', "'");
 $visibleStiche = array_slice($stiche, 0, 3);
@@ -168,7 +179,7 @@ $barcodeSvg = static function (string $digits): string {
 
         .header {
             display: grid;
-            grid-template-columns: 1fr 58mm 42mm;
+            grid-template-columns: minmax(0, 1fr) 58mm 42mm;
             gap: 6mm;
             border-bottom: 1px solid #111;
             padding-bottom: 2mm;
@@ -188,8 +199,15 @@ $barcodeSvg = static function (string $digits): string {
 
         .person-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 26mm;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 26mm;
             gap: 1mm 5mm;
+        }
+
+        .header > div,
+        .person-grid > div,
+        .shot-group {
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .meta {
@@ -238,7 +256,7 @@ $barcodeSvg = static function (string $digits): string {
 
         .shoot-grid {
             display: grid;
-            grid-template-columns: repeat(<?= htmlspecialchars((string) $gridGroups) ?>, 1fr);
+            grid-template-columns: repeat(<?= htmlspecialchars((string) $gridGroups) ?>, minmax(0, 1fr));
             gap: 1mm;
             margin-top: 6mm;
         }
@@ -297,7 +315,13 @@ $barcodeSvg = static function (string $digits): string {
         }
 
         @media print {
+            html,
             body {
+                width: auto;
+                height: auto;
+                min-height: 0;
+                margin: 0;
+                padding: 0;
                 background: #fff;
             }
 
@@ -306,12 +330,31 @@ $barcodeSvg = static function (string $digits): string {
             }
 
             .sheet {
+                display: flow-root;
                 width: auto;
                 min-height: auto;
                 margin: 0;
                 padding: 0;
                 border: 0;
                 box-shadow: none;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .shoot-grid {
+                display: flex;
+                align-items: flex-start;
+            }
+
+            .shot-group {
+                flex: 1 1 0;
+            }
+
+            .header,
+            .shot-group,
+            .footer {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -332,7 +375,7 @@ $barcodeSvg = static function (string $digits): string {
                     <div><span class="label">Anschrift:</span> <?= htmlspecialchars((string) ($adresse['strasse'] ?? '')) ?></div>
                     <div><?= htmlspecialchars($ort) ?></div>
                     <div><span class="label">Vorname:</span> <?= htmlspecialchars($vorname) ?></div>
-                    <div><span class="label">Jahrgang:</span> <?= htmlspecialchars($geburtsjahr) ?></div>
+                    <div><span class="label">Jahrgang:</span> <?= htmlspecialchars($geburtsjahr) ?> (<?= htmlspecialchars($alterskategorie) ?>)</div>
                     <div></div>
                 </div>
             </div>

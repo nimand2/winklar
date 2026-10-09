@@ -19,10 +19,11 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Schütz lösen']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt erstellen']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-9">
                 <div class="card dashboard-card">
@@ -30,7 +31,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Lösen</div>
-                                <h1 class="h2 mb-2">Neuer Schütz</h1>
+                                <h1 class="h2 mb-2">Standblatt erstellen</h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>
@@ -38,11 +39,9 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
 
                             <div class="d-flex flex-wrap gap-2">
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-outline-secondary">
-                                    Adresse wechseln
+                                    Andere Schützen auswählen
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
+
                             </div>
                         </div>
 
@@ -74,6 +73,8 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                 <?= htmlspecialchars((string) $errors[0]) ?>
                             </div>
                         <?php endif; ?>
+
+                        <p class="small text-body-secondary">Schritt 2 von 2: Stiche und Anzahl wählen, dann das Standblatt erstellen.</p>
 
                         <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/neu')) ?>">
                             <input type="hidden" name="adresse_id" value="<?= htmlspecialchars((string) $adresseId) ?>">
@@ -155,8 +156,9 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                 </div>
                                 <div class="col-12">
                                     <button type="submit" class="btn btn-primary">
-                                        Schütz für Anlass lösen
+                                        Standblatt erstellen
                                     </button>
+                                    <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-outline-secondary">Abbrechen</a>
                                 </div>
                             </div>
                         </form>

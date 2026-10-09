@@ -15,29 +15,26 @@ if (is_array($anlass)) {
     $anlassId = (int) $anlass['id'];
     $basePath = '/anlass/' . $anlassId . '/schuetzen';
     $contextLabel = (string) $anlass['name_anlass'];
-    $backPath = '/anlass/' . $anlassId;
-    $backLabel = 'Zurück zum Anlass';
 } else {
     $basePath = '/schuetzen';
-    $contextLabel = 'Globale Personenverwaltung';
-    $backPath = '/dashboard';
-    $backLabel = 'Zurück zum Dashboard';
+    $contextLabel = 'Alle Schützen';
 }
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Adressverwaltung']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Schützen verwalten']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-11">
                 <div class="card dashboard-card">
                     <div class="card-body">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
-                                <div class="brand-badge mb-3">Adressverwaltung</div>
+                                <div class="brand-badge mb-3">Schützen</div>
                                 <h1 class="h2 mb-2">Schützen verwalten</h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars($contextLabel) ?>
@@ -46,11 +43,9 @@ if (is_array($anlass)) {
 
                             <div class="d-flex flex-wrap gap-2">
                                 <a href="<?= htmlspecialchars(Url::app($basePath . '/neu')) ?>" class="btn btn-primary">
-                                    Neuer Schütz
+                                    Schützen erfassen
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app($backPath)) ?>" class="btn btn-outline-secondary">
-                                    <?= htmlspecialchars($backLabel) ?>
-                                </a>
+
                             </div>
                         </div>
 
@@ -63,7 +58,7 @@ if (is_array($anlass)) {
                         <div class="row g-4">
                             <div class="col-12">
                                 <form method="get" action="<?= htmlspecialchars(Url::app($basePath)) ?>" class="mb-3">
-                                    <label for="adresssuche" class="form-label">Schütz suchen</label>
+                                    <label for="adresssuche" class="form-label">Schützen suchen</label>
                                     <div class="input-group">
                                         <input
                                             id="adresssuche"

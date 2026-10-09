@@ -55,7 +55,8 @@ $formatDateTimeLocal = static function (mixed $value): string {
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt abrechnen #' . $standblattId]); ?>
 </head>
 <body class="app-shell">
-    <main class="container-fluid px-3 px-xl-4 px-xxl-5 py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container-fluid px-3 px-xl-4 px-xxl-5 py-5">
         <div class="row justify-content-center">
             <div class="col-12">
                 <div class="card dashboard-card">
@@ -63,19 +64,15 @@ $formatDateTimeLocal = static function (mixed $value): string {
                         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Abrechnen</div>
-                                <h1 class="h2 mb-2">Standblatt abschliessen #<?= htmlspecialchars((string) $standblattId) ?></h1>
+                                <h1 class="h2 mb-2">Standblatt abrechnen #<?= htmlspecialchars((string) $standblattId) ?></h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars($name) ?> · <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>
                             </div>
 
                             <div class="d-flex flex-wrap gap-2">
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Standblatt
-                                </a>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="btn btn-outline-secondary">
-                                    Standblatt auswählen
-                                </a>
+
+
                                 <a
                                     href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/druck')) ?>"
                                     class="btn btn-primary"
@@ -84,7 +81,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                 >
                                     Abrechnung drucken
                                 </a>
-                                
+
                             </div>
                         </div>
 
@@ -180,7 +177,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                     aria-expanded="false"
                                                                     aria-controls="<?= htmlspecialchars($collapseId) ?>"
                                                                 >
-                                                                    Edit
+                                                                    Schüsse bearbeiten
                                                                 </button>
                                                             </td>
                                                         </tr>
@@ -399,7 +396,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
 
                         <div class="d-flex justify-content-end mt-4">
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-primary">
-                                Abschliessen
+                                Zur Anlassübersicht
                             </a>
                         </div>
                     </div>

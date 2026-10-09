@@ -24,7 +24,8 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt #' . $standblattId]); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-9">
                 <div class="card dashboard-card">
@@ -38,14 +39,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                 </p>
                             </div>
 
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="btn btn-outline-secondary">
-                                    Standblatt auswählen
-                                </a>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
-                            </div>
+
                         </div>
 
                         <?php if ($errors !== []): ?>
@@ -134,11 +128,12 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                     <button type="submit" class="btn btn-primary">
                                         Standblatt speichern
                                     </button>
+                                    <a class="btn btn-outline-secondary" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>">Abbrechen</a>
                                     <a
                                         href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>"
                                         class="btn btn-outline-primary"
                                     >
-                                        Standblatt abschliessen
+                                        Standblatt abrechnen
                                     </a>
                                     <a
                                         href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/druck')) ?>"

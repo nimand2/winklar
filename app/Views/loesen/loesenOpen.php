@@ -13,10 +13,11 @@ $nummer = $nummer ?? '';
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt auswählen']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblätter']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-10">
                 <div class="card dashboard-card">
@@ -24,7 +25,7 @@ $nummer = $nummer ?? '';
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Lösen</div>
-                                <h1 class="h2 mb-2">Standblatt auswählen</h1>
+                                <h1 class="h2 mb-2">Standblätter</h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>
@@ -32,11 +33,9 @@ $nummer = $nummer ?? '';
 
                             <div class="d-flex flex-wrap gap-2">
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-primary">
-                                    Standblatt lösen
+                                    Standblatt erstellen
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
+
                             </div>
                         </div>
 
@@ -77,10 +76,7 @@ $nummer = $nummer ?? '';
                                     $name = trim((string) (($standblatt['vorname'] ?? '') . ' ' . ($standblatt['nachname'] ?? '')));
                                     $verein = (string) (($standblatt['zusatz'] ?? '') ?: ($standblatt['firmen_anrede'] ?? ''));
                                     ?>
-                                    <a
-                                        href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId)) ?>"
-                                        class="list-group-item list-group-item-action p-3"
-                                    >
+                                    <div class="list-group-item p-3">
                                         <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
                                             <div>
                                                 <div class="fw-semibold">
@@ -96,7 +92,12 @@ $nummer = $nummer ?? '';
                                                 <div>Kosten: <?= htmlspecialchars((string) ($standblatt['kosten'] ?: 'Nicht hinterlegt')) ?></div>
                                             </div>
                                         </div>
-                                    </a>
+                                        <div class="d-flex flex-wrap gap-2 mt-3">
+                                            <a class="btn btn-outline-primary btn-sm" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId)) ?>">Standblatt bearbeiten</a>
+                                            <a class="btn btn-primary btn-sm" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>">Standblatt abrechnen</a>
+                                            <a class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/druck')) ?>">Standblatt drucken</a>
+                                        </div>
+                                    </div>
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>

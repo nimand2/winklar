@@ -9,34 +9,35 @@ use App\Core\Url;
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Dashboard']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Übersicht']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-xl-10">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
-                                <h1 class="h2 mb-2">Dashboard</h1>
+                                <div class="brand-badge mb-3">Arbeitsplatz</div>
+                                <h1 class="h2 mb-2">Übersicht</h1>
+                                <p class="muted-copy mb-0">Öffne einen Anlass oder verwalte die Stammdaten deiner Schützen.</p>
                             </div>
-
-                            <a href="<?= htmlspecialchars(Url::app('/logout')) ?>" class="btn btn-outline-danger">
-                                Logout
-                            </a>
+                            <div class="small text-body-secondary pt-md-2">Angemeldet als <strong class="text-body"><?= htmlspecialchars((string) ($user['username'] ?? '')) ?></strong></div>
                         </div>
-
-                        <div class="dashboard-meta">
-                            <div class="list-group">
-                                <div class="list-group-item p-3">
-                                    <div class="small text-body-secondary mb-1">Benutzername</div>
-                                    <div class="fw-semibold"><?= htmlspecialchars((string) ($user['username'] ?? '')) ?></div>
-                                </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <a class="app-workflow-link" href="<?= htmlspecialchars(Url::app('/anlass')) ?>">
+                                    <strong>Anlässe öffnen <span class="app-workflow-arrow" aria-hidden="true">→</span></strong>
+                                    <span>Standblätter erstellen und abrechnen, Ranglisten anzeigen und die Finale vorbereiten.</span>
+                                </a>
                             </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="<?= htmlspecialchars(Url::app('/anlass')) ?>" class="btn btn-primary">Anlass auswählen</a>
-                                <a href="<?= htmlspecialchars(Url::app('/schuetzen')) ?>" class="btn btn-outline-primary">Schützen verwalten</a>
+                            <div class="col-12 col-md-6">
+                                <a class="app-workflow-link" href="<?= htmlspecialchars(Url::app('/schuetzen')) ?>">
+                                    <strong>Schützen verwalten <span class="app-workflow-arrow" aria-hidden="true">→</span></strong>
+                                    <span>Schützen suchen, neu erfassen und ihre Adress- und Vereinsangaben pflegen.</span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -44,7 +45,6 @@ use App\Core\Url;
             </div>
         </div>
     </main>
-
     <?php \App\Core\View::partial('partials/bootstrap-script'); ?>
 </body>
 </html>

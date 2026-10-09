@@ -29,6 +29,7 @@ namespace {
     require dirname(__DIR__).'/app/Services/RanglistenService.php';
     require dirname(__DIR__).'/app/Services/FinalService.php';
     require dirname(__DIR__).'/app/Core/Url.php';
+    require dirname(__DIR__).'/app/Core/Navigation.php';
     require dirname(__DIR__).'/app/Core/View.php';
     define('APP_BASE_PATH','');
     $check=static function(bool $ok,string $message): void { if (!$ok) throw new \RuntimeException($message); };

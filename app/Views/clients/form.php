@@ -14,7 +14,7 @@ $isEdit = is_array($adresse);
 $old = $old ?? [];
 $errors = $errors ?? [];
 $plzOptions = $plzOptions ?? [];
-$title = $isEdit ? 'Schütz bearbeiten' : 'Neue Adresse erstellen';
+$title = $isEdit ? 'Schützen bearbeiten' : 'Schützen erfassen';
 
 if (is_array($anlass)) {
     $anlassId = (int) $anlass['id'];
@@ -22,7 +22,7 @@ if (is_array($anlass)) {
     $contextLabel = (string) $anlass['name_anlass'];
 } else {
     $basePath = '/schuetzen';
-    $contextLabel = 'Globale Personenverwaltung';
+    $contextLabel = 'Alle Schützen';
 }
 
 if (is_array($adresse)) {
@@ -31,7 +31,7 @@ if (is_array($adresse)) {
     $action = Url::app($basePath . '/neu');
 }
 
-$submitLabel = $isEdit ? 'Änderungen speichern' : 'Adresse erstellen';
+$submitLabel = $isEdit ? 'Änderungen speichern' : ($anlass !== null ? 'Speichern und Standblatt erstellen' : 'Schützen speichern');
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -39,25 +39,22 @@ $submitLabel = $isEdit ? 'Änderungen speichern' : 'Adresse erstellen';
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => $title]); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-9">
                 <div class="card dashboard-card">
                     <div class="card-body">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
-                                <div class="brand-badge mb-3">Adressverwaltung</div>
+                                <div class="brand-badge mb-3">Schützen</div>
                                 <h1 class="h2 mb-2"><?= htmlspecialchars($title) ?></h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars($contextLabel) ?>
                                 </p>
                             </div>
 
-                            <div class="d-flex flex-wrap gap-2">
-                                <a href="<?= htmlspecialchars(Url::app($basePath)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zur Verwaltung
-                                </a>
-                            </div>
+
                         </div>
 
                         <?php if ($errors !== []): ?>
@@ -143,6 +140,7 @@ $submitLabel = $isEdit ? 'Änderungen speichern' : 'Adresse erstellen';
                                     <button type="submit" class="btn btn-primary">
                                         <?= htmlspecialchars($submitLabel) ?>
                                     </button>
+                                    <a href="<?= htmlspecialchars(Url::app($basePath)) ?>" class="btn btn-outline-secondary">Abbrechen</a>
                                 </div>
                             </div>
                         </form>

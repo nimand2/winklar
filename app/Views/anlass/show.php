@@ -13,7 +13,8 @@ $anlassId = (int) $anlass['id'];
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => (string) $anlass['name_anlass']]); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-10">
                 <div class="card dashboard-card">
@@ -24,33 +25,29 @@ $anlassId = (int) $anlass['id'];
                                 <h1 class="h2 mb-2"><?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
                             </div>
 
-                            <div class="d-flex flex-wrap gap-2">                              
+                            <div class="d-flex flex-wrap gap-2">
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>" class="btn btn-outline-secondary">
                                 Anlass konfigurieren
-                            </a>    
-                            <a href="<?= htmlspecialchars(Url::app('/dashboard')) ?>" class="btn btn-outline-secondary">
-                                    Dashboard
-                                </a>
-                                <a href="<?= htmlspecialchars(Url::app('/logout')) ?>" class="btn btn-outline-danger">
-                                    Logout
-                                </a>
+                            </a>
+
+
                             </div>
                         </div>
 
-                        <div class="d-flex flex-wrap gap-2 mb-4">
-                            
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-primary">
-                                Neuer Schütz
-                            </a>
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="btn btn-primary">
-                                Standblatt lösen
-                            </a>
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen')) ?>" class="btn btn-outline-primary">
-                                Auswahl Standblatt
-                            </a>
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen')) ?>" class="btn btn-outline-secondary">
-                                Adressverwaltung öffnen
-                            </a>
+                        <p class="muted-copy mb-4">Wähle den nächsten Arbeitsschritt. Alle Bereiche bleiben oben im Anlassmenü erreichbar.</p>
+                        <div class="row g-3 mb-4">
+                            <?php foreach ([
+                                ['/loesen/adresse', 'Standblatt erstellen', 'Schützen auswählen und Stiche lösen.'],
+                                ['/loesen', 'Standblätter öffnen', 'Standblatt suchen, bearbeiten, drucken oder abrechnen.'],
+                                ['/schuetzen', 'Schützen verwalten', 'Personen suchen und Stammdaten bearbeiten.'],
+                                ['/abschliessen', 'Rangliste anzeigen', 'Resultate nach Stich und Alterskategorie vergleichen.'],
+                                ['/final', 'Final auswerten', 'U18- und Ü18-Final, Standblätter und JSON-Export.'],
+                                ['/kasse', 'Kasse öffnen', 'Einnahmen und Gabenabgaben kontrollieren.'],
+                            ] as [$path, $label, $description]): ?>
+                                <div class="col-12 col-md-6 col-xl-4">
+                                    <a class="app-workflow-link" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . $path)) ?>"><strong><?= htmlspecialchars($label) ?></strong><span><?= htmlspecialchars($description) ?></span></a>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
 
                         <div class="row g-3">
@@ -85,17 +82,7 @@ $anlassId = (int) $anlass['id'];
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 mb-4">
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/kasse')) ?>" class="btn btn-outline-secondary">
-                                Kassen-Abrechnung
-                            </a>
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/abschliessen')) ?>" class="btn btn-outline-secondary">
-                                Rangliste anzeigen
-                            </a>
-                            <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/final')) ?>" class="btn btn-outline-secondary">
-                                Final auswerten
-                            </a>
-                        </div>
+
                     </div>
                 </div>
             </div>

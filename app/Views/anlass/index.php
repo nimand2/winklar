@@ -13,7 +13,8 @@ $anlass = $anlass ?? [];
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Anlass auswählen']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-10">
                 <div class="card dashboard-card">
@@ -28,12 +29,8 @@ $anlass = $anlass ?? [];
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/neu')) ?>" class="btn btn-primary">
                                     Neuer Anlass
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app('/dashboard')) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Dashboard
-                                </a>
-                                <a href="<?= htmlspecialchars(Url::app('/logout')) ?>" class="btn btn-outline-danger">
-                                    Logout
-                                </a>
+
+
                             </div>
                         </div>
 
@@ -46,7 +43,7 @@ $anlass = $anlass ?? [];
                                     >
                                         <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
                                             <div>
-                                                <div class="small text-body-secondary mb-1">Kategorie</div>
+                                                <div class="small text-body-secondary mb-1">Anlass</div>
                                                 <div class="fw-semibold fs-5">
                                                     <?= htmlspecialchars((string) $eintrag['name_anlass']) ?>
                                                 </div>

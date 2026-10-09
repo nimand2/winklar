@@ -20,7 +20,8 @@ $regeln = $regeln ?? [];
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Anlass konfigurieren']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-11">
                 <div class="card dashboard-card">
@@ -38,9 +39,7 @@ $regeln = $regeln ?? [];
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/bearbeiten')) ?>" class="btn btn-primary">
                                     Anlass bearbeiten
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
+
                             </div>
                         </div>
 

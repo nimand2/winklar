@@ -21,7 +21,8 @@ $action = $isEdit ? Url::app('/anlass/' . $anlassId . '/bearbeiten') : Url::app(
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => $title]); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-8">
                 <div class="card dashboard-card">
@@ -35,17 +36,7 @@ $action = $isEdit ? Url::app('/anlass/' . $anlassId . '/bearbeiten') : Url::app(
                                 </p>
                             </div>
 
-                            <div class="d-flex flex-wrap gap-2">
-                                <?php if ($isEdit): ?>
-                                    <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>" class="btn btn-outline-secondary">
-                                        Zurück zur Konfiguration
-                                    </a>
-                                <?php else: ?>
-                                    <a href="<?= htmlspecialchars(Url::app('/anlass')) ?>" class="btn btn-outline-secondary">
-                                        Zurück zur Auswahl
-                                    </a>
-                                <?php endif; ?>
-                            </div>
+
                         </div>
 
                         <?php if ($errors !== []): ?>
@@ -103,11 +94,7 @@ $action = $isEdit ? Url::app('/anlass/' . $anlassId . '/bearbeiten') : Url::app(
                                     <button type="submit" class="btn btn-primary">
                                         <?= $isEdit ? 'Anlass speichern' : 'Anlass erstellen' ?>
                                     </button>
-                                    <?php if ($isEdit): ?>
-                                        <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                            Zum Anlass
-                                        </a>
-                                    <?php endif; ?>
+                                    <a href="<?= htmlspecialchars(Url::app($isEdit ? '/anlass/' . $anlassId . '/konfiguration' : '/anlass')) ?>" class="btn btn-outline-secondary">Abbrechen</a>
                                 </div>
                             </div>
                         </form>

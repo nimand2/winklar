@@ -212,26 +212,24 @@ Leere Zustände immer ausdrücklich anzeigen:
 
 ## Navigation und Aktionen
 
-Aktionsbuttons sollen inhaltlich gruppiert werden:
+Alle geschützten Arbeitsseiten verwenden die gemeinsame Navigation aus `app/Views/partials/navigation.php`. `App\Core\View::render()` bereitet den Navigationskontext mit `App\Core\Navigation::forView()` vor. Neue Arbeitsseiten erhalten einen Eintrag in dieser Zuordnung und binden direkt nach dem öffnenden `body` den Partial ein:
 
-- oben rechts: Navigation, Zurück, Dashboard, Logout
-- unter dem Seitentitel: fachliche Aktionen der aktuellen Seite
-- in Listenzeilen: Aktionen, die genau diesen Eintrag betreffen
+```php
+<?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+<main id="main-content" tabindex="-1" class="container py-5">
+```
 
-Wichtige vorhandene Arbeitsbereiche:
+Die Hauptnavigation enthält Übersicht, Anlässe, Alle Schützen und Abmelden. Innerhalb eines Anlasses erscheint zusätzlich das Anlassmenü mit Anlassübersicht, Standblatt erstellen, Standblätter, Schützen, Rangliste, Finalauswertung, Kasse und Konfiguration. Der aktive Bereich ist hervorgehoben. Anlassname, Seitenpfad und ein festes Rücksprungziel bleiben sichtbar.
 
-- `/login`: Anmeldung
-- `/dashboard`: Einstieg nach Login
-- `/anlass`: Anlassauswahl
-- `/anlass/neu`: neuen Anlass erstellen
-- `/anlass/{id}`: Anlassdetails und Navigation
-- `/anlass/{id}/konfiguration`: Stiche, Gaben und Regeln konfigurieren
-- `/anlass/{id}/schuetzen`: Adress- und Schützenverwaltung
-- `/anlass/{id}/loesen`: Standblatt auswählen
-- `/anlass/{id}/loesen/neu`: neues Standblatt lösen
-- `/anlass/{id}/loesen/{standblattId}/abrechnen`: Standblatt abrechnen
-- `/anlass/{id}/abschliessen`: Rangliste anzeigen
-- `/anlass/{id}/kasse`: Kassenübersicht
+Auf Standblattseiten führt eine zusätzliche Navigation zwischen Bearbeiten und Abrechnen. Die Standblattliste bietet direkte Aktionen zum Bearbeiten, Abrechnen und Drucken. Das Erstellen eines Standblatts führt über Schützenauswahl und Stichauswahl, jeweils mit sichtbarer Schrittnummer.
+
+Seitenspezifische Buttons bleiben für Erstellen, Speichern, Drucken und andere fachliche Aktionen erhalten. Dashboard-, Abmelden- und allgemeine Zurück-Buttons werden nicht in jedem Seitenkopf wiederholt. Formulare bieten neben Speichern einen Abbrechen-Link. Dieser verwirft ungespeicherte Eingaben und führt zum angegebenen übergeordneten Bereich.
+
+Einheitliche Begriffe: Übersicht, Schützen erfassen, Schützen verwalten, Standblatt erstellen, Standblatt bearbeiten, Standblatt abrechnen, Finalauswertung. Ein Link zur Anlassübersicht wird als solcher beschriftet; er heisst nicht „Abschliessen“, wenn er keine Daten speichert.
+
+Navigationselemente dürfen auf kleinen Bildschirmen umbrechen und bleiben ohne JavaScript erreichbar. Beschriftete Navigationsbereiche, aktive Links, Fokusmarkierungen und ein „Zum Inhalt springen“-Link unterstützen Tastaturbedienung. Login und separate Druckseiten verwenden die gemeinsame Arbeitsnavigation nicht; beim Drucken einer Arbeitsseite wird sie ausgeblendet.
+
+Prüfung: `php tests/navigation.php` prüft alle Arbeitsseitenkontexte, aktive Bereiche, Rückwege, Linkziele und Basisverzeichnisse. `php tests/final.php` prüft weiterhin Export und Druckansichten.
 
 ## Authentifizierung und geschützte Seiten
 

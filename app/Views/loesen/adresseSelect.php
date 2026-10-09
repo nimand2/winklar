@@ -13,10 +13,11 @@ $query = trim((string) ($query ?? ''));
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt lösen']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Standblatt erstellen']); ?>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-10">
                 <div class="card dashboard-card">
@@ -24,7 +25,7 @@ $query = trim((string) ($query ?? ''));
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Standblatt</div>
-                                <h1 class="h2 mb-2">Standblatt lösen</h1>
+                                <h1 class="h2 mb-2">Standblatt erstellen</h1>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>
@@ -32,16 +33,16 @@ $query = trim((string) ($query ?? ''));
 
                             <div class="d-flex flex-wrap gap-2">
                                 <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/schuetzen/neu')) ?>" class="btn btn-primary">
-                                    Neuer Schütz
+                                    Schützen erfassen
                                 </a>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
+
                             </div>
                         </div>
 
+                        <p class="small text-body-secondary">Schritt 1 von 2: Vorhandene Schützen auswählen oder neue Schützen erfassen. Danach die Stiche für das Standblatt wählen.</p>
+
                         <form method="get" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/adresse')) ?>" class="mb-3">
-                            <label for="adresssuche" class="form-label">Adresse suchen</label>
+                            <label for="adresssuche" class="form-label">Schützen suchen</label>
                             <div class="input-group">
                                 <input
                                     id="adresssuche"

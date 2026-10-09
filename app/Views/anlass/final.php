@@ -6,14 +6,15 @@ $anlassId = (int) $anlass['id'];
 ?>
 <!DOCTYPE html>
 <html lang="de">
-<head><?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Final auswerten']); ?></head>
+<head><?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Finalauswertung']); ?></head>
 <body class="app-shell">
-<main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+<main id="main-content" tabindex="-1" class="container py-5">
     <div class="card dashboard-card"><div class="card-body">
         <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
-            <div><div class="brand-badge mb-3">Final</div><h1 class="h2">Final auswerten</h1><p class="muted-copy mb-0"><?= htmlspecialchars((string) $anlass['name_anlass']) ?></p></div>
+            <div><div class="brand-badge mb-3">Final</div><h1 class="h2">Finalauswertung</h1><p class="muted-copy mb-0"><?= htmlspecialchars((string) $anlass['name_anlass']) ?></p></div>
             <div class="d-flex flex-wrap align-items-start gap-2">
-                <a class="btn btn-outline-secondary" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>">Zurück zum Anlass</a>
+
                 <a class="btn btn-outline-secondary" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>">Finalregeln einstellen</a>
             </div>
         </div>

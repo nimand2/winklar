@@ -21,7 +21,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Kassen-Abrechnung']); ?>
+    <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Kassenübersicht']); ?>
     <style>
         @media print {
             .no-print {
@@ -41,7 +41,8 @@ $abgaben = $abrechnung['abgaben'] ?? [];
     </style>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-11">
                 <div class="card dashboard-card">
@@ -49,7 +50,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3 mb-4">
                             <div>
                                 <div class="brand-badge mb-3">Kasse</div>
-                                <h1 class="h2 mb-2">Kassen-Abrechnung <?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
+                                <h1 class="h2 mb-2">Kassenübersicht <?= htmlspecialchars((string) $anlass['name_anlass']) ?></h1>
                                 <p class="muted-copy mb-0">
                                     Einnahmen aus gelösten Standblättern und Warenwert der abgegebenen Gaben.
                                 </p>
@@ -57,9 +58,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
 
                             <div class="d-flex flex-wrap gap-2 no-print">
                                 <button type="button" class="btn btn-primary" onclick="window.print()">Drucken</button>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
+
                             </div>
                         </div>
 

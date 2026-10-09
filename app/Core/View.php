@@ -11,6 +11,7 @@ final class View
      */
     public static function render(string $view, array $data = []): void
     {
+        $data['navigation'] = Navigation::forView($view, $data);
         self::requireView($view, $data);
     }
 

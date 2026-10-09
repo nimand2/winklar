@@ -37,7 +37,8 @@ $formatNumber = static function (float $value): string {
     </style>
 </head>
 <body class="app-shell">
-    <main class="container py-5">
+    <?php \App\Core\View::partial('partials/navigation', ['navigation' => $navigation ?? []]); ?>
+    <main id="main-content" tabindex="-1" class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-11">
                 <div class="card dashboard-card">
@@ -55,9 +56,7 @@ $formatNumber = static function (float $value): string {
 
                             <div class="d-flex flex-wrap gap-2 no-print">
                                 <button type="button" class="btn btn-primary" onclick="window.print()">Drucken</button>
-                                <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-outline-secondary">
-                                    Zurück zum Anlass
-                                </a>
+
                             </div>
                         </div>
 

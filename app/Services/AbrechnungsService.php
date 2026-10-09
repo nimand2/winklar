@@ -41,25 +41,29 @@ final class AbrechnungsService
     /**
      * Filtert gepostete Gaben auf tatsaechlich erreichbare und waehbare Abgaben.
      */
-    public function itemsFromPostedGaben(int $anlassId, int $standblattId, array $postedGaben): array
+    public function itemsFromPostedGaben(int $anlassId, int $standblattId, array $postedGaben, array $postedAbgegeben = []): array
     {
         $viewData = $this->buildViewData($anlassId, $standblattId);
         $regeln = $this->gabenModel->findRegelnForStiche($this->stichIdsFromAuswertung($viewData['auswertung']));
         $selectable = $this->buildSelectableAbgaben($viewData['auswertung']['rows'], $regeln);
         $items = [];
 
-        foreach ($postedGaben as $stichId => $gabenIds) {
-            foreach ((array) $gabenIds as $gabenId) {
-                $key = (int) $stichId . ':' . (int) $gabenId;
+        foreach ($postedGaben as $stichId => $serien) {
+            foreach ((array) $serien as $serieNummer => $gabenIds) {
+                foreach ((array) $gabenIds as $gabenId) {
+                    $key = (int) $stichId . ':' . (int) $serieNummer . ':' . (int) $gabenId;
 
-                if (!isset($selectable[$key])) {
-                    continue;
+                    if (!isset($selectable[$key])) {
+                        continue;
+                    }
+
+                    $items[$key] = [
+                        'stich_id' => (int) $stichId,
+                        'serie_nummer' => (int) $serieNummer,
+                        'gaben_id' => (int) $gabenId,
+                        'abgegeben' => !empty($postedAbgegeben[$stichId][$serieNummer]) ? 1 : 0,
+                    ];
                 }
-
-                $items[$key] = [
-                    'stich_id' => (int) $stichId,
-                    'gaben_id' => (int) $gabenId,
-                ];
             }
         }
 
@@ -103,6 +107,7 @@ final class AbrechnungsService
             for ($stichNummer = 0; $stichNummer < $anzahlStiche; $stichNummer++) {
                 $rowStich = $stich;
                 $rowStich['anzahl_stiche'] = 1;
+                $rowStich['serie_nummer'] = $stichNummer + 1;
                 $rowSchuesse = array_slice($stichSchuesse, $stichNummer * $anzahlSchuss, $anzahlSchuss);
                 $row = $this->buildStichRow($rowStich, $rowSchuesse);
                 $rows[] = $row;
@@ -168,6 +173,7 @@ final class AbrechnungsService
 
         return [
             'stich_id' => (int) ($stich['id'] ?? 0),
+            'serie_nummer' => (int) ($stich['serie_nummer'] ?? 1),
             'bezeichnung' => (string) ($stich['name'] ?? 'Stich'),
             'kurzname' => (string) ($stich['short_name'] ?? ''),
             'externe_nummer' => $this->externalNumber($stich['anzeige_id'] ?? null),
@@ -187,7 +193,7 @@ final class AbrechnungsService
     {
         $saved = [];
         foreach ($savedAbgaben as $abgabe) {
-            $saved[(int) $abgabe['stich_id'] . ':' . (int) $abgabe['gaben_id']] = true;
+            $saved[(int) $abgabe['stich_id'] . ':' . (int) ($abgabe['serie_nummer'] ?? 1) . ':' . (int) $abgabe['gaben_id']] = $abgabe;
         }
 
         $regelnByStich = [];
@@ -198,16 +204,20 @@ final class AbrechnungsService
         $gruppen = [];
         foreach ($rows as $row) {
             $stichId = (int) ($row['stich_id'] ?? 0);
+            $serieNummer = (int) ($row['serie_nummer'] ?? 1);
             $stichTotal = (float) ($row['total'] ?? 0);
+            $abgegeben = false;
             $gaben = [];
 
             foreach ($regelnByStich[$stichId] ?? [] as $regel) {
                 $minWert = $regel['min_wert'] !== null ? (float) $regel['min_wert'] : (float) ($regel['punktwert'] ?? 0);
                 $maxWert = $regel['max_wert'] !== null ? (float) $regel['max_wert'] : null;
                 $erreicht = $stichTotal >= $minWert && ($maxWert === null || $stichTotal <= $maxWert);
-                $key = $stichId . ':' . (int) $regel['gaben_id'];
+                $key = $stichId . ':' . $serieNummer . ':' . (int) $regel['gaben_id'];
+                $abgegeben = $abgegeben || !empty($saved[$key]['abgegeben']);
                 $gaben[] = [
                     'stich_id' => $stichId,
+                    'serie_nummer' => $serieNummer,
                     'gaben_id' => (int) $regel['gaben_id'],
                     'name' => (string) ($regel['name'] ?? ''),
                     'anzahl' => (int) ($regel['anzahl'] ?? 0),
@@ -221,10 +231,12 @@ final class AbrechnungsService
 
             $gruppen[] = [
                 'stich_id' => $stichId,
+                'serie_nummer' => $serieNummer,
                 'bezeichnung' => (string) ($row['bezeichnung'] ?? 'Stich'),
                 'kurzname' => (string) ($row['kurzname'] ?? ''),
                 'total' => $stichTotal,
                 'gaben' => $gaben,
+                'abgegeben' => $abgegeben,
             ];
         }
 
@@ -245,7 +257,7 @@ final class AbrechnungsService
                     continue;
                 }
 
-                $selectable[(int) $gabe['stich_id'] . ':' . (int) $gabe['gaben_id']] = true;
+                $selectable[(int) $gabe['stich_id'] . ':' . (int) $gabe['serie_nummer'] . ':' . (int) $gabe['gaben_id']] = true;
             }
         }
 

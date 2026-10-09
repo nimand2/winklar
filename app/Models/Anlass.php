@@ -15,7 +15,8 @@ final class Anlass
     {
         $statement = Database::connection()->prepare(
             'SELECT id, fk_adress_id_creator, fk_adress_id_modifier, name_anlass, shortname_anlass,
-                    start_anlass, end_anlass, created_by_user_id, created_at, updated_by_user_id, updated_at
+                    start_anlass, end_anlass, final_stich_id, final_anzahl_u18, final_anzahl_ue18,
+                    created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM anlass
              ORDER BY start_anlass DESC, id DESC'
         );
@@ -61,7 +62,8 @@ final class Anlass
     {
         $statement = Database::connection()->prepare(
             'SELECT id, fk_adress_id_creator, fk_adress_id_modifier, name_anlass, shortname_anlass,
-                    start_anlass, end_anlass, created_by_user_id, created_at, updated_by_user_id, updated_at
+                    start_anlass, end_anlass, final_stich_id, final_anzahl_u18, final_anzahl_ue18,
+                    created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM anlass
              WHERE id = :id
              LIMIT 1'
@@ -95,6 +97,19 @@ final class Anlass
         $payload['id'] = $id;
 
         return $statement->execute($payload);
+    }
+
+    /**
+     * Speichert die Finalregeln ohne die Anlassgrunddaten zu veraendern.
+     */
+    public function updateFinalRegeln(int $id, ?int $stichId, int $u18, int $ue18, int $userId): void
+    {
+        $statement = Database::connection()->prepare(
+            'UPDATE anlass SET final_stich_id = :stich_id,
+                final_anzahl_u18 = :u18, final_anzahl_ue18 = :ue18,
+                updated_by_user_id = :user_id WHERE id = :id'
+        );
+        $statement->execute(['id' => $id, 'stich_id' => $stichId, 'u18' => $u18, 'ue18' => $ue18, 'user_id' => $userId]);
     }
 
     /**

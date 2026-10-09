@@ -29,6 +29,11 @@ final class AnlassService
         return $this->anlassModel->findById($id);
     }
 
+    public function updateFinalRegeln(int $id, ?int $stichId, int $u18, int $ue18, int $userId): void
+    {
+        $this->anlassModel->updateFinalRegeln($id, $stichId, $u18, $ue18, $userId);
+    }
+
     /**
      * Erstellt einen neuen Anlass mit bereits validierten Daten.
      */

@@ -94,6 +94,9 @@ CREATE TABLE anlass (
     shortname_anlass VARCHAR(100) NULL,
     start_anlass DATE NULL,
     end_anlass DATE NULL,
+    final_stich_id INT UNSIGNED NULL,
+    final_anzahl_u18 INT UNSIGNED NOT NULL DEFAULT 6,
+    final_anzahl_ue18 INT UNSIGNED NOT NULL DEFAULT 6,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -173,6 +176,7 @@ CREATE TABLE standblatt (
     datum DATE NULL,
     kosten DECIMAL(10,2) NULL,
     gaben_geprueft TINYINT(1) NOT NULL DEFAULT 0,
+    final_teilnahme TINYINT(1) NOT NULL DEFAULT 0,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -220,6 +224,8 @@ CREATE TABLE gaben_abgaben (
     gaben_id INT UNSIGNED NOT NULL,
     standblatt_id INT UNSIGNED NOT NULL,
     stich_id INT UNSIGNED NOT NULL,
+    serie_nummer INT UNSIGNED NOT NULL DEFAULT 1,
+    abgegeben TINYINT(1) NOT NULL DEFAULT 0,
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -239,7 +245,7 @@ CREATE TABLE gaben_abgaben (
     CONSTRAINT fk_gaben_abgaben_updated_by
         FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
-    UNIQUE KEY uq_gaben_abgaben (gaben_id, standblatt_id, stich_id)
+    UNIQUE KEY uq_gaben_abgaben (gaben_id, standblatt_id, stich_id, serie_nummer)
 );
 
 CREATE TABLE schussdaten (

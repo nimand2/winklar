@@ -121,7 +121,7 @@ final class Gaben
     public function findAbgabenForStandblatt(int $standblattId): array
     {
         $statement = Database::connection()->prepare(
-            'SELECT ga.id, ga.gaben_id, ga.standblatt_id, ga.stich_id, g.name, g.punktwert, g.preis, g.anzahl
+            'SELECT ga.id, ga.gaben_id, ga.standblatt_id, ga.stich_id, ga.serie_nummer, ga.abgegeben, g.name, g.punktwert, g.preis, g.anzahl
              FROM gaben_abgaben ga
              INNER JOIN gaben g ON g.id = ga.gaben_id
              WHERE ga.standblatt_id = :standblatt_id
@@ -138,7 +138,7 @@ final class Gaben
     public function findAbgabenForAnlass(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
-            'SELECT ga.id, ga.gaben_id, ga.standblatt_id, ga.stich_id,
+            'SELECT ga.id, ga.gaben_id, ga.standblatt_id, ga.stich_id, ga.serie_nummer, ga.abgegeben,
                     g.name, g.punktwert, g.preis, g.anzahl,
                     st.name AS stich_name,
                     s.gaben_geprueft,
@@ -188,9 +188,9 @@ final class Gaben
 
             $insertStatement = $connection->prepare(
                 'INSERT INTO gaben_abgaben (
-                    gaben_id, standblatt_id, stich_id, created_by_user_id, updated_by_user_id
+                    gaben_id, standblatt_id, stich_id, serie_nummer, abgegeben, created_by_user_id, updated_by_user_id
                  ) VALUES (
-                    :gaben_id, :standblatt_id, :stich_id, :created_by_user_id, :updated_by_user_id
+                    :gaben_id, :standblatt_id, :stich_id, :serie_nummer, :abgegeben, :created_by_user_id, :updated_by_user_id
                  )'
             );
 
@@ -199,6 +199,8 @@ final class Gaben
                     'gaben_id' => (int) $item['gaben_id'],
                     'standblatt_id' => $standblattId,
                     'stich_id' => (int) $item['stich_id'],
+                    'serie_nummer' => (int) ($item['serie_nummer'] ?? 1),
+                    'abgegeben' => !empty($item['abgegeben']) ? 1 : 0,
                     'created_by_user_id' => $userId,
                     'updated_by_user_id' => $userId,
                 ]);

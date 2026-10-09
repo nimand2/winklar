@@ -13,6 +13,7 @@ use App\Models\Standblatt;
 use App\Services\AbrechnungsService;
 use App\Services\AnlassService;
 use App\Services\AuthService;
+use App\Services\RanglistenService;
 
 final class AbrechnenController extends Controller
 {
@@ -24,6 +25,7 @@ final class AbrechnenController extends Controller
         private readonly Schussdaten $schussdatenModel,
         private readonly Gaben $gabenModel,
         private readonly AbrechnungsService $abrechnungsService,
+        private readonly RanglistenService $ranglistenService,
     ) {
     }
 
@@ -43,6 +45,11 @@ final class AbrechnenController extends Controller
             'anlass' => $anlass,
             'adresse' => $adresse,
             'standblatt' => $standblatt,
+            'finalStatus' => $this->ranglistenService->finalStatusForStandblatt(
+                (int) $anlass['id'],
+                (int) $standblatt['id'],
+                $anlass
+            ),
         ], $abrechnung));
     }
 
@@ -57,10 +64,29 @@ final class AbrechnenController extends Controller
         $items = $this->abrechnungsService->itemsFromPostedGaben(
             (int) $anlass['id'],
             (int) $standblatt['id'],
-            (array) ($_POST['gaben'] ?? [])
+            (array) ($_POST['gaben'] ?? []),
+            (array) ($_POST['abgegeben'] ?? [])
         );
 
         $this->gabenModel->replaceAbgabenForStandblatt((int) $standblatt['id'], $items, (int) $user['id']);
+
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    /**
+     * Speichert den Teilnahmewunsch unabhaengig von der aktuellen Qualifikation.
+     */
+    public function updateFinalTeilnahme(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+
+        $this->standblattModel->updateFinalTeilnahme(
+            (int) $standblatt['id'],
+            ($_POST['final_teilnahme'] ?? '') === '1',
+            (int) $user['id']
+        );
 
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }

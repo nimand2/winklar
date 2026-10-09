@@ -44,6 +44,37 @@ $regeln = $regeln ?? [];
                             </div>
                         </div>
 
+                        <?php foreach (($errors ?? []) as $error): ?>
+                            <div class="alert alert-danger"><?= htmlspecialchars((string) $error) ?></div>
+                        <?php endforeach; ?>
+
+                        <div class="list-group-item p-4 bg-white rounded-4 mb-4">
+                            <h2 class="h5 mb-3">Finalqualifikation</h2>
+                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/final')) ?>">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-12 col-md-4">
+                                        <label for="final_stich_id" class="form-label">Stich für die Qualifikation</label>
+                                        <select id="final_stich_id" name="final_stich_id" class="form-select">
+                                            <option value="0">Kein Final</option>
+                                            <?php foreach ($stiche as $stich): ?>
+                                                <option value="<?= (int) $stich['id'] ?>" <?= (int) ($anlass['final_stich_id'] ?? 0) === (int) $stich['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $stich['name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label for="final_anzahl_u18" class="form-label">Finalplätze U18</label>
+                                        <input id="final_anzahl_u18" name="final_anzahl_u18" type="number" min="0" max="1000" step="1" class="form-control" value="<?= (int) ($anlass['final_anzahl_u18'] ?? 6) ?>" required>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label for="final_anzahl_ue18" class="form-label">Finalplätze Ü18</label>
+                                        <input id="final_anzahl_ue18" name="final_anzahl_ue18" type="number" min="0" max="1000" step="1" class="form-control" value="<?= (int) ($anlass['final_anzahl_ue18'] ?? 6) ?>" required>
+                                    </div>
+                                    <div class="col-12 col-md-2"><button type="submit" class="btn btn-primary w-100">Speichern</button></div>
+                                </div>
+                                <p class="small text-body-secondary mt-2 mb-0">Die Rangierung erfolgt nach der Summe der besten zwei Resultate. 0 Finalplätze schliesst die jeweilige Kategorie aus.</p>
+                            </form>
+                        </div>
+
                         <div class="row g-4">
                             <div class="col-12 col-lg-5">
                                 <div class="list-group-item p-4 bg-white rounded-4 mb-4">

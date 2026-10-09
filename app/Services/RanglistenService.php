@@ -128,6 +128,41 @@ final class RanglistenService
     }
 
     /**
+     * Ermittelt die aktuelle Finalqualifikation nach den Anlassregeln.
+     */
+    public function finalStatusForStandblatt(int $anlassId, int $standblattId, array $anlass): array
+    {
+        $status = ['qualifiziert' => false, 'rang' => null, 'kategorie' => null, 'stich' => null];
+        $stichId = (int) ($anlass['final_stich_id'] ?? 0);
+        if ($stichId <= 0) {
+            return $status;
+        }
+
+        $datum = (string) (($anlass['start_anlass'] ?? '') ?: ($anlass['end_anlass'] ?? ''));
+        foreach ($this->buildForAnlass($anlassId, $datum) as $rangliste) {
+            if ((int) ($rangliste['stich']['id'] ?? 0) !== $stichId) {
+                continue;
+            }
+
+            $status['stich'] = (string) $rangliste['stich']['name'];
+            foreach ($rangliste['kategorien'] as $key => $kategorie) {
+                $anzahl = (int) ($anlass['final_anzahl_' . $key] ?? 6);
+                foreach ($kategorie['teilnehmer'] as $teilnehmer) {
+                    if ((int) $teilnehmer['standblatt_id'] === $standblattId) {
+                        return array_merge($status, [
+                            'qualifiziert' => (int) $teilnehmer['rang'] <= $anzahl,
+                            'rang' => (int) $teilnehmer['rang'],
+                            'kategorie' => (string) $kategorie['label'],
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return $status;
+    }
+
+    /**
      * Liefert die Standard-Kategorien fuer die Rangliste.
      */
     private function emptyCategories(): array

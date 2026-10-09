@@ -158,7 +158,7 @@ final class Standblatt
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
-            'SELECT id, id_anlass, id_adresse, datum, kosten, created_by_user_id, created_at,
+            'SELECT id, id_anlass, id_adresse, datum, kosten, final_teilnahme, created_by_user_id, created_at,
                     updated_by_user_id, updated_at
              FROM standblatt
              WHERE id = :id
@@ -253,6 +253,24 @@ final class Standblatt
         $payload['id'] = $id;
 
         return $statement->execute($payload);
+    }
+
+    /**
+     * Speichert den Wunsch zur Teilnahme am Final.
+     */
+    public function updateFinalTeilnahme(int $id, bool $teilnahme, int $userId): bool
+    {
+        $statement = Database::connection()->prepare(
+            'UPDATE standblatt
+             SET final_teilnahme = :final_teilnahme, updated_by_user_id = :updated_by_user_id
+             WHERE id = :id'
+        );
+
+        return $statement->execute([
+            'id' => $id,
+            'final_teilnahme' => $teilnahme ? 1 : 0,
+            'updated_by_user_id' => $userId,
+        ]);
     }
 
     /**

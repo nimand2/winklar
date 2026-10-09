@@ -169,6 +169,36 @@ final class AnlassController extends Controller
     }
 
     /**
+     * Speichert den Finalstich und die Anzahl Finalplaetze je Kategorie.
+     */
+    public function updateFinalRegeln(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $stiche = $this->stichModel->findByAnlassId((int) $anlass['id']);
+        $stichId = filter_var($_POST['final_stich_id'] ?? '0', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+        $u18 = filter_var($_POST['final_anzahl_u18'] ?? '', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1000]]);
+        $ue18 = filter_var($_POST['final_anzahl_ue18'] ?? '', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1000]]);
+        $validIds = array_map(static fn (array $stich): int => (int) $stich['id'], $stiche);
+
+        if ($stichId === false || $u18 === false || $ue18 === false || ($stichId !== 0 && !in_array($stichId, $validIds, true))) {
+            http_response_code(422);
+            $this->render('anlass/konfiguration', [
+                'user' => $user,
+                'anlass' => $anlass,
+                'stiche' => $stiche,
+                'gaben' => $this->gabenModel->getAll(),
+                'regeln' => $this->auszeichnungslimittenModel->findByAnlassId((int) $anlass['id']),
+                'errors' => ['Bitte einen Stich dieses Anlasses und je Kategorie eine Anzahl von 0 bis 1000 wählen.'],
+            ]);
+            return;
+        }
+
+        $this->anlassService->updateFinalRegeln((int) $anlass['id'], $stichId ?: null, $u18, $ue18, (int) $user['id']);
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+    }
+
+    /**
      * Zeigt die Rangliste fuer einen Anlass.
      */
     public function abschliessen(array $params): void

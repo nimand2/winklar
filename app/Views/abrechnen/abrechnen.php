@@ -14,6 +14,7 @@ $standblattId = (int) $standblatt['id'];
 $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname'] ?? '')));
 $auswertung = $auswertung ?? ['rows' => [], 'total' => 0, 'schussCount' => 0];
 $gabenVergleich = $gabenVergleich ?? [];
+$finalStatus = $finalStatus ?? ['qualifiziert' => false, 'rang' => null, 'kategorie' => null, 'stich' => null];
 $rows = (array) ($auswertung['rows'] ?? []);
 $maxSchuesse = 0;
 $stiche = (array) ($stiche ?? []);
@@ -88,18 +89,6 @@ $formatDateTimeLocal = static function (mixed $value): string {
                         </div>
 
                         <div class="row g-3 mb-4">
-                            <div class="col-12 col-md-4">
-                                <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Total</div>
-                                    <div class="display-6 fw-semibold"><?= htmlspecialchars($formatNumber((float) ($auswertung['total'] ?? 0))) ?></div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Schüsse</div>
-                                    <div class="display-6 fw-semibold"><?= htmlspecialchars((string) ($auswertung['schussCount'] ?? 0)) ?></div>
-                                </div>
-                            </div>
                             <div class="col-12 col-md-4">
                                 <div class="list-group-item h-100 p-3 bg-white rounded-4">
                                     <div class="small text-body-secondary mb-1">Datum</div>
@@ -314,6 +303,26 @@ $formatDateTimeLocal = static function (mixed $value): string {
                             </div>
 
                             <div class="col-12 col-xl-4">
+                                <div class="list-group-item p-3 bg-white rounded-4 mb-4">
+                                    <h2 class="h5 mb-3">Final</h2>
+                                    <div class="alert <?= !empty($finalStatus['qualifiziert']) ? 'alert-success' : 'alert-light border' ?> mb-2">
+                                        <strong><?= !empty($finalStatus['qualifiziert']) ? 'Für den Final qualifiziert' : 'Aktuell nicht für den Final qualifiziert' ?></strong>
+                                        <?php if ($finalStatus['rang'] !== null): ?>
+                                            <div class="small mt-1"><?= htmlspecialchars((string) $finalStatus['stich']) ?> · <?= htmlspecialchars((string) $finalStatus['kategorie']) ?> · Rang <?= (int) $finalStatus['rang'] ?></div>
+                                        <?php else: ?>
+                                            <div class="small mt-1"><?= $finalStatus['stich'] !== null ? 'Noch kein klassiertes Resultat im Finalstich vorhanden.' : 'Für diesen Anlass ist kein Finalstich eingestellt.' ?></div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="small text-body-secondary">Finalplätze: U18 <?= (int) ($anlass['final_anzahl_u18'] ?? 6) ?> · Ü18 <?= (int) ($anlass['final_anzahl_ue18'] ?? 6) ?>. Der Status richtet sich nach der aktuellen Rangliste und den Anlassregeln.</p>
+                                    <a class="small d-block mb-3" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>">Finalregeln einstellen</a>
+                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/final')) ?>">
+                                        <label class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" name="final_teilnahme" value="1" <?= !empty($standblatt['final_teilnahme']) ? 'checked' : '' ?>>
+                                            <span class="form-check-label">Ich möchte am Final teilnehmen</span>
+                                        </label>
+                                        <button type="submit" class="btn btn-outline-primary w-100">Finalteilnahme speichern</button>
+                                    </form>
+                                </div>
                                 <div class="list-group-item p-3 bg-white rounded-4">
                                     <h2 class="h5 mb-3">Gabenvergleich</h2>
 
@@ -333,6 +342,16 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                     Total <?= htmlspecialchars($formatNumber((float) $gruppe['total'])) ?>
                                                                 </div>
                                                             </div>
+                                                            <label class="form-check mb-0">
+                                                                <input
+                                                                    class="form-check-input"
+                                                                    type="checkbox"
+                                                                    name="abgegeben[<?= (int) $gruppe['stich_id'] ?>][<?= (int) $gruppe['serie_nummer'] ?>]"
+                                                                    value="1"
+                                                                    <?= !empty($gruppe['abgegeben']) ? 'checked' : '' ?>
+                                                                >
+                                                                <span class="form-check-label">Gabe abgegeben</span>
+                                                            </label>
                                                         </div>
 
                                                         <?php if (($gruppe['gaben'] ?? []) === []): ?>
@@ -340,13 +359,13 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                         <?php else: ?>
                                                             <div class="d-grid gap-2">
                                                                 <?php foreach ((array) $gruppe['gaben'] as $gabe): ?>
-                                                                    <?php $inputId = 'gabe-' . (int) $gabe['stich_id'] . '-' . (int) $gabe['gaben_id']; ?>
+                                                                    <?php $inputId = 'gabe-' . (int) $gabe['stich_id'] . '-' . (int) $gabe['serie_nummer'] . '-' . (int) $gabe['gaben_id']; ?>
                                                                     <label class="form-check d-flex align-items-start gap-2 mb-0">
                                                                         <input
                                                                             id="<?= htmlspecialchars($inputId) ?>"
                                                                             class="form-check-input mt-1"
                                                                             type="checkbox"
-                                                                            name="gaben[<?= htmlspecialchars((string) $gabe['stich_id']) ?>][]"
+                                                                            name="gaben[<?= (int) $gabe['stich_id'] ?>][<?= (int) $gabe['serie_nummer'] ?>][]"
                                                                             value="<?= htmlspecialchars((string) $gabe['gaben_id']) ?>"
                                                                             <?= !empty($gabe['selected']) ? 'checked' : '' ?>
                                                                             <?= empty($gabe['erreicht']) ? 'disabled' : '' ?>

@@ -192,6 +192,11 @@ final class RanglistenService
      */
     private function resultateForStich(array $stich, array $schuesse): array
     {
+        // Use the same stable import order as the standblatt calculation.
+        // SIUS Match/Stich counters can restart between series.
+        usort($schuesse, static fn (array $left, array $right): int =>
+            (int) ($left['id'] ?? 0) <=> (int) ($right['id'] ?? 0)
+        );
         $anzahlSchuss = max(1, (int) ($stich['anzahl_schuss'] ?? 0));
         $resultate = [];
 

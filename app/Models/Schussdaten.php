@@ -203,7 +203,7 @@ final class Schussdaten
                     externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
              WHERE id_anlass = :id_anlass
-             ORDER BY start_nr ASC, match_index ASC, stich_index ASC, schuss_zeit ASC, id ASC'
+             ORDER BY start_nr ASC, id ASC'
         );
         $statement->execute(['id_anlass' => $idAnlass]);
 

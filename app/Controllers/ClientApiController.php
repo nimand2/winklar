@@ -133,6 +133,10 @@ final class ClientApiController extends Controller
         JsonResponse::send([
             'success' => true,
             'imported' => $created,
+            // createMany commits all normalised rows in one transaction.
+            // Existing import hashes count as accepted, not newly imported.
+            'accepted' => count(array_filter($shots, 'is_array')),
+            'duplicates' => count(array_filter($shots, 'is_array')) - $created,
         ], 201);
     }
 

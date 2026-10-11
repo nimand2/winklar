@@ -22,7 +22,7 @@ namespace App\Models {
             $series=[[9,10,10,9,10],[10,10,9,9,9],[10,10,10,9,10],[10,9,9,10,9],[10,9,10,10,8]];
             foreach ($series as $serie=>$values) {
                 foreach ($values as $index=>$value) {
-                    $rows[]=['id'=>100+$serie*5+$index,'start_nr'=>24,'primaerwertung'=>$value,'externe_nummer'=>901,'match_index'=>$index+1,'stich_index'=>1];
+                    $rows[]=['id'=>1000-($serie*5+$index),'schuss_zeit'=>sprintf('2026-10-11 10:00:%02d',$serie*5+$index),'start_nr'=>24,'primaerwertung'=>$value,'externe_nummer'=>901,'match_index'=>$index+1,'stich_index'=>1];
                 }
             }
             $rows[]=['id'=>999,'start_nr'=>24,'primaerwertung'=>10,'externe_nummer'=>901,'ins_del'=>1];
@@ -38,6 +38,7 @@ namespace App\Models {
     }
 }
 namespace {
+    require dirname(__DIR__).'/app/Services/Schussreihenfolge.php';
     require dirname(__DIR__).'/app/Services/RanglistenService.php';
     require dirname(__DIR__).'/app/Services/AbrechnungsService.php';
     $standblatt=new \App\Models\Standblatt();

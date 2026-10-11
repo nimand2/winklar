@@ -33,6 +33,7 @@ namespace App\Models {
     }
 }
 namespace {
+    require dirname(__DIR__).'/app/Services/Schussreihenfolge.php';
     require dirname(__DIR__).'/app/Services/AbrechnungsService.php';
     $service = new \App\Services\AbrechnungsService(new \App\Models\Standblatt(), new \App\Models\Schussdaten(), new \App\Models\Gaben());
     $check = static function(bool $ok, string $message): void { if (!$ok) throw new \RuntimeException($message); };

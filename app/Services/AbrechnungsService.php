@@ -88,9 +88,7 @@ final class AbrechnungsService
      */
     private function buildAuswertung(array $stiche, array $schuesse): array
     {
-        usort($schuesse, static function (array $left, array $right): int {
-            return (int) $left['id'] <=> (int) $right['id'];
-        });
+        usort($schuesse, [Schussreihenfolge::class, 'compare']);
 
         $schuesseByExterneNummer = [];
         foreach ($schuesse as $schuss) {

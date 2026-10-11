@@ -26,6 +26,7 @@ namespace App\Models {
     }
 }
 namespace {
+    require dirname(__DIR__).'/app/Services/Schussreihenfolge.php';
     require dirname(__DIR__).'/app/Services/RanglistenService.php';
     require dirname(__DIR__).'/app/Services/FinalService.php';
     require dirname(__DIR__).'/app/Core/Url.php';

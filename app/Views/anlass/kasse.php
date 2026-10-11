@@ -23,7 +23,19 @@ $abgaben = $abrechnung['abgaben'] ?? [];
 <head>
     <?php \App\Core\View::partial('partials/head', ['pageTitle' => 'Kassenübersicht']); ?>
     <style>
+        .table-sort-button {
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            font-weight: inherit;
+            cursor: pointer;
+            text-align: inherit;
+        }
+        .table-sort-arrow { margin-left: 0.3em; }
         @media print {
+            .table-sort-arrow { display: none; }
             .no-print {
                 display: none !important;
             }
@@ -97,13 +109,13 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                         <div class="alert alert-light border mb-0">Noch keine Stiche gelöst.</div>
                                     <?php else: ?>
                                         <div class="table-responsive">
-                                            <table class="table align-middle mb-0">
+                                            <table class="table align-middle mb-0" data-sortable-table>
                                                 <thead>
                                                     <tr>
-                                                        <th>Stich</th>
-                                                        <th class="text-end">Anzahl</th>
-                                                        <th class="text-end">Preis</th>
-                                                        <th class="text-end">Total</th>
+                                                        <th data-sort-type="text">Stich</th>
+                                                        <th class="text-end" data-sort-type="number">Anzahl</th>
+                                                        <th class="text-end" data-sort-type="number">Preis</th>
+                                                        <th class="text-end" data-sort-type="number">Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -129,13 +141,13 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                         <div class="alert alert-light border mb-0">Noch keine Gaben abgegeben.</div>
                                     <?php else: ?>
                                         <div class="table-responsive">
-                                            <table class="table align-middle mb-0">
+                                            <table class="table align-middle mb-0" data-sortable-table>
                                                 <thead>
                                                     <tr>
-                                                        <th>Gabe</th>
-                                                        <th class="text-end">Anzahl</th>
-                                                        <th class="text-end">Wert</th>
-                                                        <th class="text-end">Total</th>
+                                                        <th data-sort-type="text">Gabe</th>
+                                                        <th class="text-end" data-sort-type="number">Anzahl</th>
+                                                        <th class="text-end" data-sort-type="number">Wert</th>
+                                                        <th class="text-end" data-sort-type="number">Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -161,28 +173,28 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                 <div class="alert alert-light border mb-0">Noch keine Standblätter vorhanden.</div>
                             <?php else: ?>
                                 <div class="table-responsive">
-                                    <table class="table align-middle mb-0">
+                                    <table class="table align-middle mb-0" data-sortable-table>
                                         <thead>
                                             <tr>
-                                                <th>Standblatt</th>
-                                                <th>Schütze</th>
-                                                <th>Verein</th>
-                                                <th>Datum</th>
-                                                <th class="text-end">Kosten</th>
-                                                <th>Gaben</th>
+                                                <th data-sort-type="number">Standblatt</th>
+                                                <th data-sort-type="text">Schütze</th>
+                                                <th data-sort-type="text">Verein</th>
+                                                <th data-sort-type="number">Datum</th>
+                                                <th class="text-end" data-sort-type="number">Kosten</th>
+                                                <th data-sort-type="text">Gaben</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <?php foreach ($standblaetter as $row): ?>
                                                 <tr>
-                                                    <td>
+                                                    <td data-sort-value="<?= (int) $row['id'] ?>">
                                                         <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . (int) $row['id'])) ?>" class="text-decoration-none">
                                                             #<?= (int) $row['id'] ?>
                                                         </a>
                                                     </td>
                                                     <td><?= htmlspecialchars((string) ($row['name'] ?: 'Unbekannt')) ?></td>
                                                     <td><?= htmlspecialchars((string) ($row['verein'] ?: '-')) ?></td>
-                                                    <td><?= htmlspecialchars((string) ($row['datum'] ?: '-')) ?></td>
+                                                    <td data-sort-value="<?= htmlspecialchars((string) (strtotime((string) ($row['datum'] ?? '')) ?: 0)) ?>"><?= htmlspecialchars((string) ($row['datum'] ?: '-')) ?></td>
                                                     <td class="text-end fw-semibold"><?= htmlspecialchars($money((float) $row['kosten'])) ?></td>
                                                     <td><?= $row['gaben_geprueft'] ? 'geprüft' : 'offen' ?></td>
                                                 </tr>
@@ -199,13 +211,13 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                 <div class="alert alert-light border mb-0">Noch keine Gaben-Details vorhanden.</div>
                             <?php else: ?>
                                 <div class="table-responsive">
-                                    <table class="table align-middle mb-0">
+                                    <table class="table align-middle mb-0" data-sortable-table>
                                         <thead>
                                             <tr>
-                                                <th>Gabe</th>
-                                                <th>Stich</th>
-                                                <th>Schütze</th>
-                                                <th class="text-end">Wert</th>
+                                                <th data-sort-type="text">Gabe</th>
+                                                <th data-sort-type="text">Stich</th>
+                                                <th data-sort-type="text">Schütze</th>
+                                                <th class="text-end" data-sort-type="number">Wert</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -230,5 +242,6 @@ $abgaben = $abrechnung['abgaben'] ?? [];
     </main>
 
     <?php \App\Core\View::partial('partials/bootstrap-script'); ?>
+    <script src="<?= htmlspecialchars(Url::asset('js/table-sort.js')) ?>" defer></script>
 </body>
 </html>

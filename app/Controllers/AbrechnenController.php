@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Database;
 use App\Core\Response;
 use App\Models\Adressen;
 use App\Models\Gaben;
@@ -65,7 +66,8 @@ final class AbrechnenController extends Controller
             (int) $anlass['id'],
             (int) $standblatt['id'],
             (array) ($_POST['gaben'] ?? []),
-            (array) ($_POST['abgegeben'] ?? [])
+            (array) ($_POST['abgegeben'] ?? []),
+            (array) ($_POST['ruecknahme'] ?? [])
         );
 
         $this->gabenModel->replaceAbgabenForStandblatt((int) $standblatt['id'], $items, (int) $user['id']);
@@ -156,6 +158,78 @@ final class AbrechnenController extends Controller
             $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
         }
 
+        Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
+    }
+
+    /**
+     * Speichert alle eingegebenen Schuesse eines Stichs gemeinsam.
+     */
+    public function saveSchuesse(array $params): void
+    {
+        $user = $this->authService->requireUser();
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
+        $updates = [];
+        $inserts = [];
+        $matchIndex = $this->schussdatenModel->nextMatchIndex((int) $standblatt['id'], (int) $anlass['id']);
+
+        foreach ((array) ($_POST['schuesse'] ?? []) as $input) {
+            $id = (int) ($input['id'] ?? 0);
+            $existing = $id > 0 ? $this->findSchussOrFail($id, (int) $anlass['id'], (int) $standblatt['id']) : null;
+            $rawValue = trim((string) ($input['primaerwertung'] ?? ''));
+            if ($id === 0 && $rawValue === '') {
+                continue;
+            }
+            $value = $this->nullableDecimal($rawValue);
+            $number = $this->nullableString($input['externe_nummer'] ?? null);
+            if ($value === null || (float) $value < 0 || $number === null) {
+                http_response_code(422);
+                echo 'Bitte für alle eingegebenen Schüsse einen gültigen Wert und eine Scheibe wählen.';
+                return;
+            }
+            $data = [
+                'primaerwertung' => $value,
+                'sekundaerwertung' => $existing['sekundaerwertung'] ?? null,
+                'externe_nummer' => $number,
+                'schuss_zeit' => $this->datetimeValue($input['schuss_zeit'] ?? null) ?? ($existing['schuss_zeit'] ?? date('Y-m-d H:i:s')),
+                'mouche' => !empty($input['mouche']) ? 1 : 0,
+                'updated_by_user_id' => (int) $user['id'],
+            ];
+            if ($existing !== null) {
+                $updates[$id] = $data;
+            } else {
+                $inserts[] = array_merge($data, [
+                    'id_anlass' => (int) $anlass['id'],
+                    'start_nr' => (string) $standblatt['id'],
+                    'schussart' => 'Korrektur',
+                    'match_index' => $matchIndex,
+                    'stich_index' => $matchIndex++,
+                    'ins_del' => 0,
+                    'log_event' => 'MANUAL_INSERT',
+                    'log_typ' => 'INFO',
+                    'import_hash' => hash('sha256', random_bytes(32)),
+                    'created_by_user_id' => (int) $user['id'],
+                ]);
+            }
+        }
+
+        if ($updates !== [] || $inserts !== []) {
+            $connection = Database::connection();
+            $connection->beginTransaction();
+            try {
+                foreach ($updates as $id => $data) {
+                    $this->schussdatenModel->updateManualCorrection($id, $data);
+                }
+                foreach ($inserts as $data) {
+                    $this->schussdatenModel->create($data);
+                }
+                $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
+                $connection->commit();
+            } catch (\Throwable $error) {
+                $connection->rollBack();
+                throw $error;
+            }
+        }
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
 

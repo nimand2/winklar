@@ -131,6 +131,7 @@ $barcodeSvg = static function (string $digits): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Standblatt drucken #<?= htmlspecialchars((string) $standblattId) ?></title>
     <?php \App\Core\View::partial('loesen/standblattPrintStyles', ['gridGroups' => $gridGroups, 'gabenColumns' => $gabenColumns]); ?>
+    <?php \App\Core\View::partial('loesen/singlePagePrint'); ?>
 </head>
 <body>
     <div class="screen-actions">
@@ -139,18 +140,16 @@ $barcodeSvg = static function (string $digits): string {
     </div>
 
 <?php endif; ?>
-    <main class="sheet">
+    <main class="sheet"><div class="sheet-content">
         <header class="header">
             <div>
                 <div class="club"><?= htmlspecialchars((string) (($anlass['shortname_anlass'] ?? '') ?: 'Sportschützen')) ?></div>
                 <div class="title"><?= htmlspecialchars((string) $anlass['name_anlass']) ?></div>
                 <div class="person-grid">
                     <div><span class="label">Name:</span> <?= htmlspecialchars($nachname) ?></div>
-                    <div><span class="label">Anschrift:</span> <?= htmlspecialchars((string) ($adresse['strasse'] ?? '')) ?></div>
-                    <div><?= htmlspecialchars($ort) ?></div>
+                    <div><span class="label">Anschrift:</span> <?= htmlspecialchars((string) ($adresse['strasse'] ?? '')) ?><br><?= htmlspecialchars($ort) ?></div>
                     <div><span class="label">Vorname:</span> <?= htmlspecialchars($vorname) ?></div>
                     <div><span class="label">Jahrgang:</span> <?= htmlspecialchars($geburtsjahr) ?> (<?= htmlspecialchars($alterskategorie) ?>)</div>
-                    <div></div>
                 </div>
             </div>
 
@@ -214,8 +213,9 @@ $barcodeSvg = static function (string $digits): string {
                 <div>Gedruckt: <?= htmlspecialchars(date('d.m.Y H:i')) ?></div>
             </div>
         </footer>
-    </main>
+    </div></main>
 <?php if (empty($batchPrint)): ?>
+<?php \App\Core\View::partial('loesen/autoPrint'); ?>
 </body>
 </html>
 <?php endif; ?>

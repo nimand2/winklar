@@ -230,11 +230,14 @@ final class Gaben
     public function resetAbgabenForStandblatt(int $standblattId, int $userId): void
     {
         $connection = Database::connection();
-        $connection->beginTransaction();
+        $ownsTransaction = !$connection->inTransaction();
+        if ($ownsTransaction) {
+            $connection->beginTransaction();
+        }
 
         try {
             $deleteStatement = $connection->prepare(
-                'DELETE FROM gaben_abgaben WHERE standblatt_id = :standblatt_id'
+                'DELETE FROM gaben_abgaben WHERE standblatt_id = :standblatt_id AND abgegeben = 0'
             );
             $deleteStatement->execute(['standblatt_id' => $standblattId]);
 
@@ -249,9 +252,13 @@ final class Gaben
                 'updated_by_user_id' => $userId,
             ]);
 
-            $connection->commit();
+            if ($ownsTransaction) {
+                $connection->commit();
+            }
         } catch (\Throwable $throwable) {
-            $connection->rollBack();
+            if ($ownsTransaction) {
+                $connection->rollBack();
+            }
             throw $throwable;
         }
     }

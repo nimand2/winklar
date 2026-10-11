@@ -15,6 +15,7 @@ use App\Core\Url;
             .sheet + .sheet { break-before: page; page-break-before: always; }
         }
     </style>
+    <?php \App\Core\View::partial('loesen/singlePagePrint'); ?>
 </head>
 <body>
     <div class="screen-actions">

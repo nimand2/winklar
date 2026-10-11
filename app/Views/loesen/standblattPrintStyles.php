@@ -68,7 +68,7 @@
 
         .person-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 26mm;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
             gap: 1mm 5mm;
         }
 

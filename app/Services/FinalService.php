@@ -31,22 +31,27 @@ final class FinalService
             }
             $stich = $rangliste['stich'];
             foreach ($rangliste['kategorien'] as $key => $kategorie) {
-                $plaetze = (int) ($anlass['final_anzahl_' . $key] ?? 6);
+                $plaetze = max(0, (int) ($anlass['final_anzahl_' . $key] ?? 6));
                 $qualifizierte = [];
+                $bestaetigt = 0;
                 foreach ($kategorie['teilnehmer'] as $row) {
-                    if ((int) $row['rang'] > $plaetze) {
-                        continue;
+                    if ($bestaetigt >= $plaetze) {
+                        break;
                     }
                     $standblatt = $standblaetter[(int) $row['standblatt_id']] ?? null;
                     if ($standblatt === null) {
                         continue;
+                    }
+                    $nimmtTeil = (int) ($standblatt['final_teilnahme'] ?? 0) === 1;
+                    if ($nimmtTeil) {
+                        $bestaetigt++;
                     }
                     $id = (int) $row['standblatt_id'];
                     $barcodeBase = (10000000 + $id) * 100;
                     $qualifizierte[] = array_merge($row, [
                         'kategorie' => $key,
                         'kategorie_label' => $kategorie['label'],
-                        'nimmt_teil' => (int) ($standblatt['final_teilnahme'] ?? 0) === 1,
+                        'nimmt_teil' => $nimmtTeil,
                         'barcode' => $id <= 999998 ? (string) ($barcodeBase + (97 - ($barcodeBase % 97))) : null,
                         'standblatt' => $standblatt,
                     ]);
@@ -132,7 +137,7 @@ final class FinalService
             ],
             'erstellt_am' => (new \DateTimeImmutable('now', new \DateTimeZone('Europe/Zurich')))->format(DATE_ATOM),
             'anlass' => ['id' => (int) $anlass['id'], 'name' => $anlass['name_anlass'], 'kurzname' => $anlass['shortname_anlass'] ?? null, 'start' => $anlass['start_anlass'] ?? null, 'ende' => $anlass['end_anlass'] ?? null],
-            'final_regeln' => ['stich_id' => (int) ($anlass['final_stich_id'] ?? 0), 'plaetze_u18' => (int) ($anlass['final_anzahl_u18'] ?? 6), 'plaetze_ue18' => (int) ($anlass['final_anzahl_ue18'] ?? 6), 'wertung' => 'Summe der besten zwei Resultate', 'altersregel' => 'Anlassjahr minus Geburtsjahr; U18 unter 18, Ü18 ab 18', 'nachruecken' => false],
+            'final_regeln' => ['stich_id' => (int) ($anlass['final_stich_id'] ?? 0), 'plaetze_u18' => (int) ($anlass['final_anzahl_u18'] ?? 6), 'plaetze_ue18' => (int) ($anlass['final_anzahl_ue18'] ?? 6), 'wertung' => 'Summe der besten zwei Resultate', 'altersregel' => 'Anlassjahr minus Geburtsjahr; U18 unter 18, Ü18 ab 18', 'nachruecken' => true],
             'qualifikationsstich' => $final['stich'],
             'teilnehmer_anzahl' => count($teilnehmer),
             'teilnehmer' => $teilnehmer,

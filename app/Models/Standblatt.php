@@ -63,6 +63,10 @@ final class Standblatt
         $statement = Database::connection()->prepare(
             'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.gaben_geprueft, s.final_teilnahme, s.created_by_user_id,
                     s.created_at, s.updated_by_user_id, s.updated_at,
+                    s.gaben_geprueft = 1 AND NOT EXISTS (
+                        SELECT 1 FROM gaben_abgaben ga
+                        WHERE ga.standblatt_id = s.id AND ga.abgegeben = 0
+                    ) AS gaben_abgegeben,
                     a.vorname, a.nachname, a.firmen_anrede, a.zusatz, a.email, a.telefon, a.geburtsdatum,
                     a.lizenz, a.strasse, a.postfach, a.nation, p.plz4, p.ortschaftsname
              FROM standblatt s
@@ -161,9 +165,12 @@ final class Standblatt
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
-            'SELECT id, id_anlass, id_adresse, datum, kosten, final_teilnahme, created_by_user_id, created_at,
-                    updated_by_user_id, updated_at
-             FROM standblatt
+            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.final_teilnahme, s.created_by_user_id, s.created_at,
+                    s.updated_by_user_id, s.updated_at, s.gaben_geprueft = 1 AND NOT EXISTS (
+                        SELECT 1 FROM gaben_abgaben ga
+                        WHERE ga.standblatt_id = s.id AND ga.abgegeben = 0
+                    ) AS gaben_abgegeben
+             FROM standblatt s
              WHERE id = :id
              LIMIT 1'
         );

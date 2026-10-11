@@ -35,39 +35,52 @@ final class AbrechnungsService
             'schuesse' => $schuesse,
             'auswertung' => $auswertung,
             'gabenVergleich' => $gaben,
+            'gabenSummen' => $this->gabenSummen($gaben),
         ];
     }
 
     /**
      * Filtert gepostete Gaben auf tatsaechlich erreichbare und waehbare Abgaben.
      */
-    public function itemsFromPostedGaben(int $anlassId, int $standblattId, array $postedGaben, array $postedAbgegeben = []): array
+    public function itemsFromPostedGaben(int $anlassId, int $standblattId, array $postedGaben, array $postedAbgegeben = [], array $postedRuecknahmen = []): array
     {
         $viewData = $this->buildViewData($anlassId, $standblattId);
-        $regeln = $this->gabenModel->findRegelnForStiche($this->stichIdsFromAuswertung($viewData['auswertung']));
-        $selectable = $this->buildSelectableAbgaben($viewData['auswertung']['rows'], $regeln);
         $items = [];
+        foreach ($viewData['gabenVergleich'] as $gruppe) {
+            foreach ($gruppe['gaben'] as $gabe) {
+                $ruecknahme = !empty($gabe['abgegeben']) && !empty($postedRuecknahmen[$gabe['stich_id']][$gabe['serie_nummer']][$gabe['gaben_id']]);
+                if ($ruecknahme && empty($gabe['erreicht'])) {
+                    continue;
+                }
+                $status = $postedAbgegeben[$gabe['stich_id']][$gabe['serie_nummer']] ?? [];
+                $items[] = [
+                    'stich_id' => $gabe['stich_id'],
+                    'serie_nummer' => $gabe['serie_nummer'],
+                    'gaben_id' => $gabe['gaben_id'],
+                    'abgegeben' => !$ruecknahme && (!empty($gabe['abgegeben']) || (is_array($status) ? !empty($status[$gabe['gaben_id']]) : !empty($status))),
+                ];
+            }
+        }
+        return $items;
+    }
 
-        foreach ($postedGaben as $stichId => $serien) {
-            foreach ((array) $serien as $serieNummer => $gabenIds) {
-                foreach ((array) $gabenIds as $gabenId) {
-                    $key = (int) $stichId . ':' . (int) $serieNummer . ':' . (int) $gabenId;
-
-                    if (!isset($selectable[$key])) {
-                        continue;
-                    }
-
-                    $items[$key] = [
-                        'stich_id' => (int) $stichId,
-                        'serie_nummer' => (int) $serieNummer,
-                        'gaben_id' => (int) $gabenId,
-                        'abgegeben' => !empty($postedAbgegeben[$stichId][$serieNummer]) ? 1 : 0,
-                    ];
+    /** Summiert Gabenwerte und Geldzahlungen getrennt nach Abgabestatus. */
+    public function gabenSummen(array $gruppen): array
+    {
+        $summen = ['gesamt' => 0, 'abgegeben' => 0, 'offen' => 0, 'geld_gesamt' => 0, 'geld_abgegeben' => 0, 'geld_offen' => 0];
+        foreach ($gruppen as $gruppe) {
+            foreach ($gruppe['gaben'] as $gabe) {
+                $cents = (int) round((float) $gabe['preis'] * 100);
+                $status = !empty($gabe['abgegeben']) ? 'abgegeben' : 'offen';
+                $summen['gesamt'] += $cents;
+                $summen[$status] += $cents;
+                if (!empty($gabe['ist_geld'])) {
+                    $summen['geld_gesamt'] += $cents;
+                    $summen['geld_' . $status] += $cents;
                 }
             }
         }
-
-        return array_values($items);
+        return array_map(static fn (int $cents): float => $cents / 100, $summen);
     }
 
     /**
@@ -214,6 +227,9 @@ final class AbrechnungsService
                 $maxWert = $regel['max_wert'] !== null ? (float) $regel['max_wert'] : null;
                 $erreicht = $stichTotal >= $minWert && ($maxWert === null || $stichTotal <= $maxWert);
                 $key = $stichId . ':' . $serieNummer . ':' . (int) $regel['gaben_id'];
+                if (!$erreicht) {
+                    continue;
+                }
                 $abgegeben = $abgegeben || !empty($saved[$key]['abgegeben']);
                 $gaben[] = [
                     'stich_id' => $stichId,
@@ -224,11 +240,17 @@ final class AbrechnungsService
                     'limit' => $minWert,
                     'max_wert' => $maxWert,
                     'erreicht' => $erreicht,
-                    'selected' => $erreicht && (isset($saved[$key]) || $defaultSelected),
+                    'selected' => true,
+                    'preis' => (float) ($regel['preis'] ?? 0),
+                    'ist_geld' => stripos((string) ($regel['name'] ?? ''), 'Barauszahlung') !== false,
+                    'abgegeben' => !empty($saved[$key]['abgegeben']),
                     'differenz' => $stichTotal - $minWert,
                 ];
             }
 
+            if ($gaben === []) {
+                continue;
+            }
             $gruppen[] = [
                 'stich_id' => $stichId,
                 'serie_nummer' => $serieNummer,
@@ -240,6 +262,33 @@ final class AbrechnungsService
             ];
         }
 
+        $visible = [];
+        foreach ($gruppen as $gruppe) {
+            foreach ($gruppe['gaben'] as $gabe) {
+                $visible[$gabe['stich_id'] . ':' . $gabe['serie_nummer'] . ':' . $gabe['gaben_id']] = true;
+            }
+        }
+        foreach ($saved as $key => $abgabe) {
+            if (empty($abgabe['abgegeben']) || isset($visible[$key])) {
+                continue;
+            }
+            $gruppen[] = [
+                'stich_id' => (int) $abgabe['stich_id'],
+                'serie_nummer' => (int) ($abgabe['serie_nummer'] ?? 1),
+                'bezeichnung' => 'Bereits abgegebene Gabe (vor Resultatkorrektur)',
+                'total' => 0,
+                'abgegeben' => true,
+                'gaben' => [[
+                    'stich_id' => (int) $abgabe['stich_id'],
+                    'serie_nummer' => (int) ($abgabe['serie_nummer'] ?? 1),
+                    'gaben_id' => (int) $abgabe['gaben_id'],
+                    'name' => (string) $abgabe['name'], 'preis' => (float) $abgabe['preis'],
+                    'ist_geld' => stripos((string) $abgabe['name'], 'Barauszahlung') !== false,
+                    'anzahl' => (int) $abgabe['anzahl'], 'limit' => (float) $abgabe['punktwert'],
+                    'selected' => true, 'erreicht' => false, 'abgegeben' => true,
+                ]],
+            ];
+        }
         return $gruppen;
     }
 

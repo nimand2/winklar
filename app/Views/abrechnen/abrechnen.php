@@ -65,6 +65,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                             <div>
                                 <div class="brand-badge mb-3">Abrechnen</div>
                                 <h1 class="h2 mb-2">Standblatt abrechnen #<?= htmlspecialchars((string) $standblattId) ?></h1>
+                                <?php if (!empty($standblatt['gaben_abgegeben'])): ?><span class="badge text-bg-success">Gaben Abgegeben</span><?php endif; ?>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars($name) ?> · <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>
@@ -144,6 +145,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                             $schuesseRow = (array) ($row['schuesse'] ?? []);
                                                             $collapseId = 'stich-edit-' . $rowIndex;
                                                             $rowExterneNummer = (string) ($row['externe_nummer'] ?? '');
+                                                            $batchFormId = 'schuesse-save-' . $rowIndex;
                                                             $expectedSlots = max(1, (int) ($row['anzahl_schuss'] ?? 0), count($schuesseRow));
                                                         ?>
                                                         <tr>
@@ -185,6 +187,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                             <td colspan="<?= htmlspecialchars((string) $resultColspan) ?>" class="bg-light">
                                                                 <div class="py-2">
                                                                     <div class="small fw-semibold mb-2">Schüsse bearbeiten</div>
+                                                                    <form id="<?= htmlspecialchars($batchFormId) ?>" method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/schuesse')) ?>"></form>
                                                                     <div class="table-responsive">
                                                                         <table class="table table-sm align-middle mb-0">
                                                                             <thead>
@@ -203,10 +206,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                         $schuss = $schuesseRow[$editIndex] ?? null;
                                                                                         $schussId = (int) ($schuss['id'] ?? 0);
                                                                                         $isExistingSchuss = $schussId > 0;
-                                                                                        $formId = ($isExistingSchuss ? 'schuss-update-' . $schussId : 'schuss-insert-' . $rowIndex . '-' . $editIndex);
-                                                                                        $formAction = $isExistingSchuss
-                                                                                            ? Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/schuss/' . $schussId)
-                                                                                            : Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/schuss');
+                                                                                        $formId = $batchFormId;
                                                                                         $externeNummer = (string) ($schuss['externe_nummer'] ?? $rowExterneNummer);
                                                                                     ?>
                                                                                     <tr>
@@ -217,31 +217,28 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                             </div>
                                                                                         </td>
                                                                                         <td class="text-end" style="min-width: 7rem;">
-                                                                                            <form
-                                                                                                id="<?= htmlspecialchars($formId) ?>"
-                                                                                                method="post"
-                                                                                                action="<?= htmlspecialchars($formAction) ?>"
-                                                                                            >
+                                                                                            <input type="hidden" name="schuesse[<?= (int) $editIndex ?>][id]" value="<?= (int) $schussId ?>" form="<?= htmlspecialchars($formId) ?>">
                                                                                                 <input
-                                                                                                    name="primaerwertung"
+                                                                                                    name="schuesse[<?= (int) $editIndex ?>][primaerwertung]"
+                                                                                                    data-shot-value
+                                                                                                    form="<?= htmlspecialchars($formId) ?>"
                                                                                                     type="number"
                                                                                                     step="0.01"
                                                                                                     min="0"
                                                                                                     class="form-control form-control-sm text-end"
                                                                                                     value="<?= $schuss !== null ? htmlspecialchars($formatNumber((float) ($schuss['primaerwertung'] ?? 0))) : '' ?>"
-                                                                                                    required
+                                                                                                    <?= $isExistingSchuss ? 'required' : '' ?>
                                                                                                 >
-                                                                                            </form>
                                                                                         </td>
                                                                                         <td style="min-width: 12rem;">
-                                                                                            <select name="externe_nummer" class="form-select form-select-sm" form="<?= htmlspecialchars($formId) ?>" required>
+                                                                                            <select name="schuesse[<?= (int) $editIndex ?>][externe_nummer]" class="form-select form-select-sm" form="<?= htmlspecialchars($formId) ?>" required>
                                                                                                 <?php if ($externeNummer !== '' && !isset($scheiben[$externeNummer])): ?>
                                                                                                     <option value="<?= htmlspecialchars($externeNummer) ?>" selected>
                                                                                                         <?= htmlspecialchars($externeNummer) ?>
                                                                                                     </option>
                                                                                                 <?php endif; ?>
                                                                                                 <?php foreach ($scheiben as $nummer => $label): ?>
-                                                                                                    <option value="<?= htmlspecialchars((string) $nummer) ?>" <?= $nummer === $externeNummer ? 'selected' : '' ?>>
+                                                                                                    <option value="<?= htmlspecialchars((string) $nummer) ?>" <?= (string) $nummer === $externeNummer ? 'selected' : '' ?>>
                                                                                                         <?= htmlspecialchars($label) ?>
                                                                                                     </option>
                                                                                                 <?php endforeach; ?>
@@ -249,7 +246,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                         </td>
                                                                                         <td style="min-width: 12rem;">
                                                                                             <input
-                                                                                                name="schuss_zeit"
+                                                                                                name="schuesse[<?= (int) $editIndex ?>][schuss_zeit]"
                                                                                                 type="datetime-local"
                                                                                                 class="form-control form-control-sm"
                                                                                                 value="<?= $schuss !== null ? htmlspecialchars($formatDateTimeLocal($schuss['zeit'] ?? null)) : '' ?>"
@@ -258,7 +255,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                         </td>
                                                                                         <td>
                                                                                             <input
-                                                                                                name="mouche"
+                                                                                                name="schuesse[<?= (int) $editIndex ?>][mouche]"
                                                                                                 type="checkbox"
                                                                                                 class="form-check-input"
                                                                                                 value="1"
@@ -268,9 +265,6 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                         </td>
                                                                                         <td class="text-end">
                                                                                             <div class="d-flex justify-content-end gap-2">
-                                                                                                <button type="submit" class="btn btn-outline-primary btn-sm" form="<?= htmlspecialchars($formId) ?>">
-                                                                                                    <?= $isExistingSchuss ? 'Speichern' : 'Einfügen' ?>
-                                                                                                </button>
                                                                                                 <?php if ($isExistingSchuss): ?>
                                                                                                     <form
                                                                                                         method="post"
@@ -287,6 +281,9 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                 <?php endfor; ?>
                                                                             </tbody>
                                                                         </table>
+                                                                    </div>
+                                                                    <div class="d-flex flex-wrap gap-2 mt-3">
+                                                                        <button type="submit" class="btn btn-primary btn-sm" form="<?= htmlspecialchars($batchFormId) ?>">Alle Schüsse speichern</button>
                                                                     </div>
                                                                 </div>
                                                             </td>
@@ -321,80 +318,59 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                     </form>
                                 </div>
                                 <div class="list-group-item p-3 bg-white rounded-4">
-                                    <h2 class="h5 mb-3">Gabenvergleich</h2>
-
+                                    <h2 class="h5 mb-3">Gaben und Auszahlung</h2>
                                     <?php if ($gabenVergleich === []): ?>
-                                        <div class="alert alert-light border mb-0">
-                                            Für die gelösten Stiche sind noch keine Gabenregeln hinterlegt.
-                                        </div>
+                                        <div class="alert alert-light border mb-0">Keine Gaben erreicht.</div>
                                     <?php else: ?>
+                                        <?php $summen = $gabenSummen; $money = static fn ($value): string => number_format((float) $value, 2, '.', "'"); ?>
+                                        <div class="alert alert-success">
+                                            <div>Gabenwert gesamt: CHF <?= $money($summen['gesamt']) ?></div>
+                                            <div>Bereits abgegeben: CHF <?= $money($summen['abgegeben']) ?></div>
+                                            <div class="fw-semibold">Noch abzugeben: CHF <?= $money($summen['offen']) ?></div>
+                                            <hr>
+                                            <div>Barauszahlung gesamt: CHF <?= $money($summen['geld_gesamt']) ?></div>
+                                            <div>Bereits ausgezahlt: CHF <?= $money($summen['geld_abgegeben']) ?></div>
+                                            <div class="fw-bold">Jetzt auszuzahlen: CHF <?= $money($summen['geld_offen']) ?></div>
+                                        </div>
                                         <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>">
                                             <div class="list-group">
                                                 <?php foreach ($gabenVergleich as $gruppe): ?>
                                                     <div class="list-group-item">
-                                                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                                                            <div>
-                                                                <div class="fw-semibold"><?= htmlspecialchars((string) $gruppe['bezeichnung']) ?></div>
-                                                                <div class="small text-body-secondary">
-                                                                    Total <?= htmlspecialchars($formatNumber((float) $gruppe['total'])) ?>
+                                                        <div class="fw-semibold"><?= htmlspecialchars((string) $gruppe['bezeichnung']) ?> · <?= htmlspecialchars($formatNumber((float) $gruppe['total'])) ?> Punkte</div>
+                                                        <?php foreach ($gruppe['gaben'] as $gabe): ?>
+                                                            <div class="border-top mt-2 pt-2">
+                                                                <input type="hidden" name="gaben[<?= (int) $gabe['stich_id'] ?>][<?= (int) $gabe['serie_nummer'] ?>][]" value="<?= (int) $gabe['gaben_id'] ?>">
+                                                                <div class="d-flex justify-content-between gap-2">
+                                                                    <span><?= htmlspecialchars((string) $gabe['name']) ?></span>
+                                                                    <strong>CHF <?= $money($gabe['preis']) ?></strong>
                                                                 </div>
-                                                            </div>
-                                                            <label class="form-check mb-0">
-                                                                <input
-                                                                    class="form-check-input"
-                                                                    type="checkbox"
-                                                                    name="abgegeben[<?= (int) $gruppe['stich_id'] ?>][<?= (int) $gruppe['serie_nummer'] ?>]"
-                                                                    value="1"
-                                                                    <?= !empty($gruppe['abgegeben']) ? 'checked' : '' ?>
-                                                                >
-                                                                <span class="form-check-label">Gabe abgegeben</span>
-                                                            </label>
-                                                        </div>
-
-                                                        <?php if (($gruppe['gaben'] ?? []) === []): ?>
-                                                            <div class="small text-body-secondary">Keine Gaben für diesen Stich hinterlegt.</div>
-                                                        <?php else: ?>
-                                                            <div class="d-grid gap-2">
-                                                                <?php foreach ((array) $gruppe['gaben'] as $gabe): ?>
-                                                                    <?php $inputId = 'gabe-' . (int) $gabe['stich_id'] . '-' . (int) $gabe['serie_nummer'] . '-' . (int) $gabe['gaben_id']; ?>
-                                                                    <label class="form-check d-flex align-items-start gap-2 mb-0">
-                                                                        <input
-                                                                            id="<?= htmlspecialchars($inputId) ?>"
-                                                                            class="form-check-input mt-1"
-                                                                            type="checkbox"
-                                                                            name="gaben[<?= (int) $gabe['stich_id'] ?>][<?= (int) $gabe['serie_nummer'] ?>][]"
-                                                                            value="<?= htmlspecialchars((string) $gabe['gaben_id']) ?>"
-                                                                            <?= !empty($gabe['selected']) ? 'checked' : '' ?>
-                                                                            <?= empty($gabe['erreicht']) ? 'disabled' : '' ?>
-                                                                        >
-                                                                        <span class="form-check-label flex-grow-1">
-                                                                            <span class="d-flex justify-content-between gap-2">
-                                                                                <span class="fw-semibold"><?= htmlspecialchars((string) $gabe['name']) ?></span>
-                                                                                <span class="badge <?= !empty($gabe['erreicht']) ? 'text-bg-success' : 'text-bg-secondary' ?>">
-                                                                                    <?= !empty($gabe['erreicht']) ? 'erreicht' : htmlspecialchars($formatNumber(abs((float) $gabe['differenz']))) . ' fehlt' ?>
-                                                                                </span>
-                                                                            </span>
-                                                                            <span class="small text-body-secondary d-block">
-                                                                                Anzahl <?= htmlspecialchars((string) $gabe['anzahl']) ?> · ab <?= htmlspecialchars($formatNumber((float) $gabe['limit'])) ?> Pkt.
-                                                                            </span>
-                                                                        </span>
+                                                                <?php if (!empty($gabe['abgegeben'])): ?>
+                                                                    <input type="hidden" name="abgegeben[<?= (int) $gabe['stich_id'] ?>][<?= (int) $gabe['serie_nummer'] ?>][<?= (int) $gabe['gaben_id'] ?>]" value="1">
+                                                                    <span class="badge text-bg-success"><?= !empty($gabe['ist_geld']) ? 'Bereits ausgezahlt' : 'Bereits abgegeben' ?></span>
+                                                                    <label class="form-check mt-2 mb-0">
+                                                                        <input class="form-check-input" type="checkbox" name="ruecknahme[<?= (int) $gabe['stich_id'] ?>][<?= (int) $gabe['serie_nummer'] ?>][<?= (int) $gabe['gaben_id'] ?>]" value="1">
+                                                                        <span class="form-check-label"><?= !empty($gabe['ist_geld']) ? 'Rücknahme der Auszahlung bestätigen' : 'Rücknahme der Gabe bestätigen' ?></span>
                                                                     </label>
-                                                                <?php endforeach; ?>
+                                                                <?php else: ?>
+                                                                    <label class="form-check mt-2 mb-0">
+                                                                        <input class="form-check-input" type="checkbox" name="abgegeben[<?= (int) $gabe['stich_id'] ?>][<?= (int) $gabe['serie_nummer'] ?>][<?= (int) $gabe['gaben_id'] ?>]" value="1">
+                                                                        <span class="form-check-label"><?= !empty($gabe['ist_geld']) ? 'Auszahlung bestätigen' : 'Abgabe bestätigen' ?></span>
+                                                                    </label>
+                                                                <?php endif; ?>
                                                             </div>
-                                                        <?php endif; ?>
+                                                        <?php endforeach; ?>
                                                     </div>
                                                 <?php endforeach; ?>
                                             </div>
-                                            <button type="submit" class="btn btn-primary w-100 mt-3">
-                                                Gaben speichern
-                                            </button>
+                                            <button type="submit" class="btn btn-primary w-100 mt-3">Abgaben und Auszahlungen speichern</button>
                                         </form>
                                     <?php endif; ?>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-end mt-4">
+                        <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+                            <a class="btn btn-outline-primary" target="_blank" rel="noopener" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/druck')) ?>">Abrechnung Drucken</a>
                             <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId)) ?>" class="btn btn-primary">
                                 Zur Anlassübersicht
                             </a>
@@ -406,5 +382,28 @@ $formatDateTimeLocal = static function (mixed $value): string {
     </main>
 
     <?php \App\Core\View::partial('partials/bootstrap-script'); ?>
+    <script>
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' || event.isComposing || event.ctrlKey || event.altKey || event.metaKey) return;
+            const input = event.target;
+            if (!(input instanceof HTMLInputElement) || !input.matches('[data-shot-value]')) return;
+            event.preventDefault();
+            const form = input.form;
+            if (!form) return;
+            const values = Array.from(form.elements).filter(field =>
+                field instanceof HTMLInputElement && field.matches('[data-shot-value]') && !field.disabled
+            );
+            const next = values[values.indexOf(input) + (event.shiftKey ? -1 : 1)];
+            if (next) {
+                next.focus();
+                next.select();
+            } else if (!event.shiftKey) {
+                const button = Array.from(form.elements).find(field =>
+                    field instanceof HTMLButtonElement && field.type === 'submit' && !field.disabled
+                );
+                button?.focus();
+            }
+        });
+    </script>
 </body>
 </html>

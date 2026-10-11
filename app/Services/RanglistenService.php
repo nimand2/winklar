@@ -138,6 +138,10 @@ final class RanglistenService
             return $status;
         }
 
+        $bestaetigte = [];
+        foreach ($this->standblattModel->findForAnlassWithAdresse($anlassId) as $blatt) {
+            $bestaetigte[(int) $blatt['id']] = !empty($blatt['final_teilnahme']);
+        }
         $datum = (string) (($anlass['start_anlass'] ?? '') ?: ($anlass['end_anlass'] ?? ''));
         foreach ($this->buildForAnlass($anlassId, $datum) as $rangliste) {
             if ((int) ($rangliste['stich']['id'] ?? 0) !== $stichId) {
@@ -146,14 +150,18 @@ final class RanglistenService
 
             $status['stich'] = (string) $rangliste['stich']['name'];
             foreach ($rangliste['kategorien'] as $key => $kategorie) {
-                $anzahl = (int) ($anlass['final_anzahl_' . $key] ?? 6);
+                $anzahl = max(0, (int) ($anlass['final_anzahl_' . $key] ?? 6));
+                $belegt = 0;
                 foreach ($kategorie['teilnehmer'] as $teilnehmer) {
                     if ((int) $teilnehmer['standblatt_id'] === $standblattId) {
                         return array_merge($status, [
-                            'qualifiziert' => (int) $teilnehmer['rang'] <= $anzahl,
+                            'qualifiziert' => $belegt < $anzahl,
                             'rang' => (int) $teilnehmer['rang'],
                             'kategorie' => (string) $kategorie['label'],
                         ]);
+                    }
+                    if (!empty($bestaetigte[(int) $teilnehmer['standblatt_id']])) {
+                        $belegt++;
                     }
                 }
             }

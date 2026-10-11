@@ -34,6 +34,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                             <div>
                                 <div class="brand-badge mb-3">Standblatt</div>
                                 <h1 class="h2 mb-2">Standblatt #<?= htmlspecialchars((string) $standblattId) ?></h1>
+                                <?php if (!empty($standblatt['gaben_abgegeben'])): ?><span class="badge text-bg-success">Gaben Abgegeben</span><?php endif; ?>
                                 <p class="muted-copy mb-0">
                                     <?= htmlspecialchars($name) ?> · <?= htmlspecialchars((string) $anlass['name_anlass']) ?>
                                 </p>

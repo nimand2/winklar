@@ -126,7 +126,7 @@ $gridGroups = max(1, count($printGroups));
 
         .person-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 26mm;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
             gap: 1mm 5mm;
         }
 
@@ -249,6 +249,7 @@ $gridGroups = max(1, count($printGroups));
             }
         }
     </style>
+    <?php \App\Core\View::partial('loesen/singlePagePrint'); ?>
 </head>
 <body>
     <div class="screen-actions">
@@ -256,18 +257,16 @@ $gridGroups = max(1, count($printGroups));
         <a href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>">Zurück zur Abrechnung</a>
     </div>
 
-    <main class="sheet">
+    <main class="sheet"><div class="sheet-content">
         <header class="header">
             <div>
                 <div class="club"><?= htmlspecialchars((string) (($anlass['shortname_anlass'] ?? '') ?: 'Sportschützen')) ?></div>
                 <div class="title"><?= htmlspecialchars((string) $anlass['name_anlass']) ?></div>
                 <div class="person-grid">
                     <div><span class="label">Name:</span> <?= htmlspecialchars($nachname) ?></div>
-                    <div><span class="label">Anschrift:</span> <?= htmlspecialchars((string) ($adresse['strasse'] ?? '')) ?></div>
-                    <div><?= htmlspecialchars($ort) ?></div>
+                    <div><span class="label">Anschrift:</span> <?= htmlspecialchars((string) ($adresse['strasse'] ?? '')) ?><br><?= htmlspecialchars($ort) ?></div>
                     <div><span class="label">Vorname:</span> <?= htmlspecialchars($vorname) ?></div>
                     <div><span class="label">Jahrgang:</span> <?= htmlspecialchars($geburtsjahr) ?></div>
-                    <div></div>
                 </div>
             </div>
 
@@ -318,7 +317,7 @@ $gridGroups = max(1, count($printGroups));
         <footer class="footer">
             <div class="awards">
                 <?php if ($gabenVergleich === []): ?>
-                    <div class="award">Keine Gaben hinterlegt</div>
+                    <div class="award">Keine Gaben erreicht</div>
                 <?php else: ?>
                     <?php foreach ($gabenVergleich as $gruppe): ?>
                         <div class="award">
@@ -329,18 +328,25 @@ $gridGroups = max(1, count($printGroups));
                             <?php else: ?>
                                 <?php foreach ($selectedGaben as $gabe): ?>
                                     <span class="award-checkbox checked"></span>
-                                    <?= htmlspecialchars((string) $gabe['anzahl']) ?> <?= htmlspecialchars((string) $gabe['name']) ?><br>
+                                    <?= htmlspecialchars((string) $gabe['name']) ?> · CHF <?= htmlspecialchars($formatMoney((float) $gabe['preis'])) ?> · <?= !empty($gabe['abgegeben']) ? 'bereits abgegeben / ausgezahlt' : 'offen' ?><br>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
+            <?php if (isset($gabenSummen)): ?>
+                <div class="print-note">
+                    <span>Gabenwert offen: CHF <?= htmlspecialchars($formatMoney((float) $gabenSummen['offen'])) ?></span>
+                    <strong>Jetzt auszuzahlen: CHF <?= htmlspecialchars($formatMoney((float) $gabenSummen['geld_offen'])) ?></strong>
+                </div>
+            <?php endif; ?>
             <div class="print-note">
                 <div><?= htmlspecialchars($name) ?> · Standblatt <?= htmlspecialchars((string) $standblattId) ?></div>
                 <div>Gedruckt: <?= htmlspecialchars(date('d.m.Y H:i')) ?></div>
             </div>
         </footer>
-    </main>
+    </div></main>
+<?php \App\Core\View::partial('loesen/autoPrint'); ?>
 </body>
 </html>

@@ -22,12 +22,12 @@ $anlassId = (int) $anlass['id'];
             <div class="alert alert-light border">Für diesen Anlass ist kein gültiger Finalstich eingestellt.</div>
         <?php else: ?>
             <p>Qualifikationsstich: <strong><?= htmlspecialchars((string) $final['stich']['name']) ?></strong>. <?= count($final['teilnehmer']) ?> Schützen sind qualifiziert und möchten teilnehmen.</p>
-            <p class="small text-body-secondary">U18 und Ü18 führen separate Finale durch. Die Auswertung verwendet die aktuelle Rangliste und die gespeicherten Teilnahmewünsche. Nur qualifizierte Schützen mit Teilnahmewunsch werden gedruckt und exportiert. Absagen führen nicht automatisch zum Nachrücken.</p>
+            <p class="small text-body-secondary">U18 und Ü18 führen separate Finale durch. Die Auswertung verwendet die aktuelle Rangliste und die gespeicherten Teilnahmewünsche. Nur qualifizierte Schützen mit Teilnahmewunsch werden gedruckt und exportiert. Nicht bestätigte Teilnehmer werden übersprungen. Die nächsten bestätigten Teilnehmer rücken nach Rang nach, bis die Finalplätze besetzt sind.</p>
             <?php foreach ($final['kategorien'] as $key => $kategorie): ?>
                 <section class="mb-4">
                     <h2 class="h5">Final <?= htmlspecialchars((string) $kategorie['label']) ?> · <?= (int) $kategorie['plaetze'] ?> Finalplätze</h2>
                     <?php $teilnehmerAnzahl = count(array_filter($kategorie['qualifizierte'], static fn (array $row): bool => $row['nimmt_teil'])); ?>
-                    <p><?= $teilnehmerAnzahl ?> bestätigte Teilnehmer für diesen Final.</p>
+                    <p><?= $teilnehmerAnzahl ?> bestätigte Teilnehmer für diesen Final. <?= max(0, (int) $kategorie['plaetze'] - $teilnehmerAnzahl) ?> Plätze noch offen.</p>
                     <?php if ($teilnehmerAnzahl > 0): ?>
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <a class="btn btn-primary" target="_blank" rel="noopener" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/final/' . $key . '/druck')) ?>">Standblätter <?= htmlspecialchars((string) $kategorie['label']) ?> drucken</a>

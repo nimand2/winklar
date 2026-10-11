@@ -76,6 +76,7 @@ $router->get('/anlass/{id}/loesen/{standblattId}/abrechnen', [$abrechnenControll
 $router->post('/anlass/{id}/loesen/{standblattId}/abrechnen', [$abrechnenController, 'speichern']);
 $router->post('/anlass/{id}/loesen/{standblattId}/abrechnen/final', [$abrechnenController, 'updateFinalTeilnahme']);
 $router->post('/anlass/{id}/loesen/{standblattId}/abrechnen/datum', [$abrechnenController, 'updateDatum']);
+$router->post('/anlass/{id}/loesen/{standblattId}/abrechnen/schuesse', [$abrechnenController, 'saveSchuesse']);
 $router->post('/anlass/{id}/loesen/{standblattId}/abrechnen/schuss', [$abrechnenController, 'storeSchuss']);
 $router->post('/anlass/{id}/loesen/{standblattId}/abrechnen/schuss/{schussId}', [$abrechnenController, 'updateSchuss']);
 $router->post('/anlass/{id}/loesen/{standblattId}/abrechnen/schuss/{schussId}/loeschen', [$abrechnenController, 'deleteSchuss']);

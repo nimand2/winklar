@@ -82,6 +82,7 @@ $nummer = $nummer ?? '';
                                                 <div class="fw-semibold">
                                                     Standblatt #<?= htmlspecialchars((string) $standblattId) ?>
                                                     <?= $name !== '' ? ' · ' . htmlspecialchars($name) : '' ?>
+                                <?php if (!empty($standblatt['gaben_abgegeben'])): ?><span class="badge text-bg-success">Gaben Abgegeben</span><?php endif; ?>
                                                 </div>
                                                 <div class="small text-body-secondary">
                                                     <?= htmlspecialchars($verein !== '' ? $verein : 'Kein Verein hinterlegt') ?>

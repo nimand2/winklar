@@ -74,20 +74,14 @@ final class ApiTokenService
         return $userId;
     }
 
-    /**
-     * Ermittelt das HMAC-Geheimnis aus Konfiguration oder Datenbankdaten.
-     */
+    /** Verlangt ein unabhaengiges API-Signaturgeheimnis. */
     private function secret(): string
     {
-        if (defined('API_TOKEN_SECRET')) {
-            $secret = (string) constant('API_TOKEN_SECRET');
-
-            if ($secret !== '') {
-                return $secret;
-            }
+        $secret = defined('API_TOKEN_SECRET') ? (string) constant('API_TOKEN_SECRET') : '';
+        if (strlen(trim($secret)) < 32) {
+            throw new \RuntimeException('API_TOKEN_SECRET muss als unabhängiges zufälliges Geheimnis mit mindestens 32 Zeichen konfiguriert sein.');
         }
-
-        return hash('sha256', DB_PASS . '|' . DB_NAME);
+        return $secret;
     }
 
     /**

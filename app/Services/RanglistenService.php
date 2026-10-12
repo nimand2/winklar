@@ -20,10 +20,16 @@ final class RanglistenService
     /**
      * Erstellt Ranglisten pro Stich und Alterskategorie fuer einen Anlass.
      */
-    public function buildForAnlass(int $anlassId, ?string $anlassDatum = null): array
+    public function buildForAnlass(int $anlassId, ?string $anlassDatum = null, ?int $onlyStichId = null, ?array $standblaetter = null): array
     {
         $stiche = $this->stichModel->findByAnlassId($anlassId);
-        $standblaetter = $this->standblattModel->findForAnlassWithAdresse($anlassId);
+        if ($onlyStichId !== null) {
+            $stiche = array_values(array_filter($stiche, static fn (array $stich): bool => (int) $stich['id'] === $onlyStichId));
+        }
+        if ($stiche === []) {
+            return [];
+        }
+        $standblaetter ??= $this->standblattModel->findForAnlassWithAdresse($anlassId);
         $schuesse = $this->schussdatenModel->findByAnlassId($anlassId);
         $schuesseByStandblattAndExterneNummer = [];
         $stichtag = $this->referenceDate($anlassDatum);
@@ -138,12 +144,13 @@ final class RanglistenService
             return $status;
         }
 
+        $standblaetter = $this->standblattModel->findForAnlassWithAdresse($anlassId);
         $bestaetigte = [];
-        foreach ($this->standblattModel->findForAnlassWithAdresse($anlassId) as $blatt) {
+        foreach ($standblaetter as $blatt) {
             $bestaetigte[(int) $blatt['id']] = !empty($blatt['final_teilnahme']);
         }
         $datum = (string) (($anlass['start_anlass'] ?? '') ?: ($anlass['end_anlass'] ?? ''));
-        foreach ($this->buildForAnlass($anlassId, $datum) as $rangliste) {
+        foreach ($this->buildForAnlass($anlassId, $datum, $stichId, $standblaetter) as $rangliste) {
             if ((int) ($rangliste['stich']['id'] ?? 0) !== $stichId) {
                 continue;
             }

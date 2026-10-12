@@ -105,7 +105,7 @@ final class AbrechnenController extends Controller
         $this->standblattModel->update((int) $standblatt['id'], [
             'id_anlass' => (int) $anlass['id'],
             'id_adresse' => (int) $standblatt['id_adresse'],
-            'datum' => $this->nullableString($_POST['datum'] ?? null),
+            'datum' => \App\Validation\SchussFormService::nullableString($_POST['datum'] ?? null),
             'kosten' => $standblatt['kosten'] ?? null,
             'updated_by_user_id' => (int) $user['id'],
         ]);
@@ -121,18 +121,18 @@ final class AbrechnenController extends Controller
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
-        $primaerwertung = $this->nullableDecimal($_POST['primaerwertung'] ?? null);
-        $externeNummer = $this->nullableString($_POST['externe_nummer'] ?? null);
+        $primaerwertung = \App\Validation\SchussFormService::nullableDecimal($_POST['primaerwertung'] ?? null);
+        $externeNummer = \App\Validation\SchussFormService::nullableString($_POST['externe_nummer'] ?? null);
 
         if ($primaerwertung !== null && $externeNummer !== null) {
             $matchIndex = $this->schussdatenModel->nextMatchIndex((int) $standblatt['id'], (int) $anlass['id']);
-            $schussZeit = $this->datetimeValue($_POST['schuss_zeit'] ?? null) ?? date('Y-m-d H:i:s');
+            $schussZeit = \App\Validation\SchussFormService::datetimeValue($_POST['schuss_zeit'] ?? null) ?? date('Y-m-d H:i:s');
 
             $this->schussdatenModel->create([
                 'id_anlass' => (int) $anlass['id'],
                 'start_nr' => (string) $standblatt['id'],
                 'primaerwertung' => $primaerwertung,
-                'sekundaerwertung' => $this->nullableDecimal($_POST['sekundaerwertung'] ?? null),
+                'sekundaerwertung' => \App\Validation\SchussFormService::nullableDecimal($_POST['sekundaerwertung'] ?? null),
                 'schussart' => 'Korrektur',
                 'schuss_zeit' => $schussZeit,
                 'mouche' => isset($_POST['mouche']) ? 1 : 0,
@@ -180,8 +180,8 @@ final class AbrechnenController extends Controller
             if ($id === 0 && $rawValue === '') {
                 continue;
             }
-            $value = $this->nullableDecimal($rawValue);
-            $number = $this->nullableString($input['externe_nummer'] ?? null);
+            $value = \App\Validation\SchussFormService::nullableDecimal($rawValue);
+            $number = \App\Validation\SchussFormService::nullableString($input['externe_nummer'] ?? null);
             if ($value === null || (float) $value < 0 || $number === null) {
                 http_response_code(422);
                 echo 'Bitte für alle eingegebenen Schüsse einen gültigen Wert und eine Scheibe wählen.';
@@ -191,7 +191,7 @@ final class AbrechnenController extends Controller
                 'primaerwertung' => $value,
                 'sekundaerwertung' => $existing['sekundaerwertung'] ?? null,
                 'externe_nummer' => $number,
-                'schuss_zeit' => $this->datetimeValue($input['schuss_zeit'] ?? null) ?? ($existing['schuss_zeit'] ?? date('Y-m-d H:i:s')),
+                'schuss_zeit' => \App\Validation\SchussFormService::datetimeValue($input['schuss_zeit'] ?? null) ?? ($existing['schuss_zeit'] ?? date('Y-m-d H:i:s')),
                 'mouche' => !empty($input['mouche']) ? 1 : 0,
                 'updated_by_user_id' => (int) $user['id'],
             ];
@@ -242,17 +242,17 @@ final class AbrechnenController extends Controller
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
         $schuss = $this->findSchussOrFail((int) ($params['schussId'] ?? 0), (int) $anlass['id'], (int) $standblatt['id']);
-        $primaerwertung = $this->nullableDecimal($_POST['primaerwertung'] ?? null);
-        $externeNummer = $this->nullableString($_POST['externe_nummer'] ?? null);
+        $primaerwertung = \App\Validation\SchussFormService::nullableDecimal($_POST['primaerwertung'] ?? null);
+        $externeNummer = \App\Validation\SchussFormService::nullableString($_POST['externe_nummer'] ?? null);
 
         if ($primaerwertung !== null && $externeNummer !== null) {
             $this->schussdatenModel->updateManualCorrection((int) $schuss['id'], [
                 'primaerwertung' => $primaerwertung,
                 'sekundaerwertung' => array_key_exists('sekundaerwertung', $_POST)
-                    ? $this->nullableDecimal($_POST['sekundaerwertung'])
+                    ? \App\Validation\SchussFormService::nullableDecimal($_POST['sekundaerwertung'])
                     : $schuss['sekundaerwertung'],
                 'externe_nummer' => $externeNummer,
-                'schuss_zeit' => $this->datetimeValue($_POST['schuss_zeit'] ?? null) ?? $schuss['schuss_zeit'],
+                'schuss_zeit' => \App\Validation\SchussFormService::datetimeValue($_POST['schuss_zeit'] ?? null) ?? $schuss['schuss_zeit'],
                 'mouche' => isset($_POST['mouche']) ? 1 : 0,
                 'updated_by_user_id' => (int) $user['id'],
             ]);
@@ -290,7 +290,7 @@ final class AbrechnenController extends Controller
         $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse']);
         $abrechnung = $this->abrechnungsService->buildViewData((int) $anlass['id'], (int) $standblatt['id']);
 
-        $this->render('abrechnen/abrechnenPrint', array_merge([
+        $this->render('abrechnen/print', array_merge([
             'user' => $user,
             'anlass' => $anlass,
             'adresse' => $adresse,
@@ -374,30 +374,4 @@ final class AbrechnenController extends Controller
         return $schuss;
     }
 
-    private function nullableString(mixed $value): ?string
-    {
-        $value = trim((string) ($value ?? ''));
-
-        return $value === '' ? null : $value;
-    }
-
-    private function nullableDecimal(mixed $value): ?string
-    {
-        $value = trim(str_replace(',', '.', (string) ($value ?? '')));
-
-        return is_numeric($value) ? $value : null;
-    }
-
-    private function datetimeValue(mixed $value): ?string
-    {
-        $value = trim((string) ($value ?? ''));
-
-        if ($value === '') {
-            return null;
-        }
-
-        $timestamp = strtotime($value);
-
-        return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
-    }
 }

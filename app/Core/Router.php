@@ -70,6 +70,15 @@ final class Router
                 }
             }
 
+            // API routes authenticate independently with Bearer tokens.
+            if (!in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)
+                && !str_starts_with($route['path'], '/api/')
+                && !Csrf::valid($_POST['csrf_token'] ?? null)) {
+                http_response_code(403);
+                echo 'Ungültiges Formular-Token. Bitte Seite neu laden.';
+                return;
+            }
+
             $route['handler']($params);
             return;
         }

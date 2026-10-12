@@ -12,14 +12,14 @@ final class Navigation
             'dashboard/index' => 'Übersicht', 'anlass/index' => 'Anlässe',
             'anlass/show' => 'Anlassübersicht', 'anlass/konfiguration' => 'Konfiguration',
             'anlass/rangliste' => 'Rangliste', 'anlass/kasse' => 'Kasse', 'anlass/final' => 'Finalauswertung',
-            'loesen/loesenOpen' => 'Standblätter', 'loesen/adresseSelect' => 'Schützen auswählen',
-            'loesen/loesenNew' => 'Standblatt erstellen', 'loesen/loesenEdit' => 'Standblatt bearbeiten',
-            'abrechnen/abrechnen' => 'Standblatt abrechnen', 'clients/indes' => 'Schützen',
+            'loesen/index' => 'Standblätter', 'loesen/adresseSelect' => 'Schützen auswählen',
+            'loesen/create' => 'Standblatt erstellen', 'loesen/edit' => 'Standblatt bearbeiten',
+            'abrechnen/abrechnen' => 'Standblatt abrechnen', 'adressen/index' => 'Schützen',
         ];
         $title = $titles[$view] ?? null;
         if ($view === 'anlass/form') {
             $title = ($data['mode'] ?? 'create') === 'edit' ? 'Anlass bearbeiten' : 'Anlass erstellen';
-        } elseif ($view === 'clients/form') {
+        } elseif ($view === 'adressen/form') {
             $title = empty($data['adresse']['id']) ? 'Schützen erfassen' : 'Schützen bearbeiten';
         }
         if ($title === null) {
@@ -27,7 +27,7 @@ final class Navigation
         }
         $anlass = $data['anlass'] ?? null;
         $event = is_array($anlass) && isset($anlass['id']) && (int) $anlass['id'] > 0 ? $anlass : null;
-        $global = str_starts_with($view, 'clients/') && $event === null ? 'schuetzen' : ($view === 'dashboard/index' ? 'dashboard' : 'anlass');
+        $global = str_starts_with($view, 'adressen/') && $event === null ? 'schuetzen' : ($view === 'dashboard/index' ? 'dashboard' : 'anlass');
         $links = [
             ['key' => 'dashboard', 'label' => 'Übersicht', 'path' => '/dashboard'],
             ['key' => 'anlass', 'label' => 'Anlässe', 'path' => '/anlass'],
@@ -42,9 +42,9 @@ final class Navigation
             $section = match ($view) {
                 'anlass/konfiguration', 'anlass/form' => 'konfiguration',
                 'anlass/rangliste' => 'rangliste', 'anlass/kasse' => 'kasse', 'anlass/final' => 'final',
-                'clients/form', 'clients/indes' => 'schuetzen',
-                'loesen/adresseSelect', 'loesen/loesenNew' => 'neu',
-                'loesen/loesenOpen', 'loesen/loesenEdit', 'abrechnen/abrechnen' => 'standblaetter',
+                'adressen/form', 'adressen/index' => 'schuetzen',
+                'loesen/adresseSelect', 'loesen/create' => 'neu',
+                'loesen/index', 'loesen/edit', 'abrechnen/abrechnen' => 'standblaetter',
                 default => 'uebersicht',
             };
             foreach ([
@@ -63,28 +63,28 @@ final class Navigation
                 $title = (string) $event['name_anlass'];
                 $back = ['label' => 'Zurück zu den Anlässen', 'path' => '/anlass'];
             }
-            if (in_array($view, ['loesen/loesenEdit', 'abrechnen/abrechnen'], true)) {
+            if (in_array($view, ['loesen/edit', 'abrechnen/abrechnen'], true)) {
                 $crumbs[] = ['label' => 'Standblätter', 'path' => $base . '/loesen'];
                 $id = (int) ($data['standblatt']['id'] ?? 0);
                 $sheet = $base . '/loesen/' . $id;
                 $title = ($view === 'abrechnen/abrechnen' ? 'Abrechnen' : 'Bearbeiten') . ' · Standblatt #' . $id;
                 $back = ['label' => 'Zurück zu den Standblättern', 'path' => $base . '/loesen'];
                 $standblattLinks = [
-                    ['label' => 'Standblatt bearbeiten', 'path' => $sheet, 'active' => $view === 'loesen/loesenEdit'],
+                    ['label' => 'Standblatt bearbeiten', 'path' => $sheet, 'active' => $view === 'loesen/edit'],
                     ['label' => 'Standblatt abrechnen', 'path' => $sheet . '/abrechnen', 'active' => $view === 'abrechnen/abrechnen'],
                 ];
-            } elseif ($view === 'loesen/loesenNew') {
+            } elseif ($view === 'loesen/create') {
                 $crumbs[] = ['label' => 'Schützen auswählen', 'path' => $base . '/loesen/adresse'];
                 $back = ['label' => 'Zurück zur Schützenauswahl', 'path' => $base . '/loesen/adresse'];
-            } elseif ($view === 'clients/form') {
+            } elseif ($view === 'adressen/form') {
                 $crumbs[] = ['label' => 'Schützen', 'path' => $base . '/schuetzen'];
                 $back = ['label' => 'Zurück zu den Schützen', 'path' => $base . '/schuetzen'];
             } elseif ($view === 'anlass/form') {
                 $crumbs[] = ['label' => 'Konfiguration', 'path' => $base . '/konfiguration'];
                 $back = ['label' => 'Zurück zur Konfiguration', 'path' => $base . '/konfiguration'];
             }
-        } elseif (str_starts_with($view, 'clients/')) {
-            if ($view === 'clients/form') {
+        } elseif (str_starts_with($view, 'adressen/')) {
+            if ($view === 'adressen/form') {
                 $crumbs[] = ['label' => 'Schützen', 'path' => '/schuetzen'];
                 $back = ['label' => 'Zurück zu den Schützen', 'path' => '/schuetzen'];
             } else {

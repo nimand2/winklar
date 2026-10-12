@@ -2,7 +2,7 @@
 
 Webapplikation zur Verwaltung von Schiessanlaessen mit Anlaessen, Schuetzen, Standblaettern, Kasse, Ranglisten und SIUS-Anbindung.
 
-Das Projekt besteht aus einer PHP-Webapplikation, einer MySQL/MariaDB-Datenbank und einem separaten C#-Windows-Client fuer den Datenaustausch mit SIUS.
+Das Projekt besteht aus einer PHP-Webapplikation, einer MySQL/MariaDB-Datenbank und einem separaten Phyton-Windows-Client fuer den Datenaustausch mit SIUS.
 
 ## Funktionen
 
@@ -20,18 +20,29 @@ Das Projekt besteht aus einer PHP-Webapplikation, einer MySQL/MariaDB-Datenbank 
 ```text
 app/
   Controllers/     HTTP-Controller fuer Weboberflaeche und API
-  Core/            Router, Response, View, Database und Basisklassen
+  Core/            Router, Response, View, Database und Session
   Models/          Datenbankzugriff
   Services/        Geschaeftslogik
-  Views/           PHP-Views
-client/
-  Form1.cs         C# Windows Forms SIUS-Client
-public/
-  index.php        Einstiegspunkt der Webapplikation
-  assets/          CSS und JavaScript
-schema.sql         Datenbankschema
-beispieldaten.sql  Beispieldaten
-config.php         Lokale Konfiguration
+  Validation/      Formularpruefung und Normalisierung
+  Views/           PHP-Views nach Fachbereich
+config/            App- und Datenbankkonfiguration
+routes/            Web- und API-Routen
+database/
+  schema.sql       Datenbankschema
+  migrations/      Schemaaenderungen
+  seeds/           Beispieldaten
+  reference/       PLZ-Rohdaten, nicht im Updatepaket
+client/            Separater C# Windows Forms SIUS-Client
+public/            Einstiegspunkt, CSS und JavaScript
+tests/
+  unit/            Geschaeftslogik und Sicherheit
+  integration/     Echte Datenbanktests
+  views/           Navigation und Formulare
+scripts/           Testausfuehrung und Updatepakete
+docs/              Architektur, Entwicklung, Design und Deployment
+  reference/       Externe SIUS-Referenzen, nicht im Updatepaket
+storage/backups/   Lokale Datenbankbackups, nicht versioniert
+config.php         Kompatibler Einstieg zur neuen Konfiguration
 ```
 
 ## Voraussetzungen
@@ -47,23 +58,22 @@ config.php         Lokale Konfiguration
 2. Datenbank erstellen:
 
    ```bash
-   mysql -u root -p < schema.sql
+   mysql -u root -p < database/schema.sql
    ```
 
 3. Optional Beispieldaten importieren:
 
    ```bash
-   mysql -u root -p winklar < beispieldaten.sql
+   mysql -u root -p winklar < database/seeds/beispieldaten.sql
    ```
 
-4. `config.php` an die lokale Umgebung anpassen:
-
-   ```php
-   define('DB_HOST', 'localhost');
-   define('DB_NAME', 'winklar');
-   define('DB_USER', '...');
-   define('DB_PASS', '...');
-   ```
+4. Datenbankzugang über `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` und
+   `DB_CHARSET` in der Serverumgebung setzen. Alternativ
+   `config/database.local.example.php` nach `config/database.local.php`
+   kopieren und dort die Zugangsdaten eintragen. Umgebungsvariablen haben Vorrang.
+   Die lokale Datei wird von Git und Updatepaketen ausgeschlossen.
+   Allgemeine Einstellungen stehen in `config/app.php`.
+   `API_TOKEN_SECRET` als zufälliges Geheimnis in der Serverumgebung setzen.
 
 5. Webserver so konfigurieren, dass `public/` der Document Root ist.
 
@@ -116,12 +126,49 @@ Die vollstaendige Schnittstellendokumentation steht in [`client/doku_schnitstell
 
 ## Weitere Dokumentation
 
-- [`zusammenfassung.md`](zusammenfassung.md) - fachliche und technische Zusammenfassung
-- [`DESIGN_GUIDE.md`](DESIGN_GUIDE.md) - Designgrundlagen
-- [`schema.sql`](schema.sql) - Datenbankschema
+- [`docs/deployment.md`](docs/deployment.md) - Einrichtung und Updatepakete
+- [`DESIGN_GUIDE.md`](docs/design/DESIGN_GUIDE.md) - Designgrundlagen
+- [`database/schema.sql`](database/schema.sql) - Datenbankschema
 - [`client/doku_schnitstelle.md`](client/doku_schnitstelle.md) - SIUS-Client API
 
 ## Sicherheit
 
-`config.php` enthaelt lokale Zugangsdaten und sollte fuer produktive Installationen passend abgesichert werden. In einer oeffentlichen GitHub-Ablage sollten echte Passwoerter, produktive Datenbankzugriffe und andere Secrets nicht versioniert werden.
+`config/database.local.php` enthält bei lokaler Konfiguration Zugangsdaten und ist vom Versionsverlauf ausgeschlossen. In einer oeffentlichen GitHub-Ablage sollten echte Passwoerter, produktive Datenbankzugriffe und andere Secrets nicht versioniert werden.
 
+
+### API-Geheimnis und Sicherheit
+
+`API_TOKEN_SECRET` muss im Serverprozess als unabhängiges, zufälliges Geheimnis
+mit mindestens 32 Zeichen gesetzt sein. Zum Erzeugen eignet sich
+`openssl rand -hex 32`. Den Wert sicher in der Serverkonfiguration hinterlegen,
+nicht im Repository. Ohne gültige Konfiguration schlägt die Token-Erstellung
+und Signaturprüfung ausdrücklich fehl. Nach dem Wechsel des Geheimnisses müssen
+sich Sussiport/API-Clients neu anmelden. Endpunkte und JSON-Formate bleiben gleich.
+
+Webformulare validieren einen Session-CSRF-Token; Logout erfolgt per POST.
+Die mit Bearer-Tokens authentifizierte API benötigt keinen Formular-CSRF-Token.
+
+Zusätzliche Prüfungen: `php tests/unit/security.php` und
+`php tests/integration/schussimport-db.php`. Der Datenbanktest benötigt eine erreichbare
+MySQL/MariaDB-Datenbank mit bestehender Tabelle `schussdaten` sowie das Recht,
+temporäre Tabellen anzulegen. Er prüft Duplikate und Rollback in einer
+verbindungslokalen temporären Tabelle, ohne vorhandene Datensätze zu ändern.
+
+## Tests und Updatepakete
+
+`php scripts/test.php` führt Unit- und View-Tests aus.
+`php scripts/test.php integration` startet zusätzlich separat die Datenbanktests.
+`php scripts/build-update.php` erstellt `build/Winklar-Update.zip` aus aktuellen
+Quellen. Details stehen in [docs/deployment.md](docs/deployment.md).
+
+## Dokumentation und Referenzmaterial
+
+- [Architekturmodell](docs/architecture/ARCHITEKTURMODELL.md)
+- [Klassendiagramm](docs/architecture/KLASSENDIAGRAMM.md)
+- [Entwicklungsübersicht](docs/development/CHEATSHEET.md)
+- [Designgrundlagen](docs/design/DESIGN_GUIDE.md)
+- [PLZ-Referenzdaten](database/reference/README.md)
+- [SIUS-Referenzmaterial](docs/reference/README.md)
+
+Das bestehende SQL-Backup liegt lokal unter `storage/backups/winklar.sql`.
+Es wird nicht versioniert oder in Updatepakete aufgenommen.

@@ -45,7 +45,7 @@ $action = $isEdit ? Url::app('/anlass/' . $anlassId . '/bearbeiten') : Url::app(
                             </div>
                         <?php endif; ?>
 
-                        <form method="post" action="<?= htmlspecialchars($action) ?>">
+                        <form method="post" action="<?= htmlspecialchars($action) ?>"><?= \App\Core\Csrf::field() ?>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label for="name_anlass" class="form-label">Name</label>

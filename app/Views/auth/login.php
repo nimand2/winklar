@@ -26,7 +26,7 @@ use App\Core\Url;
                             </div>
                         <?php endif; ?>
 
-                        <form id="login-form" action="<?= htmlspecialchars(Url::app('/login')) ?>" method="post" class="vstack gap-3">
+                        <form id="login-form" action="<?= htmlspecialchars(Url::app('/login')) ?>" method="post" class="vstack gap-3"><?= \App\Core\Csrf::field() ?>
                             <div>
                                 <label for="login" class="form-label">Benutzername oder E-Mail</label>
                                 <input

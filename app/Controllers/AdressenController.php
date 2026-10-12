@@ -30,7 +30,7 @@ final class AdressenController extends Controller
         $anlass = $this->findOptionalAnlass($params);
         $query = trim((string) ($_GET['q'] ?? ''));
 
-        $this->render('clients/indes', [
+        $this->render('adressen/index', [
             'anlass' => $anlass,
             'adressen' => $this->adressenModel->search($query),
             'query' => $query,
@@ -46,7 +46,7 @@ final class AdressenController extends Controller
         $this->authService->requireUser();
         $anlass = $this->findOptionalAnlass($params);
 
-        $this->render('clients/form', [
+        $this->render('adressen/form', [
             'anlass' => $anlass,
             'adresse' => null,
             'plzOptions' => $this->plzModel->getActiveOptions(),
@@ -68,7 +68,7 @@ final class AdressenController extends Controller
         $errors = $this->validateAddressData($data);
 
         if ($errors !== []) {
-            $this->render('clients/form', [
+            $this->render('adressen/form', [
                 'anlass' => $anlass,
                 'adresse' => null,
                 'plzOptions' => $this->plzModel->getActiveOptions(),
@@ -92,7 +92,7 @@ final class AdressenController extends Controller
         $anlass = $this->findOptionalAnlass($params);
         $adresse = $this->findAdresseOrFail((int) ($params['adresseId'] ?? 0));
 
-        $this->render('clients/form', [
+        $this->render('adressen/form', [
             'anlass' => $anlass,
             'adresse' => $adresse,
             'plzOptions' => $this->plzModel->getActiveOptions(),
@@ -120,7 +120,7 @@ final class AdressenController extends Controller
         $errors = $this->validateAddressData($data);
 
         if ($errors !== []) {
-            $this->render('clients/form', [
+            $this->render('adressen/form', [
                 'anlass' => $anlass,
                 'adresse' => $adresse,
                 'plzOptions' => $this->plzModel->getActiveOptions(),

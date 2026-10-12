@@ -88,8 +88,8 @@ final class AnlassController extends Controller
     public function store(): void
     {
         $user = $this->authService->requireUser();
-        $data = $this->sanitizeAnlassData($_POST, (int) $user['id']);
-        $errors = $this->validateAnlassData($data);
+        $data = \App\Validation\AnlassFormService::sanitizeAnlassData($_POST, (int) $user['id']);
+        $errors = \App\Validation\AnlassFormService::validateAnlassData($data);
 
         if ($errors !== []) {
             $this->render('anlass/form', [
@@ -131,8 +131,8 @@ final class AnlassController extends Controller
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
-        $data = $this->sanitizeAnlassData($_POST, (int) $user['id'], $anlass);
-        $errors = $this->validateAnlassData($data);
+        $data = \App\Validation\AnlassFormService::sanitizeAnlassData($_POST, (int) $user['id'], $anlass);
+        $errors = \App\Validation\AnlassFormService::validateAnlassData($data);
 
         if ($errors !== []) {
             $this->render('anlass/form', [
@@ -238,9 +238,9 @@ final class AnlassController extends Controller
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
-        $data = $this->sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id']);
+        $data = \App\Validation\AnlassFormService::sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id']);
 
-        if ($this->validateStichData($data) === []) {
+        if (\App\Validation\AnlassFormService::validateStichData($data) === []) {
             $this->stichModel->create($data);
         }
 
@@ -257,9 +257,9 @@ final class AnlassController extends Controller
         $stich = $this->stichModel->findById((int) ($params['stichId'] ?? 0));
 
         if ($stich !== null && (int) $stich['id_anlass'] === (int) $anlass['id']) {
-            $data = $this->sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id'], $stich);
+            $data = \App\Validation\AnlassFormService::sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id'], $stich);
 
-            if ($this->validateStichData($data) === []) {
+            if (\App\Validation\AnlassFormService::validateStichData($data) === []) {
                 $this->stichModel->update((int) $stich['id'], $data);
             }
         }
@@ -295,8 +295,8 @@ final class AnlassController extends Controller
         if ($name !== '') {
             $this->gabenModel->create([
                 'name' => $name,
-                'punktwert' => $this->nullableDecimal($_POST['punktwert'] ?? null) ?? 0,
-                'preis' => $this->nullableDecimal($_POST['preis'] ?? null) ?? 0,
+                'punktwert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['punktwert'] ?? null) ?? 0,
+                'preis' => \App\Validation\AnlassFormService::nullableDecimal($_POST['preis'] ?? null) ?? 0,
                 'anzahl' => max(0, (int) ($_POST['anzahl'] ?? 0)),
                 'created_by_user_id' => (int) $user['id'],
                 'updated_by_user_id' => (int) $user['id'],
@@ -318,8 +318,8 @@ final class AnlassController extends Controller
         if ($gabe !== null) {
             $this->gabenModel->update((int) $gabe['id'], [
                 'name' => trim((string) ($_POST['name'] ?? $gabe['name'])),
-                'punktwert' => $this->nullableDecimal($_POST['punktwert'] ?? null) ?? 0,
-                'preis' => $this->nullableDecimal($_POST['preis'] ?? null) ?? 0,
+                'punktwert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['punktwert'] ?? null) ?? 0,
+                'preis' => \App\Validation\AnlassFormService::nullableDecimal($_POST['preis'] ?? null) ?? 0,
                 'anzahl' => max(0, (int) ($_POST['anzahl'] ?? 0)),
                 'created_by_user_id' => $gabe['created_by_user_id'] ?? null,
                 'updated_by_user_id' => (int) $user['id'],
@@ -354,10 +354,10 @@ final class AnlassController extends Controller
             $this->auszeichnungslimittenModel->create([
                 'stich_id' => (int) $stich['id'],
                 'gaben_id' => (int) ($_POST['gaben_id'] ?? 0) ?: null,
-                'min_wert' => $this->nullableDecimal($_POST['min_wert'] ?? null),
-                'max_wert' => $this->nullableDecimal($_POST['max_wert'] ?? null),
-                'min_alter' => $this->nullableInt($_POST['min_alter'] ?? null),
-                'max_alter' => $this->nullableInt($_POST['max_alter'] ?? null),
+                'min_wert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['min_wert'] ?? null),
+                'max_wert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['max_wert'] ?? null),
+                'min_alter' => \App\Validation\AnlassFormService::nullableInt($_POST['min_alter'] ?? null),
+                'max_alter' => \App\Validation\AnlassFormService::nullableInt($_POST['max_alter'] ?? null),
                 'created_by_user_id' => (int) $user['id'],
                 'updated_by_user_id' => (int) $user['id'],
             ]);
@@ -396,108 +396,4 @@ final class AnlassController extends Controller
         return $anlass;
     }
 
-    /**
-     * Normalisiert Anlassdaten aus Formularwerten.
-     */
-    private function sanitizeAnlassData(array $source, int $userId, array $existing = []): array
-    {
-        return [
-            'fk_adress_id_creator' => $existing['fk_adress_id_creator'] ?? null,
-            'fk_adress_id_modifier' => $existing['fk_adress_id_modifier'] ?? null,
-            'name_anlass' => trim((string) ($source['name_anlass'] ?? '')),
-            'shortname_anlass' => $this->nullableString($source['shortname_anlass'] ?? null),
-            'start_anlass' => $this->nullableString($source['start_anlass'] ?? null),
-            'end_anlass' => $this->nullableString($source['end_anlass'] ?? null),
-            'created_by_user_id' => $existing['created_by_user_id'] ?? $userId,
-            'updated_by_user_id' => $userId,
-        ];
-    }
-
-    /**
-     * Validiert Pflichtfelder und Datumslogik eines Anlasses.
-     */
-    private function validateAnlassData(array $data): array
-    {
-        $errors = [];
-
-        if ($data['name_anlass'] === '') {
-            $errors[] = 'Bitte gib einen Namen für den Anlass ein.';
-        }
-
-        if (
-            $data['start_anlass'] !== null
-            && $data['end_anlass'] !== null
-            && $data['end_anlass'] < $data['start_anlass']
-        ) {
-            $errors[] = 'Das Enddatum darf nicht vor dem Startdatum liegen.';
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Normalisiert Stichdaten aus Formularwerten.
-     */
-    private function sanitizeStichData(array $source, int $anlassId, int $userId, array $existing = []): array
-    {
-        return [
-            'id_anlass' => $anlassId,
-            'id_disziplin' => $this->nullableInt($source['id_disziplin'] ?? null),
-            'name' => trim((string) ($source['name'] ?? '')),
-            'short_name' => $this->nullableString($source['short_name'] ?? null),
-            'anzeige_id' => $this->nullableString($source['anzeige_id'] ?? null),
-            'scheibe' => $this->nullableString($source['scheibe'] ?? null),
-            'wertigkeit' => $this->nullableDecimal($source['wertigkeit'] ?? null),
-            'anzahl_schuss' => $this->nullableInt($source['anzahl_schuss'] ?? null),
-            'anzahl_passen' => $this->nullableInt($source['anzahl_passen'] ?? null),
-            'preis' => $this->nullableDecimal($source['preis'] ?? null),
-            'verbindung' => $this->nullableString($source['verbindung'] ?? null),
-            'created_by_user_id' => $existing['created_by_user_id'] ?? $userId,
-            'updated_by_user_id' => $userId,
-        ];
-    }
-
-    /**
-     * Validiert Pflichtfelder eines Stiches.
-     */
-    private function validateStichData(array $data): array
-    {
-        $errors = [];
-
-        if ($data['name'] === '') {
-            $errors[] = 'Bitte gib einen Namen für den Stich ein.';
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Wandelt leere Formularwerte in null um.
-     */
-    private function nullableString(mixed $value): ?string
-    {
-        $value = trim((string) $value);
-
-        return $value === '' ? null : $value;
-    }
-
-    /**
-     * Wandelt optionale Dezimalwerte aus Formularen um.
-     */
-    private function nullableDecimal(mixed $value): ?float
-    {
-        $value = trim((string) $value);
-
-        return $value === '' ? null : (float) str_replace(',', '.', $value);
-    }
-
-    /**
-     * Wandelt optionale Ganzzahlen aus Formularen um.
-     */
-    private function nullableInt(mixed $value): ?int
-    {
-        $value = trim((string) $value);
-
-        return $value === '' ? null : max(0, (int) $value);
-    }
 }

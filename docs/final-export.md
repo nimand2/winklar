@@ -34,4 +34,4 @@ Der Export ist eine Momentaufnahme der aktuellen Rangliste. Er enthält ausschli
 
 Es werden keine neuen Standblattnummern erzeugt. Der Sammeldruck gibt die bestehenden Standblätter mit ihren gelösten Stichen und unveränderten Barcodes erneut aus. Passwörter und interne Personennotizen werden nicht exportiert.
 
-Prüfung der Auswahl, Barcodes und Druckvorlagen: `php tests/final.php`.
+Prüfung der Auswahl, Barcodes und Druckvorlagen: `php tests/unit/final.php`.

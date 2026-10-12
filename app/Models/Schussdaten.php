@@ -33,7 +33,15 @@ final class Schussdaten
      */
     public function create(array $data): int
     {
-        $statement = Database::connection()->prepare(
+        $statement = $this->prepareInsert();
+        $statement->execute($this->buildPayload($data));
+
+        return $statement->rowCount() > 0 ? (int) Database::connection()->lastInsertId() : 0;
+    }
+
+    private function prepareInsert(): \PDOStatement
+    {
+        return Database::connection()->prepare(
             'INSERT INTO schussdaten (
                 id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
                 teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
@@ -51,9 +59,6 @@ final class Schussdaten
              )
              ON DUPLICATE KEY UPDATE id = id'
         );
-        $statement->execute($this->buildPayload($data));
-
-        return $statement->rowCount() > 0 ? (int) Database::connection()->lastInsertId() : 0;
     }
 
     /**
@@ -70,8 +75,10 @@ final class Schussdaten
         $created = 0;
 
         try {
+            $statement = $this->prepareInsert();
             foreach ($rows as $row) {
-                if ($this->create($row) > 0) {
+                $statement->execute($this->buildPayload($row));
+                if ($statement->rowCount() > 0) {
                     $created++;
                 }
             }

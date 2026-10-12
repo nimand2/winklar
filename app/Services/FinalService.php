@@ -25,7 +25,7 @@ final class FinalService
             $standblaetter[(int) $row['id']] = $row;
         }
         $datum = (string) (($anlass['start_anlass'] ?? '') ?: ($anlass['end_anlass'] ?? ''));
-        foreach ($this->ranglistenService->buildForAnlass((int) $anlass['id'], $datum) as $rangliste) {
+        foreach ($this->ranglistenService->buildForAnlass((int) $anlass['id'], $datum, $stichId, array_values($standblaetter)) as $rangliste) {
             if ((int) $rangliste['stich']['id'] !== $stichId) {
                 continue;
             }

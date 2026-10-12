@@ -94,7 +94,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                         method="post"
                                         action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/datum')) ?>"
                                         class="d-flex gap-2 align-items-center"
-                                    >
+                                    ><?= \App\Core\Csrf::field() ?>
                                         <input
                                             name="datum"
                                             type="date"
@@ -187,7 +187,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                             <td colspan="<?= htmlspecialchars((string) $resultColspan) ?>" class="bg-light">
                                                                 <div class="py-2">
                                                                     <div class="small fw-semibold mb-2">Schüsse bearbeiten</div>
-                                                                    <form id="<?= htmlspecialchars($batchFormId) ?>" method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/schuesse')) ?>"></form>
+                                                                    <form id="<?= htmlspecialchars($batchFormId) ?>" method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/schuesse')) ?>"><?= \App\Core\Csrf::field() ?></form>
                                                                     <div class="table-responsive">
                                                                         <table class="table table-sm align-middle mb-0">
                                                                             <thead>
@@ -269,7 +269,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                                     <form
                                                                                                         method="post"
                                                                                                         action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/schuss/' . $schussId . '/loeschen')) ?>"
-                                                                                                    >
+                                                                                                    ><?= \App\Core\Csrf::field() ?>
                                                                                                         <button type="submit" class="btn btn-outline-danger btn-sm">
                                                                                                             Löschen
                                                                                                         </button>
@@ -309,7 +309,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                     </div>
                                     <p class="small text-body-secondary">Finalplätze: U18 <?= (int) ($anlass['final_anzahl_u18'] ?? 6) ?> · Ü18 <?= (int) ($anlass['final_anzahl_ue18'] ?? 6) ?>. Der Status richtet sich nach der aktuellen Rangliste und den Anlassregeln.</p>
                                     <a class="small d-block mb-3" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>">Finalregeln einstellen</a>
-                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/final')) ?>">
+                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/final')) ?>"><?= \App\Core\Csrf::field() ?>
                                         <label class="form-check mb-3">
                                             <input class="form-check-input" type="checkbox" name="final_teilnahme" value="1" <?= !empty($standblatt['final_teilnahme']) ? 'checked' : '' ?>>
                                             <span class="form-check-label">Ich möchte am Final teilnehmen</span>
@@ -332,7 +332,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                             <div>Bereits ausgezahlt: CHF <?= $money($summen['geld_abgegeben']) ?></div>
                                             <div class="fw-bold">Jetzt auszuzahlen: CHF <?= $money($summen['geld_offen']) ?></div>
                                         </div>
-                                        <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>">
+                                        <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen')) ?>"><?= \App\Core\Csrf::field() ?>
                                             <div class="list-group">
                                                 <?php foreach ($gabenVergleich as $gruppe): ?>
                                                     <div class="list-group-item">

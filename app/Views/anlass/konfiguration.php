@@ -49,7 +49,7 @@ $regeln = $regeln ?? [];
 
                         <div class="list-group-item p-4 bg-white rounded-4 mb-4">
                             <h2 class="h5 mb-3">Finalqualifikation</h2>
-                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/final')) ?>">
+                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/final')) ?>"><?= \App\Core\Csrf::field() ?>
                                 <div class="row g-3 align-items-end">
                                     <div class="col-12 col-md-4">
                                         <label for="final_stich_id" class="form-label">Stich für die Qualifikation</label>
@@ -78,7 +78,7 @@ $regeln = $regeln ?? [];
                             <div class="col-12 col-lg-5">
                                 <div class="list-group-item p-4 bg-white rounded-4 mb-4">
                                     <h2 class="h5 mb-3">Neuer Stich</h2>
-                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche')) ?>">
+                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche')) ?>"><?= \App\Core\Csrf::field() ?>
                                         <div class="row g-3">
                                             <div class="col-12">
                                                 <label for="stich_name" class="form-label">Name</label>
@@ -129,7 +129,7 @@ $regeln = $regeln ?? [];
 
                                 <div class="list-group-item p-4 bg-white rounded-4 mb-4">
                                     <h2 class="h5 mb-3">Neue Gabe</h2>
-                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben')) ?>">
+                                    <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben')) ?>"><?= \App\Core\Csrf::field() ?>
                                         <div class="row g-3">
                                             <div class="col-12">
                                                 <label for="gabe_name" class="form-label">Name</label>
@@ -165,7 +165,7 @@ $regeln = $regeln ?? [];
                                             Erstelle zuerst eine Gabe.
                                         </div>
                                     <?php else: ?>
-                                        <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben-regeln')) ?>">
+                                        <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben-regeln')) ?>"><?= \App\Core\Csrf::field() ?>
                                             <div class="row g-3">
                                                 <div class="col-12">
                                                     <label for="regel_stich" class="form-label">Stich</label>
@@ -213,7 +213,7 @@ $regeln = $regeln ?? [];
                                 <div class="list-group mb-4">
                                     <?php foreach ($stiche as $stich): ?>
                                         <div class="list-group-item p-3">
-                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'])) ?>">
+                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'])) ?>"><?= \App\Core\Csrf::field() ?>
                                                 <div class="row g-2 align-items-end">
                                                     <div class="col-12 col-md-4">
                                                         <label class="form-label">Name</label>
@@ -260,7 +260,7 @@ $regeln = $regeln ?? [];
                                                     </div>
                                                 </div>
                                             </form>
-                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'] . '/loeschen')) ?>" class="mt-2">
+                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/stiche/' . (int) $stich['id'] . '/loeschen')) ?>" class="mt-2"><?= \App\Core\Csrf::field() ?>
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">Stich löschen</button>
                                             </form>
                                         </div>
@@ -277,7 +277,7 @@ $regeln = $regeln ?? [];
                                 <div class="list-group mb-4">
                                     <?php foreach ($gaben as $gabe): ?>
                                         <div class="list-group-item p-3">
-                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben/' . (int) $gabe['id'])) ?>">
+                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben/' . (int) $gabe['id'])) ?>"><?= \App\Core\Csrf::field() ?>
                                                 <div class="row g-2 align-items-end">
                                                     <div class="col-12 col-md-4">
                                                         <label class="form-label">Name</label>
@@ -300,7 +300,7 @@ $regeln = $regeln ?? [];
                                                     </div>
                                                 </div>
                                             </form>
-                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben/' . (int) $gabe['id'] . '/loeschen')) ?>" class="mt-2">
+                                            <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben/' . (int) $gabe['id'] . '/loeschen')) ?>" class="mt-2"><?= \App\Core\Csrf::field() ?>
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">Gabe löschen</button>
                                             </form>
                                         </div>
@@ -327,7 +327,7 @@ $regeln = $regeln ?? [];
                                                         Alter <?= htmlspecialchars((string) ($regel['min_alter'] ?? '-')) ?> bis <?= htmlspecialchars((string) ($regel['max_alter'] ?? '-')) ?>
                                                     </div>
                                                 </div>
-                                                <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben-regeln/' . (int) $regel['id'] . '/loeschen')) ?>">
+                                                <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration/gaben-regeln/' . (int) $regel['id'] . '/loeschen')) ?>"><?= \App\Core\Csrf::field() ?>
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">Regel löschen</button>
                                                 </form>
                                             </div>

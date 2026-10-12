@@ -35,7 +35,7 @@ final class LoesenController extends Controller
         $adresse = $this->findAdresseOrFail((int) ($_GET['adresse_id'] ?? 0), (int) $anlass['id']);
         $stiche = $this->stichModel->findByAnlassId((int) $anlass['id']);
 
-        $this->render('loesen/loesenNew', [
+        $this->render('loesen/create', [
             'user' => $user,
             'anlass' => $anlass,
             'adresse' => $adresse,
@@ -59,7 +59,7 @@ final class LoesenController extends Controller
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $nummer = trim((string) ($_GET['nummer'] ?? ''));
 
-        $this->render('loesen/loesenOpen', [
+        $this->render('loesen/index', [
             'user' => $user,
             'anlass' => $anlass,
             'standblaetter' => $this->standblattModel->findForAnlassWithAdresse((int) $anlass['id'], $nummer),
@@ -119,7 +119,7 @@ final class LoesenController extends Controller
         $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse'], (int) $anlass['id']);
         $selectedStiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
 
-        $this->render('loesen/loesenEdit', [
+        $this->render('loesen/edit', [
             'user' => $user,
             'anlass' => $anlass,
             'adresse' => $adresse,

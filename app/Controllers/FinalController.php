@@ -64,7 +64,7 @@ final class FinalController extends Controller
             $blatt['gaben'] = $gaben;
         }
         unset($blatt);
-        $this->render('anlass/finalPrint', array_merge($data, ['blaetter' => $blaetter]));
+        $this->render('anlass/final-print', array_merge($data, ['blaetter' => $blaetter]));
     }
 
     private function categoryData(array $params): array

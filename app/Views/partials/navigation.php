@@ -20,7 +20,7 @@ if ($navigation === []) {
                     <a class="app-nav-link btn <?= $navigation['global'] === $link['key'] ? 'is-active btn-primary' : 'btn-light' ?>" href="<?= htmlspecialchars(Url::app($link['path'])) ?>" <?= $navigation['global'] === $link['key'] ? 'aria-current="page"' : '' ?>><?= htmlspecialchars($link['label']) ?></a>
                 <?php endforeach; ?>
             </div>
-            <a class="app-logout btn btn-outline-secondary" href="<?= htmlspecialchars(Url::app('/logout')) ?>">Abmelden</a>
+            <form method="post" action="<?= htmlspecialchars(Url::app('/logout')) ?>"><?= \App\Core\Csrf::field() ?><button type="submit" class="app-logout btn btn-outline-secondary">Abmelden</button></form>
         </nav>
         <?php if ($navigation['event'] !== null): ?>
             <div class="app-event-name"><span>Aktueller Anlass</span> <?= htmlspecialchars((string) $navigation['event']['name_anlass']) ?></div>

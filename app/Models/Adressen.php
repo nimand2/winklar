@@ -214,7 +214,16 @@ final class Adressen
         $payload = $this->buildPayload($data);
         $payload['id'] = $id;
 
-        return $statement->execute($payload);
+        return Database::transaction(function ($pdo) use ($statement, $payload, $id, $data): bool {
+            $previous = $this->findById($id);
+            $result = $statement->execute($payload);
+            if (($previous['geburtsdatum'] ?? null) !== ($data['geburtsdatum'] ?? null)) {
+                $ids = $pdo->prepare('SELECT id FROM standblatt WHERE id_adresse = ?');
+                $ids->execute([$id]);
+                foreach ($ids->fetchAll(\PDO::FETCH_COLUMN) as $sheet) (new Gaben())->resetAbgabenForStandblatt((int) $sheet, $data['updated_by_user_id'] ?? null);
+            }
+            return $result;
+        });
     }
 
     /**

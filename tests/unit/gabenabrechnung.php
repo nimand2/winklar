@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models {
     class Standblatt {
+        public function findById(int $id): array {return ['geburtsdatum'=>'2013-07-23','start_anlass'=>'2026-10-11'];}
+
         public function findSticheForStandblatt(int $id): array {
             return [['id'=>1, 'name'=>'Chilbistich', 'anzeige_id'=>901, 'anzahl_schuss'=>1, 'anzahl_stiche'=>2]];
         }
@@ -34,6 +36,9 @@ namespace App\Models {
 }
 namespace {
     require dirname(__DIR__, 2).'/app/Services/Schussreihenfolge.php';
+    require dirname(__DIR__, 2).'/app/Services/SchussStatus.php';
+    require dirname(__DIR__, 2).'/app/Services/SerienService.php';
+    require dirname(__DIR__, 2).'/app/Services/Altersregel.php';
     require dirname(__DIR__, 2).'/app/Services/AbrechnungsService.php';
     $service = new \App\Services\AbrechnungsService(new \App\Models\Standblatt(), new \App\Models\Schussdaten(), new \App\Models\Gaben());
     $check = static function(bool $ok, string $message): void { if (!$ok) throw new \RuntimeException($message); };
@@ -58,7 +63,8 @@ namespace {
     $kept=$service->itemsFromPostedGaben(1,1,[]);
     $check(in_array(9,array_column($kept,'gaben_id'),true), 'Historical delivery retained without confirmation');
     $returnedHistory=$service->itemsFromPostedGaben(1,1,[],[],[1=>[1=>[9=>1]]]);
-    $check(!in_array(9,array_column($returnedHistory,'gaben_id'),true), 'Returned historical award removed without new entitlement');
+    $returnedRow = array_values(array_filter($returnedHistory, static fn ($row) => $row['gaben_id'] === 9))[0];
+    $check(!$returnedRow['abgegeben'] && $returnedRow['ruecknahme'], 'Historical return retained as an explicit correction');
     $method=new \ReflectionMethod($service,'buildGabenVergleich');
     $history=$method->invoke($service,[],[],[['stich_id'=>1,'serie_nummer'=>1,'gaben_id'=>1,'abgegeben'=>1,'name'=>'Barauszahlung','preis'=>12.5,'anzahl'=>100,'punktwert'=>47]]);
     $check($service->gabenSummen($history)['geld_offen']===0.0, 'Historical delivery never paid again');

@@ -8,6 +8,20 @@ use PDO;
 
 final class Database
 {
+    public static function transaction(callable $work): mixed
+    {
+        $pdo = self::connection();
+        $owns = !$pdo->inTransaction();
+        if ($owns) $pdo->beginTransaction();
+        try {
+            $result = $work($pdo);
+            if ($owns) $pdo->commit();
+            return $result;
+        } catch (\Throwable $error) {
+            if ($owns && $pdo->inTransaction()) $pdo->rollBack();
+            throw $error;
+        }
+    }
     /**
      * Liefert eine wiederverwendete PDO-Verbindung zur konfigurierten MySQL-Datenbank.
      */

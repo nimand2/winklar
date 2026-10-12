@@ -1,17 +1,20 @@
 # SIUS-Client Schnittstellendokumentation
 
-Diese Datei beschreibt die aktuell implementierte Schnittstelle zwischen dem Windows-Client (`client/Form1.cs`) und der Webapplikation.
+Diese Datei beschreibt den Serververtrag und dessen Verwendung durch den externen Python-Client [SiusClientV2](https://github.com/nimand2/SiusClientV2). Der bisherige C#-Client wird nicht mehr verwendet.
+
+Client-Abgleich vom 12. Oktober 2026: Commit [`c613ed2`](https://github.com/nimand2/SiusClientV2/tree/c613ed20d863085a2bf458ec5bc3a9a2e3b6b899). Installation und Bedienung werden im Client-Repository gepflegt.
 
 Die Dokumentation ist bewusst auf die Endpunkte beschränkt, die der Client wirklich nutzt. Es gibt aktuell keine generische CRUD-API für Anlässe, Schützen oder Schussdaten.
 
 ## Überblick
 
-- **Client**: Windows Forms Anwendung in C#.
+- **Client**: SiusClientV2, Python-Desktop-Anwendung mit PyQt6 unter Windows.
 - **Server**: PHP-Webapplikation mit JSON-API unter `/api/...`.
 - **Transport**: HTTP oder HTTPS.
 - **Datenformat**: JSON für API-Aufrufe, CSV für den lokalen SIUS-Dateiaustausch.
 - **Authentifizierung**: Bearer Token im HTTP-Header `Authorization`.
-- **Polling**: Der Client prüft alle 3 Sekunden die Importdatei und neue Schützen.
+- **Polling**: Schussimport etwa jede Sekunde, neue Schützen alle 3 Sekunden; bei Fehlern wächst die Wartezeit bis auf 30 Sekunden. Änderungen lösen eine vollständige Dateiprüfung aus, spätestens erfolgt sie nach 30 Sekunden.
+- **Journal**: Schüsse werden vor dem Versand in SQLite gesichert, getrennt nach Server-Adresse und Anlass. Erst eine gültige Serverbestätigung entfernt sie aus der offenen Warteschlange.
 
 ## Ablauf im Client
 
@@ -20,11 +23,11 @@ Die Dokumentation ist bewusst auf die Endpunkte beschränkt, die der Client wirk
 3. Server liefert ein Bearer Token.
 4. Client setzt `Authorization: Bearer <token>` für alle weiteren API-Aufrufe.
 5. Client lädt alle Anlässe über `GET /api/anlaesse`.
-6. Benutzer wählt einen Anlass.
-7. Client exportiert die Schützen dieses Anlasses in die lokale Export-CSV.
+6. Benutzer wählt Dateien, Schiesstag und Anlass und startet den Live-Betrieb.
+7. Client exportiert die Schützen dieses Anlasses in die lokale Export-CSV; ein vorhandener Export wird erst nach Bestätigung ersetzt.
 8. Hintergrundprozess startet:
-   - neue SIUS-Schusszeilen aus der Import-CSV lesen,
-   - Schüsse an den Server senden,
+   - vollständige SIUS-Schusszeilen aus der Import-CSV lesen und dauerhaft vormerken,
+   - offene Schüsse in Blöcken von höchstens 500 an den Server senden und bestätigen,
    - neue Schützen vom Server holen und an die Export-CSV anhängen.
 
 ## Basis-URL
@@ -243,7 +246,7 @@ Bei keinen neuen Schützen wird ein leeres Array zurückgegeben:
 
 Importiert eine Liste von SIUS-Schussdatensätzen für einen Anlass.
 
-Der Client sendet nur neu erkannte Schüsse. Zusätzlich verhindert der Server doppelte Einträge über einen Import-Hash aus den relevanten SIUS-Schussfeldern. Dadurch bleiben Daten auch dann eindeutig, wenn der Client neu gestartet wird und dieselbe Datei nochmals sendet.
+V2 sendet offene Schüsse aus seinem lokalen Journal. Bei einem vollständigen Wiederabgleich sendet er auch zuvor bestätigte Schüsse erneut. Der Server verhindert doppelte Einträge über einen Import-Hash aus den relevanten SIUS-Schussfeldern. Dadurch bleiben Daten auch bei verlorenen Antworten, Neustart und erneutem Versand derselben Datei eindeutig.
 
 **Pfadparameter**
 
@@ -293,16 +296,28 @@ Der Client sendet nur neu erkannte Schüsse. Zusätzlich verhindert der Server d
 
 Der Server akzeptiert für `AnlassId` und `Shots` auch `anlassId` und `shots`. Innerhalb eines Schusses akzeptiert der Server die gezeigten PascalCase-Feldnamen und zusätzlich die Variante mit kleinem Anfangsbuchstaben, zum Beispiel `startNr`.
 
+`Shots` ist verpflichtend und muss eine Liste mit höchstens 500 Schüssen sein.
+Eine ausdrücklich leere Liste ist zulässig. Jeder Schuss benötigt `StartNr`,
+`Primaerwertung`, `Zeit` und `ExterneNummer`; die Startnummer muss zu einem
+Standblatt dieses Anlasses gehören. Werte und Grenzen werden vor jedem
+Schreibzugriff geprüft. Widersprüchliche PascalCase-/camelCase-Doppelfelder
+werden zurückgewiesen. Zeitstempel bewahren Sekunden, `TimeSinceChange`
+bewahrt bis zu vier Nachkommastellen.
+
 **Response `201 Created`**
 
 ```json
 {
   "success": true,
-  "imported": 1
+  "imported": 1,
+  "accepted": 1,
+  "duplicates": 0
 }
 ```
 
 `imported` enthält die Anzahl neu eingefügter Datensätze. Bereits vorhandene Schüsse werden übersprungen und nicht mitgezählt.
+
+`accepted` zählt alle angenommenen Schüsse einschließlich vorhandener Datensätze; `duplicates` ist `accepted - imported`. V2 akzeptiert einen erfolgreichen Wiederabgleich mit `imported: 0`. Wenn `accepted` vorhanden ist, muss die Zahl exakt der Anzahl gesendeter Schüsse entsprechen, bevor V2 den Block lokal bestätigt.
 
 **Fehler `400 Bad Request`: Anlass passt nicht**
 
@@ -326,6 +341,21 @@ Dieser Fehler tritt auf, wenn die Anlass-ID im Pfad ungültig ist oder `AnlassId
 }
 ```
 
+**Fehler `422 Unprocessable Content`**
+
+Ungültiges JSON, falsche Pflichtfelder, Datums-/Zahlformate, unbekannte
+Startnummern, widersprüchliche Felder oder zu grosse Listen liefern
+`success: false` und `errorCode: "INVALID_INPUT"`. Der gesamte Block wird
+abgelehnt. Fehlende oder nicht als Array gesendete `Shots` liefern `400`.
+Import und erneute Gabenprüfung werden gemeinsam gespeichert; bei einem
+Datenbankfehler wird der ganze Block zurückgerollt.
+
+**Fehler `429 Too Many Requests` beim Login**
+
+Nach zehn Versuchen je Kombination aus Login und IP oder fünfzig Versuchen je IP
+innerhalb von 15 Minuten folgt `errorCode: "TOO_MANY_ATTEMPTS"` mit
+`Retry-After: 900`. Web- und API-Login teilen diese Begrenzung.
+
 **Fehler `500 Internal Server Error`**
 
 ```json
@@ -340,7 +370,7 @@ Dieser Fehler tritt auf, wenn die Anlass-ID im Pfad ungültig ist oder `AnlassId
 
 Der Client liest die Importdatei mit `ISO-8859-1` und erwartet Semikolon als Trennzeichen.
 
-Eine gültige Schusszeile muss mindestens 28 Felder haben. Zusätzliche Felder werden ignoriert.
+V2 erwartet genau 28 Felder und verwendet einen CSV-Parser mit Unterstützung für Anführungszeichen. Eine unvollständige letzte Zeile bleibt bis zum abschließenden Zeilenumbruch ausstehend. Ungültige Zeilen werden im Journal und in einer Fehlerdatei neben der Quelle gesichert.
 
 **Reihenfolge der Felder**
 
@@ -377,26 +407,31 @@ Eine gültige Schusszeile muss mindestens 28 Felder haben. Zusätzliche Felder w
 
 Dezimalwerte dürfen in der CSV ein Komma oder einen Punkt verwenden. Der Client normalisiert Kommas vor dem JSON-Versand zu Punkten.
 
+Uhrzeiten ohne Datum werden vor dem Versand anhand des gewählten Schiesstags und des SIUS-Jahreszeitzählers ergänzt. V2 verarbeitet diesen Zähler als Hundertstelsekunden seit Jahresbeginn und prüft die Übereinstimmung mit der Uhrzeit. Bei Zähler 0 verwendet V2 das gewählte Datum.
+
+Beim Feld `InsDel` bildet V2 das CSV-Kennzeichen `I` auf die JSON-Zahl `1` ab.
+Laut [SiusData.pdf, Seite 39](../docs/reference/SiusData.pdf) bedeutet `1` manuell
+eingefügt und zählt als Schuss; `2` bedeutet ignorieren und zählt nicht. `0` zählt
+regulär. Der Server bewahrt das Kennzeichen und verwendet für lokale manuelle
+Löschungen das separate Feld `manuell_geloescht`. Wiederholte Importe heben eine
+lokale Löschung nicht auf. Der Betreiber hat bestätigt, dass sämtliche bestehenden
+`1`-Datensätze wieder gewertet werden sollen.
+
+
 ## SIUS-CSV Exportdatei
 
-Der Client schreibt beim Auswählen eines Anlasses die komplette Schützenliste in die Exportdatei.
+V2 schreibt beim ersten Live-Start für einen Übertragungskontext die komplette Schützenliste. Neue Schützen werden anschließend angehängt. Schreiben und Anhängen erfolgen durch eine temporäre Datei mit anschließendem atomarem Ersetzen.
 
-**Header**
-
-```csv
-Id;Startnummer;Name;Vorname;Verein;Bahn;Abloesung;Aktiv
-```
+**Format**: Kommagetrennt, ohne Spaltenüberschrift, mit elf Feldern: Standblatt-ID, Nachname, Vorname, Kurzname und sieben leere Felder. Der Export beginnt mit einem Dummy-Datensatz mit ID 0. Kommas und Anführungszeichen in Namen werden nach CSV-Regeln maskiert.
 
 **Beispiel**
 
 ```csv
-Id;Startnummer;Name;Vorname;Verein;Bahn;Abloesung;Aktiv
-12;12;Muster;Max;Schützenverein Beispiel;0;0;1
+0,DummyName,Dummy,D. DummyName,,,,,,,
+12,Muster,Max,M. Muster,,,,,,,
 ```
 
-Beim initialen Export schreibt der Client UTF-8. Beim Anhängen neuer Schützen verwendet der aktuelle Client `ISO-8859-1`.
-
-Semikolons in Textfeldern werden durch Kommas ersetzt.
+Vollständiger Export und Anhängen verwenden durchgehend `ISO-8859-1` und CRLF-Zeilenumbrüche. Nicht darstellbare Namen führen zu einer Fehlermeldung; die bestehende Exportdatei bleibt dabei erhalten.
 
 ## Datenzuordnung auf dem Server
 

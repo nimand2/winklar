@@ -63,11 +63,12 @@ final class AdressenController extends Controller
         $user = $this->authService->requireUser();
         $anlass = $this->findOptionalAnlass($params);
         $data = $this->addressDataFromRequest($user);
-        $plz = $this->plzModel->findByLookup((string) ($_POST['plz_lookup'] ?? ''));
+        $plz = $this->plzModel->findByLookup($data['plz_lookup']);
         $data['plz_id'] = $plz['id'] ?? null;
         $errors = $this->validateAddressData($data);
 
         if ($errors !== []) {
+            http_response_code(422);
             $this->render('adressen/form', [
                 'anlass' => $anlass,
                 'adresse' => null,
@@ -110,7 +111,7 @@ final class AdressenController extends Controller
         $anlass = $this->findOptionalAnlass($params);
         $adresse = $this->findAdresseOrFail((int) ($params['adresseId'] ?? 0));
         $data = $this->addressDataFromRequest($user);
-        $plz = $this->plzModel->findByLookup((string) ($_POST['plz_lookup'] ?? ''));
+        $plz = $this->plzModel->findByLookup($data['plz_lookup']);
         $data['plz_id'] = $plz['id'] ?? null;
         $data['creator_adress_id'] = $adresse['creator_adress_id'] ?? null;
         $data['modifier_adress_id'] = $adresse['modifier_adress_id'] ?? null;
@@ -120,6 +121,7 @@ final class AdressenController extends Controller
         $errors = $this->validateAddressData($data);
 
         if ($errors !== []) {
+            http_response_code(422);
             $this->render('adressen/form', [
                 'anlass' => $anlass,
                 'adresse' => $adresse,
@@ -188,24 +190,18 @@ final class AdressenController extends Controller
      */
     private function addressDataFromRequest(array $user): array
     {
-        return [
-            'anrede' => trim((string) ($_POST['anrede'] ?? '')),
-            'firmen_anrede' => trim((string) ($_POST['firmen_anrede'] ?? '')),
-            'nachname' => trim((string) ($_POST['nachname'] ?? '')),
-            'vorname' => trim((string) ($_POST['vorname'] ?? '')),
-            'zusatz' => trim((string) ($_POST['zusatz'] ?? '')),
-            'strasse' => trim((string) ($_POST['strasse'] ?? '')),
-            'postfach' => trim((string) ($_POST['postfach'] ?? '')),
-            'nation' => trim((string) ($_POST['nation'] ?? '')),
-            'plz_lookup' => trim((string) ($_POST['plz_lookup'] ?? '')),
-            'telefon' => trim((string) ($_POST['telefon'] ?? '')),
-            'email' => trim((string) ($_POST['email'] ?? '')),
-            'notiz' => trim((string) ($_POST['notiz'] ?? '')),
-            'geburtsdatum' => $this->nullableString($_POST['geburtsdatum'] ?? null),
-            'lizenz' => trim((string) ($_POST['lizenz'] ?? '')),
-            'created_by_user_id' => (int) $user['id'],
-            'updated_by_user_id' => (int) $user['id'],
-        ];
+        $input = new \App\Validation\FormInput($_POST);
+        $data = [];
+        foreach (['anrede'=>50, 'firmen_anrede'=>100, 'nachname'=>150, 'vorname'=>150, 'zusatz'=>150, 'strasse'=>190, 'postfach'=>100, 'nation'=>100, 'plz_lookup'=>200, 'telefon'=>50, 'email'=>190, 'notiz'=>10000, 'lizenz'=>100] as $field=>$length) {
+            $data[$field] = $input->text($field, $length, $field === 'nachname') ?? '';
+        }
+        $data['geburtsdatum'] = $input->date('geburtsdatum');
+        if ($data['geburtsdatum'] !== null && $data['geburtsdatum'] > date('Y-m-d')) $input->errors[] = 'Geburtsdatum darf nicht in der Zukunft liegen.';
+        if ($data['email'] !== '' && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) $input->errors[] = 'Bitte eine gültige E-Mail-Adresse eingeben.';
+        $data['created_by_user_id'] = (int) $user['id'];
+        $data['updated_by_user_id'] = (int) $user['id'];
+        $data['_errors'] = $input->errors;
+        return $data;
     }
 
     /**
@@ -213,6 +209,7 @@ final class AdressenController extends Controller
      */
     private function validateAddressData(array $data): array
     {
+        if (($data['_errors'] ?? []) !== []) return $data['_errors'];
         if ((string) $data['nachname'] === '') {
             return ['Bitte gib mindestens einen Nachnamen ein.'];
         }

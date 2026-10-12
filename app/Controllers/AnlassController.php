@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Response;
+use App\Validation\AnlassFormService;
 use App\Models\Auszeichnungslimitten;
 use App\Models\Gaben;
 use App\Models\Stich;
@@ -92,11 +93,12 @@ final class AnlassController extends Controller
         $errors = \App\Validation\AnlassFormService::validateAnlassData($data);
 
         if ($errors !== []) {
+            http_response_code(422);
             $this->render('anlass/form', [
                 'user' => $user,
                 'mode' => 'create',
                 'anlass' => [],
-                'old' => $_POST,
+                'old' => array_filter($_POST, 'is_scalar'),
                 'errors' => $errors,
             ]);
             return;
@@ -135,11 +137,12 @@ final class AnlassController extends Controller
         $errors = \App\Validation\AnlassFormService::validateAnlassData($data);
 
         if ($errors !== []) {
+            http_response_code(422);
             $this->render('anlass/form', [
                 'user' => $user,
                 'mode' => 'edit',
                 'anlass' => $anlass,
-                'old' => $_POST,
+                'old' => array_filter($_POST, 'is_scalar'),
                 'errors' => $errors,
             ]);
             return;
@@ -190,6 +193,8 @@ final class AnlassController extends Controller
                 'gaben' => $this->gabenModel->getAll(),
                 'regeln' => $this->auszeichnungslimittenModel->findByAnlassId((int) $anlass['id']),
                 'errors' => ['Bitte einen Stich dieses Anlasses und je Kategorie eine Anzahl von 0 bis 1000 wählen.'],
+                'oldSection' => 'final',
+                'old' => array_filter($_POST, 'is_scalar'),
             ]);
             return;
         }
@@ -238,144 +243,134 @@ final class AnlassController extends Controller
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
-        $data = \App\Validation\AnlassFormService::sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id']);
-
-        if (\App\Validation\AnlassFormService::validateStichData($data) === []) {
-            $this->stichModel->create($data);
+        $data = AnlassFormService::sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id']);
+        $errors = AnlassFormService::validateStichData($data);
+        if ($this->stichModel->hasAnzeigeId((int) $anlass['id'], $data['anzeige_id'])) {
+            $errors[] = 'Diese Anzeige-ID wird in diesem Anlass bereits verwendet.';
         }
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        if ($errors !== []) {
+            $this->configurationError($anlass, $user, $errors, 'stich');
+            return;
+        }
+        $this->stichModel->create($data);
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Aktualisiert einen Stich des Anlasses.
-     */
     public function updateStich(array $params): void
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $stich = $this->stichModel->findById((int) ($params['stichId'] ?? 0));
-
-        if ($stich !== null && (int) $stich['id_anlass'] === (int) $anlass['id']) {
-            $data = \App\Validation\AnlassFormService::sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id'], $stich);
-
-            if (\App\Validation\AnlassFormService::validateStichData($data) === []) {
-                $this->stichModel->update((int) $stich['id'], $data);
-            }
+        if ($stich === null || (int) $stich['id_anlass'] !== (int) $anlass['id']) Response::notFound('Stich nicht gefunden');
+        $data = AnlassFormService::sanitizeStichData($_POST, (int) $anlass['id'], (int) $user['id'], $stich);
+        $errors = AnlassFormService::validateStichData($data);
+        if ($this->stichModel->hasAnzeigeId((int) $anlass['id'], $data['anzeige_id'], (int) $stich['id'])) {
+            $errors[] = 'Diese Anzeige-ID wird in diesem Anlass bereits verwendet.';
         }
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        if ($errors !== []) {
+            $this->configurationError($anlass, $user, $errors, 'stich', (int) $stich['id']);
+            return;
+        }
+        $this->stichModel->update((int) $stich['id'], $data);
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Loescht einen Stich des Anlasses.
-     */
     public function deleteStich(array $params): void
     {
-        $this->authService->requireUser();
+        $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $stich = $this->stichModel->findById((int) ($params['stichId'] ?? 0));
-
-        if ($stich !== null && (int) $stich['id_anlass'] === (int) $anlass['id']) {
-            $this->stichModel->delete((int) $stich['id']);
+        if ($stich === null || (int) $stich['id_anlass'] !== (int) $anlass['id']) Response::notFound('Stich nicht gefunden');
+        if (!$this->stichModel->delete((int) $stich['id'])) {
+            $this->configurationError($anlass, $user, ['Dieser Stich gehört zu einem Standblatt oder einer Abgabe und kann nicht gelöscht werden.']);
+            return;
         }
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Erstellt eine neue Gabe.
-     */
     public function storeGabe(array $params): void
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
-        $name = trim((string) ($_POST['name'] ?? ''));
-
-        if ($name !== '') {
-            $this->gabenModel->create([
-                'name' => $name,
-                'punktwert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['punktwert'] ?? null) ?? 0,
-                'preis' => \App\Validation\AnlassFormService::nullableDecimal($_POST['preis'] ?? null) ?? 0,
-                'anzahl' => max(0, (int) ($_POST['anzahl'] ?? 0)),
-                'created_by_user_id' => (int) $user['id'],
-                'updated_by_user_id' => (int) $user['id'],
-            ]);
+        $data = AnlassFormService::gabe($_POST, (int) $user['id']);
+        if ($data['_errors'] !== []) {
+            $this->configurationError($anlass, $user, $data['_errors'], 'gabe');
+            return;
         }
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        $this->gabenModel->create($data);
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Aktualisiert eine bestehende Gabe.
-     */
     public function updateGabe(array $params): void
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $gabe = $this->gabenModel->findById((int) ($params['gabeId'] ?? 0));
-
-        if ($gabe !== null) {
-            $this->gabenModel->update((int) $gabe['id'], [
-                'name' => trim((string) ($_POST['name'] ?? $gabe['name'])),
-                'punktwert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['punktwert'] ?? null) ?? 0,
-                'preis' => \App\Validation\AnlassFormService::nullableDecimal($_POST['preis'] ?? null) ?? 0,
-                'anzahl' => max(0, (int) ($_POST['anzahl'] ?? 0)),
-                'created_by_user_id' => $gabe['created_by_user_id'] ?? null,
-                'updated_by_user_id' => (int) $user['id'],
-            ]);
+        if ($gabe === null) Response::notFound('Gabe nicht gefunden');
+        $data = AnlassFormService::gabe($_POST, (int) $user['id'], $gabe);
+        if ($data['_errors'] !== []) {
+            $this->configurationError($anlass, $user, $data['_errors'], 'gabe', (int) $gabe['id']);
+            return;
         }
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        $this->gabenModel->update((int) $gabe['id'], $data);
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Loescht eine Gabe.
-     */
     public function deleteGabe(array $params): void
     {
+        $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
-        $this->authService->requireUser();
-        $this->gabenModel->delete((int) ($params['gabeId'] ?? 0));
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        if (!$this->gabenModel->delete((int) ($params['gabeId'] ?? 0))) {
+            $this->configurationError($anlass, $user, ['Diese Gabe wird in Regeln oder Abgaben verwendet und kann nicht gelöscht werden.']);
+            return;
+        }
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Erstellt eine neue Regel zur Gabenvergabe.
-     */
     public function storeRegel(array $params): void
     {
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
-        $stich = $this->stichModel->findById((int) ($_POST['stich_id'] ?? 0));
-
-        if ($stich !== null && (int) $stich['id_anlass'] === (int) $anlass['id']) {
-            $this->auszeichnungslimittenModel->create([
-                'stich_id' => (int) $stich['id'],
-                'gaben_id' => (int) ($_POST['gaben_id'] ?? 0) ?: null,
-                'min_wert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['min_wert'] ?? null),
-                'max_wert' => \App\Validation\AnlassFormService::nullableDecimal($_POST['max_wert'] ?? null),
-                'min_alter' => \App\Validation\AnlassFormService::nullableInt($_POST['min_alter'] ?? null),
-                'max_alter' => \App\Validation\AnlassFormService::nullableInt($_POST['max_alter'] ?? null),
-                'created_by_user_id' => (int) $user['id'],
-                'updated_by_user_id' => (int) $user['id'],
-            ]);
+        $data = AnlassFormService::regel($_POST, (int) $user['id']);
+        $stich = $this->stichModel->findById((int) ($data['stich_id'] ?? 0));
+        if ($stich === null || (int) $stich['id_anlass'] !== (int) $anlass['id']) $data['_errors'][] = 'Bitte einen Stich dieses Anlasses wählen.';
+        if ($this->gabenModel->findById((int) ($data['gaben_id'] ?? 0)) === null) $data['_errors'][] = 'Bitte eine vorhandene Gabe wählen.';
+        if ($data['_errors'] !== []) {
+            $this->configurationError($anlass, $user, $data['_errors'], 'regel');
+            return;
         }
-
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+        $this->auszeichnungslimittenModel->create($data);
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
     }
 
-    /**
-     * Loescht eine Regel zur Gabenvergabe.
-     */
     public function deleteRegel(array $params): void
     {
-        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $this->authService->requireUser();
-        $this->auszeichnungslimittenModel->delete((int) ($params['regelId'] ?? 0));
+        $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
+        $regel = $this->auszeichnungslimittenModel->getById((int) ($params['regelId'] ?? 0));
+        $stich = $regel === null ? null : $this->stichModel->findById((int) $regel['stich_id']);
+        if ($stich === null || (int) $stich['id_anlass'] !== (int) $anlass['id']) Response::notFound('Regel nicht gefunden');
+        $this->auszeichnungslimittenModel->delete((int) $regel['id']);
+        $this->redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+    }
 
-        Response::redirect('/anlass/' . (int) $anlass['id'] . '/konfiguration');
+    private function configurationError(array $anlass, array $user, array $errors, string $section = '', int $id = 0): void
+    {
+        http_response_code(422);
+        $stiche = $this->stichModel->findByAnlassId((int) $anlass['id']);
+        $gaben = $this->gabenModel->getAll();
+        // Keep scalar submitted values so users can correct them without retyping.
+        $old = array_filter($_POST, static fn ($value): bool => is_string($value));
+        if ($id > 0) {
+            if ($section === 'stich') foreach ($stiche as &$row) { if ((int) $row['id'] === $id) $row = array_merge($row, $old); }
+            if ($section === 'gabe') foreach ($gaben as &$row) { if ((int) $row['id'] === $id) $row = array_merge($row, $old); }
+            unset($row);
+        }
+        $this->render('anlass/konfiguration', [
+            'user' => $user, 'anlass' => $anlass, 'stiche' => $stiche, 'gaben' => $gaben,
+            'regeln' => $this->auszeichnungslimittenModel->findByAnlassId((int) $anlass['id']),
+            'errors' => $errors, 'old' => $id === 0 ? $old : [], 'oldSection' => $section,
+        ]);
     }
 
     /**

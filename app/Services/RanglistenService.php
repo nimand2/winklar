@@ -31,23 +31,15 @@ final class RanglistenService
         }
         $standblaetter ??= $this->standblattModel->findForAnlassWithAdresse($anlassId);
         $schuesse = $this->schussdatenModel->findByAnlassId($anlassId);
-        $schuesseByStandblattAndExterneNummer = [];
-        $stichtag = $this->referenceDate($anlassDatum);
-
-        foreach ($schuesse as $schuss) {
-            if ((int) ($schuss['ins_del'] ?? 0) !== 0) {
-                continue;
-            }
-
-            $standblattId = (int) ($schuss['start_nr'] ?? 0);
-            $externeNummer = $this->externalNumber($schuss['externe_nummer'] ?? null);
-
-            if ($standblattId <= 0 || $externeNummer === '') {
-                continue;
-            }
-
-            $schuesseByStandblattAndExterneNummer[$standblattId][$externeNummer][] = $schuss;
+        $bySheet = [];
+        foreach ($schuesse as $schuss) $bySheet[(int) ($schuss['start_nr'] ?? 0)][] = $schuss;
+        $purchases = $this->standblattModel->findSticheForAnlass($anlassId);
+        $series = [];
+        foreach ($standblaetter as $sheet) {
+            $id = (int) $sheet['id'];
+            $series[$id] = SerienService::build($purchases[$id] ?? [], $bySheet[$id] ?? [])['rows'];
         }
+        $stichtag = $this->referenceDate($anlassDatum);
 
         $ranglisten = [];
 
@@ -66,17 +58,10 @@ final class RanglistenService
 
             foreach ($standblaetter as $standblatt) {
                 $standblattId = (int) $standblatt['id'];
-                $stichSchuesse = $schuesseByStandblattAndExterneNummer[$standblattId][$externeNummer] ?? [];
-
-                if ($stichSchuesse === []) {
-                    continue;
-                }
-
-                $resultate = $this->resultateForStich($stich, $stichSchuesse);
-
-                if ($resultate === []) {
-                    continue;
-                }
+                $rows = array_values(array_filter($series[$standblattId] ?? [], static fn (array $row): bool => (int) $row['stich_id'] === (int) $stich['id'] && !empty($row['vollstaendig'])));
+                $resultate = array_column($rows, 'total');
+                rsort($resultate, SORT_NUMERIC);
+                if ($resultate === []) continue;
 
                 $teilnehmer = [
                     'standblatt_id' => $standblattId,
@@ -86,7 +71,8 @@ final class RanglistenService
                     'total' => $resultate[0],
                     'summe_beste_zwei' => array_sum(array_slice($resultate, 0, 2)),
                     'resultate' => $resultate,
-                    'schuss_count' => count($stichSchuesse),
+                    'schuss_count' => array_sum(array_map(static fn (array $row): int => count($row['schuesse']), $rows)),
+                    'vollstaendige_serien' => count($rows),
                 ];
 
                 $kategorie = $this->categoryForBirthdate($standblatt['geburtsdatum'] ?? null, $stichtag);
@@ -162,12 +148,12 @@ final class RanglistenService
                 foreach ($kategorie['teilnehmer'] as $teilnehmer) {
                     if ((int) $teilnehmer['standblatt_id'] === $standblattId) {
                         return array_merge($status, [
-                            'qualifiziert' => $belegt < $anzahl,
+                            'qualifiziert' => count($teilnehmer['resultate']) >= 2 && $belegt < $anzahl,
                             'rang' => (int) $teilnehmer['rang'],
                             'kategorie' => (string) $kategorie['label'],
                         ]);
                     }
-                    if (!empty($bestaetigte[(int) $teilnehmer['standblatt_id']])) {
+                    if (count($teilnehmer['resultate']) >= 2 && !empty($bestaetigte[(int) $teilnehmer['standblatt_id']])) {
                         $belegt++;
                     }
                 }
@@ -195,35 +181,6 @@ final class RanglistenService
     }
 
     /**
-     * Berechnet Serienresultate eines Stiches aus den importierten Schuessen.
-     */
-    private function resultateForStich(array $stich, array $schuesse): array
-    {
-        // Identische zeitliche Reihenfolge in Rangliste und Standblatt.
-        usort($schuesse, [Schussreihenfolge::class, 'compare']);
-        $anzahlSchuss = max(1, (int) ($stich['anzahl_schuss'] ?? 0));
-        $resultate = [];
-
-        for ($offset = 0; $offset < count($schuesse); $offset += $anzahlSchuss) {
-            $serie = array_slice($schuesse, $offset, $anzahlSchuss);
-
-            if ($serie === []) {
-                continue;
-            }
-
-            $resultate[] = array_reduce(
-                $serie,
-                fn (float $sum, array $schuss): float => $sum + $this->numericValue($schuss['primaerwertung'] ?? null),
-                0.0
-            );
-        }
-
-        rsort($resultate, SORT_NUMERIC);
-
-        return $resultate;
-    }
-
-    /**
      * Vergleicht Resultatserien fuer die Rangsortierung.
      */
     private function compareResultate(array $leftResultate, array $rightResultate): int
@@ -248,25 +205,8 @@ final class RanglistenService
      */
     private function categoryForBirthdate(mixed $birthdate, ?\DateTimeImmutable $stichtag): string
     {
-        if (!$stichtag instanceof \DateTimeImmutable) {
-            return 'ue18';
-        }
-
-        $birthdate = trim((string) $birthdate);
-
-        if ($birthdate === '') {
-            return 'ue18';
-        }
-
-        try {
-            $geburtsdatum = new \DateTimeImmutable($birthdate);
-        } catch (\Throwable) {
-            return 'ue18';
-        }
-
-        $alterImAnlassjahr = (int) $stichtag->format('Y') - (int) $geburtsdatum->format('Y');
-
-        return $alterImAnlassjahr < 18 ? 'u18' : 'ue18';
+        $age = Altersregel::alter($birthdate, $stichtag?->format('Y-m-d'));
+        return $age !== null && $age < 18 ? 'u18' : 'ue18';
     }
 
     /**
@@ -299,15 +239,4 @@ final class RanglistenService
         return trim((string) $value);
     }
 
-    /**
-     * Normalisiert optionale Zahlenwerte aus Import- und Datenbankfeldern.
-     */
-    private function numericValue(mixed $value): float
-    {
-        if ($value === null || $value === '') {
-            return 0.0;
-        }
-
-        return (float) str_replace(',', '.', (string) $value);
-    }
 }

@@ -57,6 +57,13 @@ final class Router
     public function dispatch(string $method, string $uri): void
     {
         $path = $this->normalizePath($uri);
+        $base = rtrim(defined('APP_BASE_PATH') ? APP_BASE_PATH : '', '/');
+        if ($base !== '') {
+            if ($path !== $base && !str_starts_with($path, $base . '/')) {
+                Response::notFound();
+            }
+            $path = $this->normalizePath(substr($path, strlen($base)) ?: '/');
+        }
 
         foreach ($this->routes[$method] ?? [] as $route) {
             if (!preg_match($route['pattern'], $path, $matches)) {
@@ -79,7 +86,16 @@ final class Router
                 return;
             }
 
-            $route['handler']($params);
+            try {
+                $route['handler']($params);
+            } catch (\InvalidArgumentException $exception) {
+                if (str_starts_with($route['path'], '/api/')) {
+                    JsonResponse::error($exception->getMessage(), 422, 'INVALID_INPUT');
+                } else {
+                    http_response_code(422);
+                    echo htmlspecialchars($exception->getMessage(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                }
+            }
             return;
         }
 
@@ -95,7 +111,8 @@ final class Router
         $quotedPath = preg_quote($normalizedPath, '#');
         $pattern = preg_replace_callback(
             '/\\\\\{([a-zA-Z_][a-zA-Z0-9_]*)\\\\\}/',
-            static fn (array $matches): string => '(?P<' . $matches[1] . '>[^/]+)',
+            static fn (array $matches): string => '(?P<' . $matches[1] . '>'
+                . (($matches[1] === 'id' || str_ends_with($matches[1], 'Id')) ? '[0-9]+' : '[^/]+') . ')',
             $quotedPath
         );
 

@@ -28,16 +28,24 @@ final class ClientApiController extends Controller
     public function login(): void
     {
         $payload = $this->jsonPayload();
-        $username = trim((string) ($payload['Username'] ?? $payload['username'] ?? ''));
-        $password = (string) ($payload['Password'] ?? $payload['password'] ?? '');
+        $login = $payload['Username'] ?? $payload['username'] ?? null;
+        $secret = $payload['Password'] ?? $payload['password'] ?? null;
+        $username = is_string($login) ? trim($login) : '';
+        $password = is_string($secret) ? $secret : '';
 
-        if ($username === '' || $password === '') {
+        if ($username === '' || $password === '' || mb_strlen($username, 'UTF-8') > 150 || strlen($password) > 4096) {
             JsonResponse::error('Benutzername und Passwort sind erforderlich.', 400, 'INVALID_INPUT');
             return;
         }
 
-        $user = $this->authService->findUserByLogin($username);
-        if ($user === null || !password_verify($password, (string) $user['password_hash'])) {
+        try {
+            $user = $this->authService->validateCredentials($username, $password);
+        } catch (\App\Core\LoginLimitExceeded $exception) {
+            header('Retry-After: 900');
+            JsonResponse::error($exception->getMessage(), 429, 'TOO_MANY_ATTEMPTS');
+            return;
+        }
+        if ($user === null) {
             JsonResponse::error('Ungültige Anmeldedaten.', 401, 'INVALID_CREDENTIALS');
             return;
         }
@@ -88,7 +96,9 @@ final class ClientApiController extends Controller
         }
 
         $anlassId = (int) ($params['id'] ?? 0);
-        $sinceId = (int) ($_GET['sinceId'] ?? 0);
+        $input = new \App\Validation\FormInput($_GET);
+        $sinceId = $input->integer('sinceId', 0, PHP_INT_MAX) ?? 0;
+        if ($input->errors !== []) throw new \InvalidArgumentException(implode(' ', $input->errors));
 
         if ($anlassId <= 0) {
             JsonResponse::error('Ungültiger Anlass.', 400, 'INVALID_ANLASS');
@@ -110,8 +120,10 @@ final class ClientApiController extends Controller
 
         $anlassId = (int) ($params['id'] ?? 0);
         $payload = $this->jsonPayload();
-        $payloadAnlassId = (int) ($payload['AnlassId'] ?? $payload['anlassId'] ?? 0);
-        $shots = $payload['Shots'] ?? $payload['shots'] ?? [];
+        $input = new \App\Validation\FormInput(['AnlassId' => $payload['AnlassId'] ?? $payload['anlassId'] ?? null]);
+        $payloadAnlassId = $input->integer('AnlassId', 1, PHP_INT_MAX);
+        if ($input->errors !== []) throw new \InvalidArgumentException(implode(' ', $input->errors));
+        $shots = $payload['Shots'] ?? $payload['shots'] ?? null;
 
         if ($anlassId <= 0 || ($payloadAnlassId > 0 && $payloadAnlassId !== $anlassId)) {
             JsonResponse::error('Ungültiger Anlass.', 400, 'INVALID_ANLASS');
@@ -125,6 +137,9 @@ final class ClientApiController extends Controller
 
         try {
             $created = $this->clientApiService->importShots($anlassId, $shots, (int) $user['id']);
+        } catch (\InvalidArgumentException $exception) {
+            JsonResponse::error($exception->getMessage(), 422, 'INVALID_INPUT');
+            return;
         } catch (Throwable $exception) {
             JsonResponse::error('Schussdaten konnten nicht importiert werden.', 500, 'IMPORT_FAILED');
             return;
@@ -135,8 +150,8 @@ final class ClientApiController extends Controller
             'imported' => $created,
             // createMany commits all normalised rows in one transaction.
             // Existing import hashes count as accepted, not newly imported.
-            'accepted' => count(array_filter($shots, 'is_array')),
-            'duplicates' => count(array_filter($shots, 'is_array')) - $created,
+            'accepted' => count($shots),
+            'duplicates' => count($shots) - $created,
         ], 201);
     }
 
@@ -165,14 +180,7 @@ final class ClientApiController extends Controller
      */
     private function jsonPayload(): array
     {
-        $rawBody = file_get_contents('php://input');
-        if ($rawBody === false || trim($rawBody) === '') {
-            return [];
-        }
-
-        $payload = json_decode($rawBody, true);
-
-        return is_array($payload) ? $payload : [];
+        return \App\Core\JsonRequest::decode(file_get_contents('php://input') ?: '');
     }
 
     /**

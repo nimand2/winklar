@@ -155,7 +155,7 @@ final class Plz
              FROM plz
              WHERE ortschaftsname = :ortschaftsname'
         );
-        $statement->execute(['ortschaftsname' => "%$ortschaftsname%"]);
+        $statement->execute(['ortschaftsname' => $ortschaftsname]);
 
         $plz = $statement->fetch();
 

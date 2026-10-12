@@ -93,11 +93,21 @@ final class LoesenController extends Controller
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $adresse = $this->findAdresseOrFail((int) ($_POST['adresse_id'] ?? 0), (int) $anlass['id']);
         $stiche = $this->stichModel->findByAnlassId((int) $anlass['id']);
-        $selectedStichCounts = $this->selectedStichCountsFromRequest($stiche);
+        $form = \App\Validation\StandblattFormService::parse($_POST, $stiche);
+        if ($form['errors'] !== []) {
+            http_response_code(422);
+            $this->render(isset($standblatt) ? 'loesen/edit' : 'loesen/create', [
+                'user' => $user, 'anlass' => $anlass, 'adresse' => $adresse, 'stiche' => $stiche,
+                'standblatt' => $standblatt ?? [], 'old' => ['datum' => is_string($_POST['datum'] ?? null) ? $_POST['datum'] : '', 'stich_ids' => array_keys($form['counts']), 'stich_counts' => $form['counts']],
+                'errors' => $form['errors'], 'selectedStichCounts' => $form['counts'],
+            ]);
+            return;
+        }
+        $selectedStichCounts = $form['counts'];
         $data = [
             'id_anlass' => (int) $anlass['id'],
             'id_adresse' => (int) $adresse['id'],
-            'datum' => $this->nullableString($_POST['datum'] ?? null),
+            'datum' => $form['datum'],
             'kosten' => $this->calculateKosten($stiche, $selectedStichCounts),
             'created_by_user_id' => (int) $user['id'],
             'updated_by_user_id' => (int) $user['id'],
@@ -119,12 +129,15 @@ final class LoesenController extends Controller
         $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse'], (int) $anlass['id']);
         $selectedStiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
 
+        $available = $this->stichModel->findByAnlassId((int) $anlass['id']);
+        foreach ($available as &$row) foreach ($selectedStiche as $saved) if ((int) $row['id'] === (int) $saved['id']) $row = array_merge($row, $saved);
+        unset($row);
         $this->render('loesen/edit', [
             'user' => $user,
             'anlass' => $anlass,
             'adresse' => $adresse,
             'standblatt' => $standblatt,
-            'stiche' => $this->stichModel->findByAnlassId((int) $anlass['id']),
+            'stiche' => $available,
             'selectedStichCounts' => $this->stichCountsById($selectedStiche),
             'errors' => [],
             'old' => [
@@ -167,12 +180,25 @@ final class LoesenController extends Controller
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
         $adresse = $this->findAdresseOrFail((int) $standblatt['id_adresse'], (int) $anlass['id']);
         $stiche = $this->stichModel->findByAnlassId((int) $anlass['id']);
-        $selectedStichCounts = $this->selectedStichCountsFromRequest($stiche);
+        $savedStiche = $this->standblattModel->findSticheForStandblatt((int) $standblatt['id']);
+        foreach ($stiche as &$row) foreach ($savedStiche as $saved) if ((int) $row['id'] === (int) $saved['id']) $row = array_merge($row, $saved);
+        unset($row);
+        $form = \App\Validation\StandblattFormService::parse($_POST, $stiche);
+        if ($form['errors'] !== []) {
+            http_response_code(422);
+            $this->render(isset($standblatt) ? 'loesen/edit' : 'loesen/create', [
+                'user' => $user, 'anlass' => $anlass, 'adresse' => $adresse, 'stiche' => $stiche,
+                'standblatt' => $standblatt ?? [], 'old' => ['datum' => is_string($_POST['datum'] ?? null) ? $_POST['datum'] : '', 'stich_ids' => array_keys($form['counts']), 'stich_counts' => $form['counts']],
+                'errors' => $form['errors'], 'selectedStichCounts' => $form['counts'],
+            ]);
+            return;
+        }
+        $selectedStichCounts = $form['counts'];
 
         $data = [
             'id_anlass' => (int) $anlass['id'],
             'id_adresse' => (int) $adresse['id'],
-            'datum' => $this->nullableString($_POST['datum'] ?? null),
+            'datum' => $form['datum'],
             'kosten' => $this->calculateKosten($stiche, $selectedStichCounts),
             'updated_by_user_id' => (int) $user['id'],
         ];
@@ -264,29 +290,6 @@ final class LoesenController extends Controller
         }
 
         return number_format($total, 2, '.', '');
-    }
-
-    /**
-     * Extrahiert und validiert Stichmengen aus dem Formularrequest.
-     */
-    private function selectedStichCountsFromRequest(array $availableStiche): array
-    {
-        $availableIds = array_map(
-            static fn (array $stich): int => (int) $stich['id'],
-            $availableStiche
-        );
-        $selectedIds = array_map('intval', (array) ($_POST['stich_ids'] ?? []));
-        $selectedIds = array_values(array_unique($selectedIds));
-        $selectedIds = array_values(array_intersect($selectedIds, $availableIds));
-        $postedCounts = (array) ($_POST['stich_counts'] ?? []);
-        $selectedStichCounts = [];
-
-        foreach ($selectedIds as $stichId) {
-            $count = (int) ($postedCounts[$stichId] ?? 1);
-            $selectedStichCounts[$stichId] = max(1, $count);
-        }
-
-        return $selectedStichCounts;
     }
 
     /**

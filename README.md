@@ -2,7 +2,7 @@
 
 Webapplikation zur Verwaltung von Schiessanlaessen mit Anlaessen, Schuetzen, Standblaettern, Kasse, Ranglisten und SIUS-Anbindung.
 
-Das Projekt besteht aus einer PHP-Webapplikation, einer MySQL/MariaDB-Datenbank und einem separaten Phyton-Windows-Client fuer den Datenaustausch mit SIUS.
+Das Projekt besteht aus einer PHP-Webapplikation, einer MySQL/MariaDB-Datenbank und dem separaten Python-Windows-Client [SiusClientV2](https://github.com/nimand2/SiusClientV2) fuer den Datenaustausch mit SIUS. Der Client wird in seinem eigenen Repository gepflegt.
 
 ## Funktionen
 
@@ -32,7 +32,7 @@ database/
   migrations/      Schemaaenderungen
   seeds/           Beispieldaten
   reference/       PLZ-Rohdaten, nicht im Updatepaket
-client/            Separater C# Windows Forms SIUS-Client
+client/            Schnittstellendokumentation fuer den externen SiusClientV2
 public/            Einstiegspunkt, CSS und JavaScript
 tests/
   unit/            Geschaeftslogik und Sicherheit
@@ -47,10 +47,10 @@ config.php         Kompatibler Einstieg zur neuen Konfiguration
 
 ## Voraussetzungen
 
-- PHP 8.x mit PDO-MySQL
+- PHP 8.1 oder neuer mit PDO-MySQL und mbstring
 - MySQL oder MariaDB
 - Webserver mit Document Root auf `public/`
-- Fuer den SIUS-Client: Windows mit .NET/Windows Forms Entwicklungsumgebung
+- Fuer SiusClientV2: Windows; Einrichtung und Python-/EXE-Start sind im [Client-Repository](https://github.com/nimand2/SiusClientV2) beschrieben
 
 ## Installation
 
@@ -82,7 +82,7 @@ config.php         Kompatibler Einstieg zur neuen Konfiguration
 Mit dem eingebauten PHP-Server kann die Anwendung lokal gestartet werden:
 
 ```bash
-php -S localhost:8000 -t public
+APP_ENV=development php -S localhost:8000 -t public public/index.php
 ```
 
 Danach ist die Anwendung unter folgender Adresse erreichbar:
@@ -107,7 +107,7 @@ http://localhost:8000
 
 ## SIUS-API
 
-Der C#-Client kommuniziert ueber JSON mit der Webapplikation. Die wichtigsten Endpunkte sind:
+SiusClientV2 kommuniziert ueber JSON mit der Webapplikation. Die wichtigsten Endpunkte sind:
 
 - `POST /api/login`
 - `GET /api/anlaesse`
@@ -143,16 +143,23 @@ mit mindestens 32 Zeichen gesetzt sein. Zum Erzeugen eignet sich
 `openssl rand -hex 32`. Den Wert sicher in der Serverkonfiguration hinterlegen,
 nicht im Repository. Ohne gültige Konfiguration schlägt die Token-Erstellung
 und Signaturprüfung ausdrücklich fehl. Nach dem Wechsel des Geheimnisses müssen
-sich Sussiport/API-Clients neu anmelden. Endpunkte und JSON-Formate bleiben gleich.
+sich SiusClientV2/API-Clients neu anmelden. Endpunkte und JSON-Formate bleiben gleich.
 
 Webformulare validieren einen Session-CSRF-Token; Logout erfolgt per POST.
 Die mit Bearer-Tokens authentifizierte API benötigt keinen Formular-CSRF-Token.
+Secure-Cookies sind im Produktivbetrieb standardmässig aktiviert; lokales HTTP
+verwendet `APP_ENV=development`. `APP_BASE_PATH=/winklar` konfiguriert einen
+Unterpfad. Web- und API-Login begrenzen Versuche gemeinsam pro IP und Login.
+`LOGIN_LIMIT_DIR` kann dafür ein privates, für PHP schreibbares Verzeichnis setzen.
 
-Zusätzliche Prüfungen: `php tests/unit/security.php` und
-`php tests/integration/schussimport-db.php`. Der Datenbanktest benötigt eine erreichbare
-MySQL/MariaDB-Datenbank mit bestehender Tabelle `schussdaten` sowie das Recht,
-temporäre Tabellen anzulegen. Er prüft Duplikate und Rollback in einer
-verbindungslokalen temporären Tabelle, ohne vorhandene Datensätze zu ändern.
+Die Datenbanktests legen alle Anwendungstabellen als verbindungslokale temporäre
+Tabellen an. Sie benötigen eine erreichbare MySQL/MariaDB-Datenbank und das Recht,
+temporäre Tabellen anzulegen; vorhandene Anwendungsdaten bleiben unverändert.
+
+Bestehende Installationen benötigen die additive Review-Migration:
+`php scripts/migrate-review.php` prüft vorab, `php scripts/migrate-review.php --apply`
+erstellt zuerst ein privates Backup und migriert anschliessend. Details und
+Herkunftskennzeichnung stehen in [docs/deployment.md](docs/deployment.md).
 
 ## Tests und Updatepakete
 

@@ -2,17 +2,8 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__, 2) . '/app/bootstrap.php';
-
-// A connection-local temporary table shadows the real table. No application rows are touched.
-$pdo = App\Core\Database::connection();
-$definition = $pdo->query('SHOW CREATE TABLE schussdaten')->fetch();
-$sql = $definition['Create Table'];
-$sql = preg_replace('/^CREATE TABLE/', 'CREATE TEMPORARY TABLE', $sql);
-// Temporary tables do not support foreign keys; preserve columns, engine and unique keys.
-$sql = preg_replace('/^\s*CONSTRAINT[^\n]+\n/m', '', $sql);
-$sql = preg_replace('/,\n\)/', "\n)", $sql);
-$pdo->exec($sql);
+require dirname(__DIR__) . '/support/database.php';
+$pdo = review_test_database();
 $check = static function (bool $ok, string $message): void {
     if (!$ok) throw new RuntimeException($message);
 };

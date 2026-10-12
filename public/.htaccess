@@ -1,11 +1,9 @@
-RewriteEngine On
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+Options -Indexes
 DirectoryIndex index.php
-
-# Existing files and directories keep working, e.g. assets.
+RewriteEngine On
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteRule (^|/)\. - [F,L]
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
-
-# Everything else goes through the central front controller.
 RewriteRule ^ index.php [L,QSA]

@@ -45,32 +45,45 @@ final class KassenService
             ];
         }
 
-        $gabenTotal = 0.0;
+        $gabenTotal = 0;
+        $gabenOffen = 0;
+        $geldAbgegeben = 0;
+        $geldOffen = 0;
         $gabenById = [];
 
         foreach ($abgaben as $abgabe) {
             $gabenId = (int) $abgabe['gaben_id'];
             $preis = $this->numericValue($abgabe['preis'] ?? null);
-            $gabenTotal += $preis;
-
-            if (!isset($gabenById[$gabenId])) {
-                $gabenById[$gabenId] = [
+            $cents = (int) round($preis * 100);
+            $delivered = !empty($abgabe['abgegeben']);
+            if ($delivered) $gabenTotal += $cents; else $gabenOffen += $cents;
+            if (!empty($abgabe['ist_geld'])) {
+                if ($delivered) $geldAbgegeben += $cents; else $geldOffen += $cents;
+            }
+            $groupKey = $gabenId . ':' . $preis . ':' . (int) $delivered;
+            if (!isset($gabenById[$groupKey])) {
+                $gabenById[$groupKey] = [
                     'gaben_id' => $gabenId,
                     'name' => (string) ($abgabe['name'] ?? ''),
                     'preis' => $preis,
                     'anzahl' => 0,
+                    'abgegeben' => $delivered,
                     'total' => 0.0,
                 ];
             }
 
-            $gabenById[$gabenId]['anzahl']++;
-            $gabenById[$gabenId]['total'] += $preis;
+            $gabenById[$groupKey]['anzahl']++;
+            $gabenById[$groupKey]['total'] += $preis;
         }
 
         return [
             'einnahmen_total' => $einnahmenTotal,
-            'gaben_total' => $gabenTotal,
-            'netto' => $einnahmenTotal - $gabenTotal,
+            'gaben_total' => $gabenTotal / 100.0,
+            'gaben_offen_total' => $gabenOffen / 100.0,
+            'geld_abgegeben' => $geldAbgegeben / 100.0,
+            'geld_offen' => $geldOffen / 100.0,
+            'kassenbestand' => $einnahmenTotal - $geldAbgegeben / 100.0,
+            'netto' => $einnahmenTotal - $gabenTotal / 100.0,
             'standblatt_count' => count($standblaetter),
             'offene_gaben_pruefungen' => $offeneGabenPruefungen,
             'standblaetter' => $standblattRows,

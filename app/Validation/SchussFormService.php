@@ -8,28 +8,22 @@ final class SchussFormService
 {
     public static function nullableString(mixed $value): ?string
     {
+        if ($value !== null && !is_string($value) && !is_int($value)) return null;
         $value = trim((string) ($value ?? ''));
 
-        return $value === '' ? null : $value;
+        return $value === '' || mb_strlen($value, 'UTF-8') > 100 ? null : $value;
     }
 
     public static function nullableDecimal(mixed $value): ?string
     {
-        $value = trim(str_replace(',', '.', (string) ($value ?? '')));
-
-        return is_numeric($value) ? $value : null;
+        $input = new FormInput(['value' => $value]);
+        $result = $input->decimal('value');
+        if ($input->errors !== []) throw new \InvalidArgumentException(implode(' ', $input->errors));
+        return $result;
     }
 
     public static function datetimeValue(mixed $value): ?string
     {
-        $value = trim((string) ($value ?? ''));
-
-        if ($value === '') {
-            return null;
-        }
-
-        $timestamp = strtotime($value);
-
-        return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
+        return FormInput::timestamp($value);
     }
 }

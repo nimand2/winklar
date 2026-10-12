@@ -108,7 +108,11 @@ final class Stich
         $payload = $this->buildPayload($data);
         $payload['id'] = $id;
 
-        return $statement->execute($payload);
+        return Database::transaction(function () use ($statement, $payload, $id, $data): bool {
+            $result = $statement->execute($payload);
+            (new Gaben())->invalidateStich($id, $data['updated_by_user_id'] ?? null);
+            return $result;
+        });
     }
 
     /**
@@ -117,11 +121,23 @@ final class Stich
     public function delete(int $id): bool
     {
         $statement = Database::connection()->prepare(
-            'DELETE FROM stich
-             WHERE id = :id'
+            'DELETE FROM stich WHERE id = :id
+             AND NOT EXISTS (SELECT 1 FROM standblatt_stich WHERE id_stich = stich.id)
+             AND NOT EXISTS (SELECT 1 FROM gaben_abgaben WHERE stich_id = stich.id)
+             AND NOT EXISTS (SELECT 1 FROM gaben_bewegungen WHERE stich_id = stich.id)'
         );
+        $statement->execute(['id' => $id]);
+        return $statement->rowCount() === 1;
+    }
 
-        return $statement->execute(['id' => $id]);
+    public function hasAnzeigeId(int $anlassId, ?string $anzeigeId, int $exceptId = 0): bool
+    {
+        if ($anzeigeId === null || trim($anzeigeId) === '') return false;
+        $statement = Database::connection()->prepare(
+            'SELECT 1 FROM stich WHERE id_anlass = :anlass AND anzeige_id = :nummer AND id <> :except_id LIMIT 1'
+        );
+        $statement->execute(['anlass' => $anlassId, 'nummer' => trim($anzeigeId), 'except_id' => $exceptId]);
+        return (bool) $statement->fetchColumn();
     }
 
     /**

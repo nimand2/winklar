@@ -62,15 +62,19 @@ final class AbrechnenController extends Controller
         $user = $this->authService->requireUser();
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
-        $items = $this->abrechnungsService->itemsFromPostedGaben(
-            (int) $anlass['id'],
-            (int) $standblatt['id'],
-            (array) ($_POST['gaben'] ?? []),
-            (array) ($_POST['abgegeben'] ?? []),
-            (array) ($_POST['ruecknahme'] ?? [])
-        );
+        Database::transaction(function ($connection) use ($anlass, $standblatt, $user): void {
+            $lock = $connection->prepare('SELECT id FROM standblatt WHERE id = ? FOR UPDATE');
+            $lock->execute([(int) $standblatt['id']]);
+            $items = $this->abrechnungsService->itemsFromPostedGaben(
+                (int) $anlass['id'],
+                (int) $standblatt['id'],
+                (array) ($_POST['gaben'] ?? []),
+                (array) ($_POST['abgegeben'] ?? []),
+                (array) ($_POST['ruecknahme'] ?? [])
+            );
 
-        $this->gabenModel->replaceAbgabenForStandblatt((int) $standblatt['id'], $items, (int) $user['id']);
+            $this->gabenModel->replaceAbgabenForStandblatt((int) $standblatt['id'], $items, (int) $user['id']);
+        });
 
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
@@ -102,10 +106,13 @@ final class AbrechnenController extends Controller
         $anlass = $this->findAnlassOrFail((int) ($params['id'] ?? 0));
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
 
+        $dateInput = new \App\Validation\FormInput($_POST);
+        $date = $dateInput->date('datum');
+        if ($dateInput->errors !== []) throw new \InvalidArgumentException(implode(' ', $dateInput->errors));
         $this->standblattModel->update((int) $standblatt['id'], [
             'id_anlass' => (int) $anlass['id'],
             'id_adresse' => (int) $standblatt['id_adresse'],
-            'datum' => \App\Validation\SchussFormService::nullableString($_POST['datum'] ?? null),
+            'datum' => $date,
             'kosten' => $standblatt['kosten'] ?? null,
             'updated_by_user_id' => (int) $user['id'],
         ]);
@@ -124,7 +131,10 @@ final class AbrechnenController extends Controller
         $primaerwertung = \App\Validation\SchussFormService::nullableDecimal($_POST['primaerwertung'] ?? null);
         $externeNummer = \App\Validation\SchussFormService::nullableString($_POST['externe_nummer'] ?? null);
 
-        if ($primaerwertung !== null && $externeNummer !== null) {
+        if ($primaerwertung === null || $externeNummer === null) {
+            throw new \InvalidArgumentException('Ein gültiger Schusswert und eine Scheibe sind erforderlich.');
+        }
+        Database::transaction(function () use ($anlass, $standblatt, $user, $primaerwertung, $externeNummer): void {
             $matchIndex = $this->schussdatenModel->nextMatchIndex((int) $standblatt['id'], (int) $anlass['id']);
             $schussZeit = \App\Validation\SchussFormService::datetimeValue($_POST['schuss_zeit'] ?? null) ?? date('Y-m-d H:i:s');
 
@@ -156,7 +166,7 @@ final class AbrechnenController extends Controller
             ]);
 
             $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
-        }
+        });
 
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
@@ -174,9 +184,13 @@ final class AbrechnenController extends Controller
         $matchIndex = $this->schussdatenModel->nextMatchIndex((int) $standblatt['id'], (int) $anlass['id']);
 
         foreach ((array) ($_POST['schuesse'] ?? []) as $input) {
+            if (!is_array($input)) throw new \InvalidArgumentException('Ungültige Schusszeile.');
+            $form = new \App\Validation\FormInput($input);
+            $form->integer('id', 0, PHP_INT_MAX);
+            if ($form->errors !== []) throw new \InvalidArgumentException(implode(' ', $form->errors));
             $id = (int) ($input['id'] ?? 0);
             $existing = $id > 0 ? $this->findSchussOrFail($id, (int) $anlass['id'], (int) $standblatt['id']) : null;
-            $rawValue = trim((string) ($input['primaerwertung'] ?? ''));
+            $rawValue = is_scalar($input['primaerwertung'] ?? '') ? trim((string) ($input['primaerwertung'] ?? '')) : 'invalid';
             if ($id === 0 && $rawValue === '') {
                 continue;
             }
@@ -214,9 +228,7 @@ final class AbrechnenController extends Controller
         }
 
         if ($updates !== [] || $inserts !== []) {
-            $connection = Database::connection();
-            $connection->beginTransaction();
-            try {
+            Database::transaction(function () use ($updates, $inserts, $standblatt, $user): void {
                 foreach ($updates as $id => $data) {
                     $this->schussdatenModel->updateManualCorrection($id, $data);
                 }
@@ -224,11 +236,7 @@ final class AbrechnenController extends Controller
                     $this->schussdatenModel->create($data);
                 }
                 $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
-                $connection->commit();
-            } catch (\Throwable $error) {
-                $connection->rollBack();
-                throw $error;
-            }
+            });
         }
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
@@ -245,7 +253,10 @@ final class AbrechnenController extends Controller
         $primaerwertung = \App\Validation\SchussFormService::nullableDecimal($_POST['primaerwertung'] ?? null);
         $externeNummer = \App\Validation\SchussFormService::nullableString($_POST['externe_nummer'] ?? null);
 
-        if ($primaerwertung !== null && $externeNummer !== null) {
+        if ($primaerwertung === null || $externeNummer === null) {
+            throw new \InvalidArgumentException('Ein gültiger Schusswert und eine Scheibe sind erforderlich.');
+        }
+        Database::transaction(function () use ($schuss, $standblatt, $user, $primaerwertung, $externeNummer): void {
             $this->schussdatenModel->updateManualCorrection((int) $schuss['id'], [
                 'primaerwertung' => $primaerwertung,
                 'sekundaerwertung' => array_key_exists('sekundaerwertung', $_POST)
@@ -258,7 +269,7 @@ final class AbrechnenController extends Controller
             ]);
 
             $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
-        }
+        });
 
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }
@@ -273,8 +284,10 @@ final class AbrechnenController extends Controller
         $standblatt = $this->findStandblattOrFail((int) ($params['standblattId'] ?? 0), (int) $anlass['id']);
         $schuss = $this->findSchussOrFail((int) ($params['schussId'] ?? 0), (int) $anlass['id'], (int) $standblatt['id']);
 
-        $this->schussdatenModel->markDeleted((int) $schuss['id'], (int) $user['id']);
-        $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
+        Database::transaction(function () use ($schuss, $standblatt, $user): void {
+            $this->schussdatenModel->markDeleted((int) $schuss['id'], (int) $user['id']);
+            $this->gabenModel->resetAbgabenForStandblatt((int) $standblatt['id'], (int) $user['id']);
+        });
 
         Response::redirect('/anlass/' . (int) $anlass['id'] . '/loesen/' . (int) $standblatt['id'] . '/abrechnen');
     }

@@ -10,6 +10,9 @@ namespace App\Models {
     }
     class Standblatt {
         public int $loads = 0;
+        public function findSticheForAnlass(int $id): array {
+            return array_fill(1, 14, [['id'=>4,'name'=>'Finalstich','anzeige_id'=>1,'anzahl_schuss'=>1,'anzahl_stiche'=>2]]);
+        }
         public function findForAnlassWithAdresse(int $id): array {
             $this->loads++;
             $rows=[];
@@ -22,13 +25,16 @@ namespace App\Models {
     class Schussdaten {
         public function findByAnlassId(int $id): array {
             $rows=[];
-            for ($i=1; $i<=14; $i++) $rows[]=['start_nr'=>$i, 'externe_nummer'=>1, 'primaerwertung'=>100-$i];
+            for ($i=1; $i<=14; $i++) for ($n=1; $n<=2; $n++) $rows[]=['id'=>$i*2+$n,'start_nr'=>$i, 'externe_nummer'=>1, 'primaerwertung'=>100-$i];
             return $rows;
         }
     }
 }
 namespace {
     require dirname(__DIR__, 2).'/app/Services/Schussreihenfolge.php';
+    require dirname(__DIR__, 2).'/app/Services/SchussStatus.php';
+    require dirname(__DIR__, 2).'/app/Services/SerienService.php';
+    require dirname(__DIR__, 2).'/app/Services/Altersregel.php';
     require dirname(__DIR__, 2).'/app/Services/RanglistenService.php';
     require dirname(__DIR__, 2).'/app/Services/FinalService.php';
     require dirname(__DIR__, 2).'/app/Core/Url.php';

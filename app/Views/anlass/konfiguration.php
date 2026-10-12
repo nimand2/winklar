@@ -13,6 +13,9 @@ $anlassId = (int) $anlass['id'];
 $gaben = $gaben ?? [];
 $stiche = $stiche ?? [];
 $regeln = $regeln ?? [];
+$old = $old ?? [];
+$oldSection = $oldSection ?? '';
+$oldValue = static fn (string $section, string $field, string $default = ''): string => htmlspecialchars((string) ($oldSection === $section ? ($old[$field] ?? $default) : $default));
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -56,17 +59,17 @@ $regeln = $regeln ?? [];
                                         <select id="final_stich_id" name="final_stich_id" class="form-select">
                                             <option value="0">Kein Final</option>
                                             <?php foreach ($stiche as $stich): ?>
-                                                <option value="<?= (int) $stich['id'] ?>" <?= (int) ($anlass['final_stich_id'] ?? 0) === (int) $stich['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $stich['name']) ?></option>
+                                                <option value="<?= (int) $stich['id'] ?>" <?= (int) ($oldSection === 'final' ? ($old['final_stich_id'] ?? 0) : ($anlass['final_stich_id'] ?? 0)) === (int) $stich['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $stich['name']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
                                     <div class="col-6 col-md-3">
                                         <label for="final_anzahl_u18" class="form-label">Finalplätze U18</label>
-                                        <input id="final_anzahl_u18" name="final_anzahl_u18" type="number" min="0" max="1000" step="1" class="form-control" value="<?= (int) ($anlass['final_anzahl_u18'] ?? 6) ?>" required>
+                                        <input id="final_anzahl_u18" name="final_anzahl_u18" type="number" min="0" max="1000" step="1" class="form-control" value="<?= $oldValue('final', 'final_anzahl_u18', (string) ($anlass['final_anzahl_u18'] ?? 6)) ?>" required>
                                     </div>
                                     <div class="col-6 col-md-3">
                                         <label for="final_anzahl_ue18" class="form-label">Finalplätze Ü18</label>
-                                        <input id="final_anzahl_ue18" name="final_anzahl_ue18" type="number" min="0" max="1000" step="1" class="form-control" value="<?= (int) ($anlass['final_anzahl_ue18'] ?? 6) ?>" required>
+                                        <input id="final_anzahl_ue18" name="final_anzahl_ue18" type="number" min="0" max="1000" step="1" class="form-control" value="<?= $oldValue('final', 'final_anzahl_ue18', (string) ($anlass['final_anzahl_ue18'] ?? 6)) ?>" required>
                                     </div>
                                     <div class="col-12 col-md-2"><button type="submit" class="btn btn-primary w-100">Speichern</button></div>
                                 </div>
@@ -82,43 +85,43 @@ $regeln = $regeln ?? [];
                                         <div class="row g-3">
                                             <div class="col-12">
                                                 <label for="stich_name" class="form-label">Name</label>
-                                                <input id="stich_name" name="name" class="form-control" required>
+                                                <input id="stich_name" name="name" class="form-control" required value="<?= $oldValue('stich', 'name', '') ?>">
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label for="stich_short_name" class="form-label">Kurzname</label>
-                                                <input id="stich_short_name" name="short_name" class="form-control">
+                                                <input id="stich_short_name" name="short_name" class="form-control" value="<?= $oldValue('stich', 'short_name', '') ?>">
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label for="stich_anzeige_id" class="form-label">Anzeige-ID</label>
-                                                <input id="stich_anzeige_id" name="anzeige_id" class="form-control">
+                                                <input id="stich_anzeige_id" name="anzeige_id" class="form-control" value="<?= $oldValue('stich', 'anzeige_id', '') ?>">
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label for="stich_scheibe" class="form-label">Scheibe</label>
-                                                <input id="stich_scheibe" name="scheibe" class="form-control">
+                                                <input id="stich_scheibe" name="scheibe" class="form-control" value="<?= $oldValue('stich', 'scheibe', '') ?>">
                                             </div>
                                             <div class="col-6 col-md-3">
                                                 <label for="stich_wertigkeit" class="form-label">Wertigkeit</label>
-                                                <input id="stich_wertigkeit" name="wertigkeit" type="number" step="0.01" min="0" class="form-control">
+                                                <input id="stich_wertigkeit" name="wertigkeit" type="number" step="0.01" min="0" class="form-control" value="<?= $oldValue('stich', 'wertigkeit', '') ?>">
                                             </div>
                                             <div class="col-6 col-md-3">
                                                 <label for="stich_anzahl_schuss" class="form-label">Schuss</label>
-                                                <input id="stich_anzahl_schuss" name="anzahl_schuss" type="number" min="0" class="form-control">
+                                                <input id="stich_anzahl_schuss" name="anzahl_schuss" type="number" min="1" max="1000" required class="form-control" value="<?= $oldValue('stich', 'anzahl_schuss', '') ?>">
                                             </div>
                                             <div class="col-6 col-md-3">
                                                 <label for="stich_anzahl_passen" class="form-label">Max. Passen</label>
-                                                <input id="stich_anzahl_passen" name="anzahl_passen" type="number" min="0" class="form-control">
+                                                <input id="stich_anzahl_passen" name="anzahl_passen" type="number" min="0" max="1000" class="form-control" value="<?= $oldValue('stich', 'anzahl_passen', '') ?>">
                                             </div>
                                             <div class="col-6 col-md-3">
                                                 <label for="stich_preis" class="form-label">Preis</label>
-                                                <input id="stich_preis" name="preis" type="number" step="0.01" min="0" class="form-control">
+                                                <input id="stich_preis" name="preis" type="number" step="0.01" min="0" class="form-control" value="<?= $oldValue('stich', 'preis', '') ?>">
                                             </div>
                                             <div class="col-12 col-md-6">
                                                 <label for="stich_id_disziplin" class="form-label">Disziplin-ID</label>
-                                                <input id="stich_id_disziplin" name="id_disziplin" type="number" min="0" class="form-control">
+                                                <input id="stich_id_disziplin" name="id_disziplin" type="number" min="0" class="form-control" value="<?= $oldValue('stich', 'id_disziplin', '') ?>">
                                             </div>
                                             <div class="col-12 col-md-6">
                                                 <label for="stich_verbindung" class="form-label">Verbindung</label>
-                                                <input id="stich_verbindung" name="verbindung" class="form-control">
+                                                <input id="stich_verbindung" name="verbindung" class="form-control" value="<?= $oldValue('stich', 'verbindung', '') ?>">
                                             </div>
                                             <div class="col-12">
                                                 <button type="submit" class="btn btn-primary w-100">Stich erstellen</button>
@@ -133,19 +136,19 @@ $regeln = $regeln ?? [];
                                         <div class="row g-3">
                                             <div class="col-12">
                                                 <label for="gabe_name" class="form-label">Name</label>
-                                                <input id="gabe_name" name="name" class="form-control" required>
+                                                <input id="gabe_name" name="name" class="form-control" required value="<?= $oldValue('gabe', 'name', '') ?>">
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label for="gabe_punktwert" class="form-label">Punktwert</label>
-                                                <input id="gabe_punktwert" name="punktwert" type="number" step="0.01" min="0" class="form-control" value="0">
+                                                <input id="gabe_punktwert" name="punktwert" type="number" step="0.01" min="0" class="form-control" value="<?= $oldValue('gabe', 'punktwert', '0') ?>">
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label for="gabe_preis" class="form-label">Preis</label>
-                                                <input id="gabe_preis" name="preis" type="number" step="0.01" min="0" class="form-control" value="0">
+                                                <input id="gabe_preis" name="preis" type="number" step="0.01" min="0" class="form-control" value="<?= $oldValue('gabe', 'preis', '0') ?>">
                                             </div>
                                             <div class="col-12 col-md-4">
                                                 <label for="gabe_anzahl" class="form-label">Anzahl</label>
-                                                <input id="gabe_anzahl" name="anzahl" type="number" min="0" class="form-control" value="0">
+                                                <input id="gabe_anzahl" name="anzahl" type="number" min="0" class="form-control" value="<?= $oldValue('gabe', 'anzahl', '0') ?>">
                                             </div>
                                             <div class="col-12">
                                                 <button type="submit" class="btn btn-primary w-100">Gabe erstellen</button>
@@ -171,7 +174,7 @@ $regeln = $regeln ?? [];
                                                     <label for="regel_stich" class="form-label">Stich</label>
                                                     <select id="regel_stich" name="stich_id" class="form-select" required>
                                                         <?php foreach ($stiche as $stich): ?>
-                                                            <option value="<?= (int) $stich['id'] ?>"><?= htmlspecialchars((string) $stich['name']) ?></option>
+                                                            <option value="<?= (int) $stich['id'] ?>" <?= $oldSection === 'regel' && (int) ($old['stich_id'] ?? 0) === (int) $stich['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $stich['name']) ?></option>
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
@@ -179,25 +182,25 @@ $regeln = $regeln ?? [];
                                                     <label for="regel_gabe" class="form-label">Gabe</label>
                                                     <select id="regel_gabe" name="gaben_id" class="form-select" required>
                                                         <?php foreach ($gaben as $gabe): ?>
-                                                            <option value="<?= (int) $gabe['id'] ?>"><?= htmlspecialchars((string) $gabe['name']) ?></option>
+                                                            <option value="<?= (int) $gabe['id'] ?>" <?= $oldSection === 'regel' && (int) ($old['gaben_id'] ?? 0) === (int) $gabe['id'] ? 'selected' : '' ?>><?= htmlspecialchars((string) $gabe['name']) ?></option>
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
                                                 <div class="col-6 col-md-3">
                                                     <label for="min_wert" class="form-label">Min. Wert</label>
-                                                    <input id="min_wert" name="min_wert" type="number" step="0.01" class="form-control">
+                                                    <input id="min_wert" name="min_wert" type="number" step="0.01" class="form-control" value="<?= $oldValue('regel', 'min_wert', '') ?>">
                                                 </div>
                                                 <div class="col-6 col-md-3">
                                                     <label for="max_wert" class="form-label">Max. Wert</label>
-                                                    <input id="max_wert" name="max_wert" type="number" step="0.01" class="form-control">
+                                                    <input id="max_wert" name="max_wert" type="number" step="0.01" class="form-control" value="<?= $oldValue('regel', 'max_wert', '') ?>">
                                                 </div>
                                                 <div class="col-6 col-md-3">
                                                     <label for="min_alter" class="form-label">Min. Alter</label>
-                                                    <input id="min_alter" name="min_alter" type="number" min="0" class="form-control">
+                                                    <input id="min_alter" name="min_alter" type="number" min="0" max="150" class="form-control" value="<?= $oldValue('regel', 'min_alter', '') ?>">
                                                 </div>
                                                 <div class="col-6 col-md-3">
                                                     <label for="max_alter" class="form-label">Max. Alter</label>
-                                                    <input id="max_alter" name="max_alter" type="number" min="0" class="form-control">
+                                                    <input id="max_alter" name="max_alter" type="number" min="0" max="150" class="form-control" value="<?= $oldValue('regel', 'max_alter', '') ?>">
                                                 </div>
                                                 <div class="col-12">
                                                     <button type="submit" class="btn btn-primary w-100">Regel erstellen</button>
@@ -241,11 +244,11 @@ $regeln = $regeln ?? [];
                                                     </div>
                                                     <div class="col-6 col-md-2">
                                                         <label class="form-label">Schuss</label>
-                                                        <input name="anzahl_schuss" type="number" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['anzahl_schuss'] ?? '')) ?>">
+                                                        <input name="anzahl_schuss" type="number" min="1" max="1000" required class="form-control" value="<?= htmlspecialchars((string) ($stich['anzahl_schuss'] ?? '')) ?>">
                                                     </div>
                                                     <div class="col-6 col-md-2">
                                                         <label class="form-label">Max. Passen</label>
-                                                        <input name="anzahl_passen" type="number" min="0" class="form-control" value="<?= htmlspecialchars((string) ($stich['anzahl_passen'] ?? '')) ?>">
+                                                        <input name="anzahl_passen" type="number" min="0" max="1000" class="form-control" value="<?= htmlspecialchars((string) ($stich['anzahl_passen'] ?? '')) ?>">
                                                     </div>
                                                     <div class="col-6 col-md-2">
                                                         <label class="form-label">Disziplin-ID</label>

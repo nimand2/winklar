@@ -84,15 +84,25 @@ final class AuthService
      */
     public function attemptLogin(string $login, string $password, bool $rememberMe = false): bool
     {
-        $user = $this->findUserByLogin($login);
+        $user = $this->validateCredentials($login, $password);
 
-        if ($user === null || !password_verify($password, (string) $user['password_hash'])) {
+        if ($user === null) {
             return false;
         }
 
         $this->loginUser($user, $rememberMe);
 
         return true;
+    }
+
+    public function validateCredentials(string $login, string $password): ?array
+    {
+        if (!(new \App\Core\LoginLimiter())->attempt($login, (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'))) {
+            throw new \App\Core\LoginLimitExceeded('Zu viele Anmeldeversuche. Bitte in 15 Minuten erneut versuchen.');
+        }
+        $user = $this->findUserByLogin($login);
+        if ($user === null || !password_verify($password, (string) $user['password_hash'])) return null;
+        return $user;
     }
 
     /**

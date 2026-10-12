@@ -2,7 +2,7 @@
 
 Download: `/anlass/{id}/final/{kategorie}/export` (angemeldet). UTF-8, Schema-Version 1. `kategorie` ist `u18` oder `ue18`. Jeder Export enthält genau einen separaten Final.
 
-Der Export ist eine Momentaufnahme der aktuellen Rangliste. Er enthält ausschliesslich Schützen innerhalb der eingestellten Finalplätze, deren gespeicherter Teilnahmewunsch aktiviert ist. Absagen lösen kein Nachrücken aus. Die Reihenfolge innerhalb des gewählten Finals ist der Qualifikationsrang. Diese Reihenfolge vergibt keine Scheiben oder Finalstartplätze.
+Der Export ist eine Momentaufnahme der aktuellen Rangliste. Er enthält ausschliesslich qualifizierte Schützen mit aktiviertem Teilnahmewunsch und mindestens zwei vollständigen gelösten Serien im Qualifikationsstich. Unvollständige und nicht gelöste Serien zählen nicht. Nicht bestätigte Teilnehmer werden übersprungen; die nächsten bestätigten Teilnehmer rücken nach Rang nach, bis die eingestellten Finalplätze besetzt sind. Die Reihenfolge innerhalb des gewählten Finals ist der Qualifikationsrang. Diese Reihenfolge vergibt keine Scheiben oder Finalstartplätze.
 
 ## Aufbau
 

@@ -35,6 +35,7 @@ final class FinalService
                 $qualifizierte = [];
                 $bestaetigt = 0;
                 foreach ($kategorie['teilnehmer'] as $row) {
+                    if (count($row['resultate']) < 2) continue;
                     if ($bestaetigt >= $plaetze) {
                         break;
                     }
@@ -137,7 +138,7 @@ final class FinalService
             ],
             'erstellt_am' => (new \DateTimeImmutable('now', new \DateTimeZone('Europe/Zurich')))->format(DATE_ATOM),
             'anlass' => ['id' => (int) $anlass['id'], 'name' => $anlass['name_anlass'], 'kurzname' => $anlass['shortname_anlass'] ?? null, 'start' => $anlass['start_anlass'] ?? null, 'ende' => $anlass['end_anlass'] ?? null],
-            'final_regeln' => ['stich_id' => (int) ($anlass['final_stich_id'] ?? 0), 'plaetze_u18' => (int) ($anlass['final_anzahl_u18'] ?? 6), 'plaetze_ue18' => (int) ($anlass['final_anzahl_ue18'] ?? 6), 'wertung' => 'Summe der besten zwei Resultate', 'altersregel' => 'Anlassjahr minus Geburtsjahr; U18 unter 18, Ü18 ab 18', 'nachruecken' => true],
+            'final_regeln' => ['stich_id' => (int) ($anlass['final_stich_id'] ?? 0), 'plaetze_u18' => (int) ($anlass['final_anzahl_u18'] ?? 6), 'plaetze_ue18' => (int) ($anlass['final_anzahl_ue18'] ?? 6), 'wertung' => 'Summe der besten zwei vollständigen gelösten Resultate; mindestens zwei erforderlich', 'altersregel' => 'Anlassjahr minus Geburtsjahr; U18 unter 18, Ü18 ab 18', 'nachruecken' => true],
             'qualifikationsstich' => $final['stich'],
             'teilnehmer_anzahl' => count($teilnehmer),
             'teilnehmer' => $teilnehmer,

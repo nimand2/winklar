@@ -17,7 +17,7 @@ final class Schussdaten
             'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
                     teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
-                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    ins_del, manuell_geloescht, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
                     externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
@@ -46,14 +46,14 @@ final class Schussdaten
                 id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
                 teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
                 time_since_change, sweep_direction, demonstration, match_index, stich_index,
-                ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                ins_del, manuell_geloescht, total_art, gruppe, feuerart, log_event, log_typ,
                 zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
                 externe_nummer, import_hash, created_by_user_id, updated_by_user_id
              ) VALUES (
                 :id_anlass, :start_nr, :primaerwertung, :schussart, :bahn_nr, :sekundaerwertung,
                 :teiler, :schuss_zeit, :mouche, :x_koordinate, :y_koordinate, :in_time,
                 :time_since_change, :sweep_direction, :demonstration, :match_index, :stich_index,
-                :ins_del, :total_art, :gruppe, :feuerart, :log_event, :log_typ,
+                :ins_del, 0, :total_art, :gruppe, :feuerart, :log_event, :log_typ,
                 :zeit_seit_jahresanfang, :abloesung, :waffe, :position, :target_id,
                 :externe_nummer, :import_hash, :created_by_user_id, :updated_by_user_id
              )
@@ -64,7 +64,7 @@ final class Schussdaten
     /**
      * Importiert mehrere Schussdatensaetze in einer Transaktion.
      */
-    public function createMany(array $rows): int
+    public function createMany(array $rows, bool $invalidateAwards = false): int
     {
         if ($rows === []) {
             return 0;
@@ -73,6 +73,7 @@ final class Schussdaten
         $connection = Database::connection();
         $connection->beginTransaction();
         $created = 0;
+        $affected = [];
 
         try {
             $statement = $this->prepareInsert();
@@ -80,6 +81,14 @@ final class Schussdaten
                 $statement->execute($this->buildPayload($row));
                 if ($statement->rowCount() > 0) {
                     $created++;
+                    $affected[(int) ($row['start_nr'] ?? 0)] = $row['updated_by_user_id'] ?? null;
+                }
+            }
+
+            if ($invalidateAwards) {
+                $gaben = new Gaben();
+                foreach ($affected as $standblattId => $userId) {
+                    if ($standblattId > 0) $gaben->resetAbgabenForStandblatt($standblattId, $userId);
                 }
             }
 
@@ -101,7 +110,7 @@ final class Schussdaten
             'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
                     teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
-                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    ins_del, manuell_geloescht, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
                     externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
@@ -124,7 +133,7 @@ final class Schussdaten
             'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
                     teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
-                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    ins_del, manuell_geloescht, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
                     externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten
@@ -185,7 +194,7 @@ final class Schussdaten
     {
         $statement = Database::connection()->prepare(
             'UPDATE schussdaten
-             SET ins_del = 1,
+             SET manuell_geloescht = 1,
                  updated_by_user_id = :updated_by_user_id
              WHERE id = :id'
         );
@@ -205,7 +214,7 @@ final class Schussdaten
             'SELECT id, id_anlass, start_nr, primaerwertung, schussart, bahn_nr, sekundaerwertung,
                     teiler, schuss_zeit, mouche, x_koordinate, y_koordinate, in_time,
                     time_since_change, sweep_direction, demonstration, match_index, stich_index,
-                    ins_del, total_art, gruppe, feuerart, log_event, log_typ,
+                    ins_del, manuell_geloescht, total_art, gruppe, feuerart, log_event, log_typ,
                     zeit_seit_jahresanfang, abloesung, waffe, position, target_id,
                     externe_nummer, import_hash, created_by_user_id, created_at, updated_by_user_id, updated_at
              FROM schussdaten

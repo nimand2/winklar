@@ -96,7 +96,14 @@ final class Anlass
         $payload = $this->buildPayload($data);
         $payload['id'] = $id;
 
-        return $statement->execute($payload);
+        return Database::transaction(function () use ($statement, $payload, $id, $data): bool {
+            $previous = $this->findById($id);
+            $result = $statement->execute($payload);
+            if (($previous['start_anlass'] ?? null) !== $data['start_anlass'] || ($previous['end_anlass'] ?? null) !== $data['end_anlass']) {
+                (new Gaben())->invalidateAnlass($id, $data['updated_by_user_id'] ?? null);
+            }
+            return $result;
+        });
     }
 
     /**

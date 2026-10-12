@@ -9,6 +9,9 @@ namespace App\Models {
         }
     }
     class Standblatt {
+        public function findById(int $id): array {return ['geburtsdatum'=>'2013-07-23','start_anlass'=>'2026-10-11'];}
+        public function findSticheForAnlass(int $id): array {return [24=>$this->findSticheForStandblatt(24)];}
+
         public function findForAnlassWithAdresse(int $id): array {
             return [['id'=>24,'vorname'=>'Cheryl','nachname'=>'Ruoss','geburtsdatum'=>'2013-07-23','final_teilnahme'=>1]];
         }
@@ -25,7 +28,7 @@ namespace App\Models {
                     $rows[]=['id'=>1000-($serie*5+$index),'schuss_zeit'=>sprintf('2026-10-11 10:00:%02d',$serie*5+$index),'start_nr'=>24,'primaerwertung'=>$value,'externe_nummer'=>901,'match_index'=>$index+1,'stich_index'=>1];
                 }
             }
-            $rows[]=['id'=>999,'start_nr'=>24,'primaerwertung'=>10,'externe_nummer'=>901,'ins_del'=>1];
+            $rows[]=['id'=>999,'start_nr'=>24,'primaerwertung'=>10,'externe_nummer'=>901,'manuell_geloescht'=>1];
             usort($rows,static fn($a,$b)=>($a['match_index'] ?? 0) <=> ($b['match_index'] ?? 0));
             return $rows;
         }
@@ -39,6 +42,9 @@ namespace App\Models {
 }
 namespace {
     require dirname(__DIR__, 2).'/app/Services/Schussreihenfolge.php';
+    require dirname(__DIR__, 2).'/app/Services/SchussStatus.php';
+    require dirname(__DIR__, 2).'/app/Services/SerienService.php';
+    require dirname(__DIR__, 2).'/app/Services/Altersregel.php';
     require dirname(__DIR__, 2).'/app/Services/RanglistenService.php';
     require dirname(__DIR__, 2).'/app/Services/AbrechnungsService.php';
     $standblatt=new \App\Models\Standblatt();

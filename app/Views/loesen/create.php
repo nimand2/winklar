@@ -132,7 +132,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                                                     id="stich-count-<?= htmlspecialchars((string) $stichId) ?>"
                                                                     name="stich_counts[<?= htmlspecialchars((string) $stichId) ?>]"
                                                                     type="number"
-                                                                    min="1"
+                                                                    min="1" max="1000"
                                                                     step="1"
                                                                     class="form-control"
                                                                     value="<?= htmlspecialchars((string) $anzahlStiche) ?>"

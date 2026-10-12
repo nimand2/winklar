@@ -83,13 +83,13 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                             </div>
                             <div class="col-12 col-md-3">
                                 <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Gabenwert</div>
+                                    <div class="small text-body-secondary mb-1">Gabenwert abgegeben</div>
                                     <div class="fw-semibold fs-5"><?= htmlspecialchars($money($gabenTotal)) ?></div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-3">
                                 <div class="list-group-item h-100 p-3 bg-white rounded-4">
-                                    <div class="small text-body-secondary mb-1">Netto</div>
+                                    <div class="small text-body-secondary mb-1">Ergebnis nach abgegebenen Gaben</div>
                                     <div class="fw-semibold fs-5"><?= htmlspecialchars($money($netto)) ?></div>
                                 </div>
                             </div>
@@ -99,6 +99,15 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                     <div class="fw-semibold fs-5"><?= (int) ($abrechnung['offene_gaben_pruefungen'] ?? 0) ?></div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <?php foreach (['gaben_offen_total' => 'Gabenwert noch offen', 'geld_abgegeben' => 'Barauszahlungen bestätigt', 'geld_offen' => 'Barauszahlungen offen', 'kassenbestand' => 'Einnahmen minus bestätigte Barauszahlungen'] as $key => $label): ?>
+                                <div class="col-12 col-md-3"><div class="list-group-item h-100 p-3 bg-white rounded-4">
+                                    <div class="small text-body-secondary mb-1"><?= htmlspecialchars($label) ?></div>
+                                    <div class="fw-semibold fs-5"><?= htmlspecialchars($money((float) ($abrechnung[$key] ?? 0))) ?></div>
+                                </div></div>
+                            <?php endforeach; ?>
                         </div>
 
                         <div class="row g-4">
@@ -121,7 +130,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                                 <tbody>
                                                     <?php foreach ($stichEinnahmen as $row): ?>
                                                         <tr>
-                                                            <td><?= htmlspecialchars((string) $row['name']) ?></td>
+                                                            <td><?= htmlspecialchars((string) $row['name']) ?><?php if (!empty($row['preis_uebernommen'])): ?><div class="small text-body-secondary">Preis aus bestehenden Gesamtkosten übernommen</div><?php endif; ?></td>
                                                             <td class="text-end"><?= (int) $row['anzahl_stiche'] ?></td>
                                                             <td class="text-end"><?= htmlspecialchars($money((float) $row['preis'])) ?></td>
                                                             <td class="text-end fw-semibold"><?= htmlspecialchars($money((float) $row['total'])) ?></td>
@@ -136,7 +145,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
 
                             <div class="col-12 col-lg-6">
                                 <section class="list-group-item p-4 bg-white rounded-4 h-100">
-                                    <h2 class="h5 mb-3">Abgegebene Gaben</h2>
+                                    <h2 class="h5 mb-3">Gaben nach Abgabestatus</h2>
                                     <?php if ($gaben === []): ?>
                                         <div class="alert alert-light border mb-0">Noch keine Gaben abgegeben.</div>
                                     <?php else: ?>
@@ -153,7 +162,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                                 <tbody>
                                                     <?php foreach ($gaben as $gabe): ?>
                                                         <tr>
-                                                            <td><?= htmlspecialchars((string) $gabe['name']) ?></td>
+                                                            <td><?= htmlspecialchars((string) $gabe['name']) ?><div class="small text-body-secondary"><?= !empty($gabe['abgegeben']) ? 'Abgegeben' : 'Offen' ?></div></td>
                                                             <td class="text-end"><?= (int) $gabe['anzahl'] ?></td>
                                                             <td class="text-end"><?= htmlspecialchars($money((float) $gabe['preis'])) ?></td>
                                                             <td class="text-end fw-semibold"><?= htmlspecialchars($money((float) $gabe['total'])) ?></td>
@@ -224,7 +233,7 @@ $abgaben = $abrechnung['abgaben'] ?? [];
                                             <?php foreach ($abgaben as $abgabe): ?>
                                                 <?php $name = trim((string) (($abgabe['vorname'] ?? '') . ' ' . ($abgabe['nachname'] ?? ''))); ?>
                                                 <tr>
-                                                    <td><?= htmlspecialchars((string) $abgabe['name']) ?></td>
+                                                    <td><?= htmlspecialchars((string) $abgabe['name']) ?><div class="small text-body-secondary"><?= !empty($abgabe['abgegeben']) ? 'Abgegeben' : 'Offen' ?><?= ($abgabe['preis_quelle'] ?? '') === 'uebernommen' ? ' · Preis übernommen' : '' ?></div></td>
                                                     <td><?= htmlspecialchars((string) ($abgabe['stich_name'] ?? '-')) ?></td>
                                                     <td><?= htmlspecialchars($name !== '' ? $name : 'Unbekannt') ?></td>
                                                     <td class="text-end"><?= htmlspecialchars($money((float) $abgabe['preis'])) ?></td>

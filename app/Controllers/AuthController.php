@@ -37,16 +37,24 @@ final class AuthController extends Controller
             $this->redirect('/login');
         }
 
-        $login = trim((string) ($_POST['login'] ?? ''));
-        $password = (string) ($_POST['password'] ?? '');
+        $login = is_string($_POST['login'] ?? null) ? trim($_POST['login']) : '';
+        $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
         $rememberMe = isset($_POST['remember_me']);
 
-        if ($login === '' || $password === '') {
+        if ($login === '' || $password === '' || mb_strlen($login, 'UTF-8') > 150 || strlen($password) > 4096) {
             Session::putFlash('error', 'Bitte Benutzername/E-Mail und Passwort ausfüllen.');
             $this->redirect('/login');
         }
 
-        if (!$this->authService->attemptLogin($login, $password, $rememberMe)) {
+        try {
+            $loggedIn = $this->authService->attemptLogin($login, $password, $rememberMe);
+        } catch (\App\Core\LoginLimitExceeded $exception) {
+            http_response_code(429);
+            header('Retry-After: 900');
+            $this->render('auth/login', ['flash' => ['type' => 'error', 'message' => $exception->getMessage()]]);
+            return;
+        }
+        if (!$loggedIn) {
             Session::putFlash('error', 'Die Login-Daten sind ungültig.');
             $this->redirect('/login');
         }

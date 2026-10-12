@@ -1,11 +1,17 @@
 RewriteEngine On
+Options -Indexes
 DirectoryIndex index.php public/index.php
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 # Block direct access to internal application folders and sensitive root files.
 RewriteRule ^(\.git|app|config|routes|database|tests|scripts|build|storage|docs|backup%20DB|backup[[:space:]]DB|client|model)(/|$) - [F,L]
 RewriteRule ^auth/auth\.php$ - [F,L]
 RewriteRule ^(config\.php|db\.php|schema\.sql|beispieldaten\.sql)$ - [F,L]
 RewriteRule ^[^/]+\.(csv|pdf|sql)$ - [F,L]
+RewriteRule (^|/)\. - [F,L]
+
+# Public asset URLs also work when the project directory is the document root.
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
 
 # Route the project root to the front controller instead of showing a directory listing.
 RewriteRule ^$ public/index.php [L,QSA]

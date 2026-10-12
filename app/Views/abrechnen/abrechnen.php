@@ -46,7 +46,7 @@ $formatNumber = static function (float $value): string {
 $formatDateTimeLocal = static function (mixed $value): string {
     $timestamp = strtotime((string) $value);
 
-    return $timestamp === false ? '' : date('Y-m-d\TH:i', $timestamp);
+    return $timestamp === false ? '' : date('Y-m-d\TH:i:s', $timestamp);
 };
 ?>
 <!DOCTYPE html>
@@ -151,6 +151,11 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                         <tr>
                                                             <td>
                                                                 <div class="fw-semibold"><?= htmlspecialchars((string) $row['bezeichnung']) ?></div>
+                                                                <?php if ((int) ($row['stich_id'] ?? 0) === 0): ?>
+                                                                    <span class="badge text-bg-secondary">Keiner gelösten Serie zugeordnet</span>
+                                                                <?php elseif (empty($row['vollstaendig'])): ?>
+                                                                    <span class="badge text-bg-warning">Unvollständig · zählt noch nicht</span>
+                                                                <?php endif; ?>
                                                                 <?php if ((string) ($row['kurzname'] ?? '') !== ''): ?>
                                                                     <div class="small text-body-secondary"><?= htmlspecialchars((string) $row['kurzname']) ?></div>
                                                                 <?php endif; ?>
@@ -248,6 +253,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                                                                             <input
                                                                                                 name="schuesse[<?= (int) $editIndex ?>][schuss_zeit]"
                                                                                                 type="datetime-local"
+                                                                                                step="1"
                                                                                                 class="form-control form-control-sm"
                                                                                                 value="<?= $schuss !== null ? htmlspecialchars($formatDateTimeLocal($schuss['zeit'] ?? null)) : '' ?>"
                                                                                                 form="<?= htmlspecialchars($formId) ?>"
@@ -307,7 +313,7 @@ $formatDateTimeLocal = static function (mixed $value): string {
                                             <div class="small mt-1"><?= $finalStatus['stich'] !== null ? 'Noch kein klassiertes Resultat im Finalstich vorhanden.' : 'Für diesen Anlass ist kein Finalstich eingestellt.' ?></div>
                                         <?php endif; ?>
                                     </div>
-                                    <p class="small text-body-secondary">Finalplätze: U18 <?= (int) ($anlass['final_anzahl_u18'] ?? 6) ?> · Ü18 <?= (int) ($anlass['final_anzahl_ue18'] ?? 6) ?>. Der Status richtet sich nach der aktuellen Rangliste und den Anlassregeln.</p>
+                                    <p class="small text-body-secondary">Für den Final sind mindestens zwei vollständige gelöste Serien im Finalstich erforderlich. Finalplätze: U18 <?= (int) ($anlass['final_anzahl_u18'] ?? 6) ?> · Ü18 <?= (int) ($anlass['final_anzahl_ue18'] ?? 6) ?>.</p>
                                     <a class="small d-block mb-3" href="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/konfiguration')) ?>">Finalregeln einstellen</a>
                                     <form method="post" action="<?= htmlspecialchars(Url::app('/anlass/' . $anlassId . '/loesen/' . $standblattId . '/abrechnen/final')) ?>"><?= \App\Core\Csrf::field() ?>
                                         <label class="form-check mb-3">

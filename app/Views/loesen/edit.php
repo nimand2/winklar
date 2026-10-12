@@ -89,6 +89,8 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                                                     value="<?= htmlspecialchars((string) $stichId) ?>"
                                                                     id="stich-<?= htmlspecialchars((string) $stichId) ?>"
                                                                     data-stich-price="<?= htmlspecialchars((string) ($stich['preis'] ?? 0)) ?>"
+                                                                    data-booked-count="<?= (int) ($stich['anzahl_stiche'] ?? 0) ?>"
+                                                                    data-booked-cost="<?= htmlspecialchars((string) ($stich['kosten'] ?? 0)) ?>"
                                                                     <?= in_array($stichId, $selectedStichIds, true) ? 'checked' : '' ?>
                                                                 >
                                                                 <span class="form-check-label fw-semibold">
@@ -104,6 +106,7 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                                                     name="stich_counts[<?= htmlspecialchars((string) $stichId) ?>]"
                                                                     type="number"
                                                                     min="1"
+                                                                    max="1000"
                                                                     step="1"
                                                                     class="form-control"
                                                                     value="<?= htmlspecialchars((string) $anzahlStiche) ?>"
@@ -116,6 +119,9 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                                                                 <?= htmlspecialchars((string) ($stich['anzahl_schuss'] ?: '')) ?> Schuss
                                                                 <?php if ($stich['preis'] !== null): ?>
                                                                     · CHF <?= htmlspecialchars((string) $stich['preis']) ?>
+                                                                <?php endif; ?>
+                                                                <?php if (($stich['preis_quelle'] ?? '') === 'uebernommen'): ?>
+                                                                    <div>Preis aus bestehenden Gesamtkosten übernommen.</div>
                                                                 <?php endif; ?>
                                                             </div>
                                                         </label>
@@ -173,7 +179,9 @@ $name = trim((string) (($adresse['vorname'] ?? '') . ' ' . ($adresse['nachname']
                     const count = Math.max(1, parseInt(countInput?.value || '1', 10));
                     const price = parseFloat((checkbox.dataset.stichPrice || '0').replace(',', '.'));
 
-                    return sum + (count * price);
+                    const bookedCount = Number(checkbox.dataset.bookedCount || '0');
+                    const bookedCost = Number(checkbox.dataset.bookedCost || '0');
+                    return sum + (bookedCount === count ? bookedCost : Math.round(count * price * 100) / 100);
                 }, 0);
 
                 kostenInput.value = total.toFixed(2);

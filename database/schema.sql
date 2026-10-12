@@ -1,6 +1,11 @@
-drop database IF EXISTS winklar;
+-- Installation only: existing data is never deleted. Existing tables cause an error.
 create database IF NOT EXISTS winklar CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 use winklar;
+
+CREATE TABLE app_migrations (
+    id VARCHAR(100) PRIMARY KEY,
+    applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -132,6 +137,7 @@ CREATE TABLE stich (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_stich_anlass_anzeige (id_anlass, anzeige_id),
     CONSTRAINT fk_stich_anlass
         FOREIGN KEY (id_anlass) REFERENCES anlass(id)
         ON DELETE CASCADE,
@@ -160,7 +166,7 @@ CREATE TABLE auszeichnungslimiten (
         ON DELETE CASCADE,
     CONSTRAINT fk_auszeichnungslimiten_gaben
         FOREIGN KEY (gaben_id) REFERENCES gaben(id)
-        ON DELETE SET NULL,
+        ON DELETE RESTRICT,
     CONSTRAINT fk_auszeichnungslimiten_created_by
         FOREIGN KEY (created_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
@@ -199,7 +205,10 @@ CREATE TABLE standblatt_stich (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_standblatt INT UNSIGNED NOT NULL,
     id_stich INT UNSIGNED NOT NULL,
-    anzahl_stiche INT UNSIGNED NOT NULL DEFAULT 0,
+    anzahl_stiche INT UNSIGNED NOT NULL DEFAULT 1,
+    preis DECIMAL(12,6) NOT NULL,
+    kosten DECIMAL(10,2) NOT NULL,
+    preis_quelle VARCHAR(20) NOT NULL DEFAULT 'erfasst',
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
@@ -209,7 +218,7 @@ CREATE TABLE standblatt_stich (
         ON DELETE CASCADE,
     CONSTRAINT fk_standblatt_stich_stich
         FOREIGN KEY (id_stich) REFERENCES stich(id)
-        ON DELETE CASCADE,
+        ON DELETE RESTRICT,
     CONSTRAINT fk_standblatt_stich_created_by
         FOREIGN KEY (created_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
@@ -226,19 +235,26 @@ CREATE TABLE gaben_abgaben (
     stich_id INT UNSIGNED NOT NULL,
     serie_nummer INT UNSIGNED NOT NULL DEFAULT 1,
     abgegeben TINYINT(1) NOT NULL DEFAULT 0,
+    name_snapshot VARCHAR(150) NOT NULL,
+    preis_snapshot DECIMAL(10,2) NOT NULL,
+    punktwert_snapshot DECIMAL(10,2) NOT NULL,
+    anzahl_snapshot INT UNSIGNED NOT NULL,
+    ist_geld_snapshot TINYINT(1) NOT NULL,
+    stich_name_snapshot VARCHAR(150) NOT NULL,
+    preis_quelle VARCHAR(20) NOT NULL DEFAULT 'erfasst',
     created_by_user_id INT UNSIGNED NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by_user_id INT UNSIGNED NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_gaben_abgaben_gaben
         FOREIGN KEY (gaben_id) REFERENCES gaben(id)
-        ON DELETE CASCADE,
+        ON DELETE RESTRICT,
     CONSTRAINT fk_gaben_abgaben_standblatt
         FOREIGN KEY (standblatt_id) REFERENCES standblatt(id)
-        ON DELETE CASCADE,
+        ON DELETE RESTRICT,
     CONSTRAINT fk_gaben_abgaben_stich
         FOREIGN KEY (stich_id) REFERENCES stich(id)
-        ON DELETE CASCADE,
+        ON DELETE RESTRICT,
     CONSTRAINT fk_gaben_abgaben_created_by
         FOREIGN KEY (created_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
@@ -246,6 +262,25 @@ CREATE TABLE gaben_abgaben (
         FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
         ON DELETE SET NULL,
     UNIQUE KEY uq_gaben_abgaben (gaben_id, standblatt_id, stich_id, serie_nummer)
+);
+
+CREATE TABLE gaben_bewegungen (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    gaben_id INT UNSIGNED NOT NULL,
+    standblatt_id INT UNSIGNED NOT NULL,
+    stich_id INT UNSIGNED NOT NULL,
+    serie_nummer INT UNSIGNED NOT NULL,
+    richtung SMALLINT NOT NULL,
+    name_snapshot VARCHAR(150) NOT NULL,
+    preis_snapshot DECIMAL(10,2) NOT NULL,
+    ist_geld_snapshot TINYINT(1) NOT NULL,
+    preis_quelle VARCHAR(20) NOT NULL DEFAULT 'erfasst',
+    created_by_user_id INT UNSIGNED NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_bewegungen_gabe FOREIGN KEY (gaben_id) REFERENCES gaben(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_bewegungen_blatt FOREIGN KEY (standblatt_id) REFERENCES standblatt(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_bewegungen_stich FOREIGN KEY (stich_id) REFERENCES stich(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_bewegungen_user FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE schussdaten (
@@ -262,12 +297,13 @@ CREATE TABLE schussdaten (
     x_koordinate DECIMAL(10,4) NULL,
     y_koordinate DECIMAL(10,4) NULL,
     in_time TINYINT(1) NOT NULL DEFAULT 1,
-    time_since_change INT UNSIGNED NULL,
+    time_since_change DECIMAL(14,4) UNSIGNED NULL,
     sweep_direction VARCHAR(20) NULL,
     demonstration TINYINT(1) NOT NULL DEFAULT 0,
     match_index INT UNSIGNED NULL,
     stich_index INT UNSIGNED NULL,
-    ins_del TINYINT(1) NOT NULL DEFAULT 0,
+    ins_del TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    manuell_geloescht TINYINT(1) NOT NULL DEFAULT 0,
     total_art VARCHAR(50) NULL,
     gruppe VARCHAR(100) NULL,
     feuerart VARCHAR(50) NULL,

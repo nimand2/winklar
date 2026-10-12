@@ -90,18 +90,17 @@ final class Standblatt
     public function findEinnahmenByStichForAnlass(int $anlassId): array
     {
         $statement = Database::connection()->prepare(
-            'SELECT st.id AS stich_id, st.name, st.short_name, st.preis,
-                    SUM(ss.anzahl_stiche) AS anzahl_stiche,
-                    SUM(ss.anzahl_stiche * COALESCE(st.preis, 0)) AS total
+            'SELECT st.id AS stich_id, st.name, st.short_name, ss.preis,
+                    SUM(ss.anzahl_stiche) AS anzahl_stiche, SUM(ss.kosten) AS total,
+                    MAX(ss.preis_quelle = "uebernommen") AS preis_uebernommen
              FROM standblatt_stich ss
              INNER JOIN standblatt s ON s.id = ss.id_standblatt
              INNER JOIN stich st ON st.id = ss.id_stich
              WHERE s.id_anlass = :anlass_id
-             GROUP BY st.id, st.name, st.short_name, st.preis
-             ORDER BY st.name ASC, st.id ASC'
+             GROUP BY st.id, st.name, st.short_name, ss.preis
+             ORDER BY st.name ASC, st.id ASC, ss.preis ASC'
         );
         $statement->execute(['anlass_id' => $anlassId]);
-
         return $statement->fetchAll();
     }
 
@@ -129,33 +128,14 @@ final class Standblatt
     {
         $connection = Database::connection();
         $connection->beginTransaction();
-
         try {
-            $standblattId = $this->create($data);
-            $statement = $connection->prepare(
-                'INSERT INTO standblatt_stich (
-                    id_standblatt, id_stich, anzahl_stiche, created_by_user_id, updated_by_user_id
-                 ) VALUES (
-                    :id_standblatt, :id_stich, :anzahl_stiche, :created_by_user_id, :updated_by_user_id
-                 )'
-            );
-
-            foreach ($stichCounts as $stichId => $anzahlStiche) {
-                $statement->execute([
-                    'id_standblatt' => $standblattId,
-                    'id_stich' => (int) $stichId,
-                    'anzahl_stiche' => (int) $anzahlStiche,
-                    'created_by_user_id' => $userId,
-                    'updated_by_user_id' => $userId,
-                ]);
-            }
-
+            $id = $this->create(array_replace($data, ['kosten' => '0.00']));
+            $this->saveStiche($id, (int) $data['id_anlass'], $stichCounts, $userId, []);
             $connection->commit();
-
-            return $standblattId;
-        } catch (\Throwable $throwable) {
+            return $id;
+        } catch (\Throwable $error) {
             $connection->rollBack();
-            throw $throwable;
+            throw $error;
         }
     }
 
@@ -165,13 +145,16 @@ final class Standblatt
     public function findById(int $id): ?array
     {
         $statement = Database::connection()->prepare(
-            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.final_teilnahme, s.created_by_user_id, s.created_at,
+            'SELECT s.id, s.id_anlass, s.id_adresse, s.datum, s.kosten, s.gaben_geprueft, s.final_teilnahme, s.created_by_user_id, s.created_at,
+                    a.geburtsdatum, an.start_anlass, an.end_anlass,
                     s.updated_by_user_id, s.updated_at, s.gaben_geprueft = 1 AND NOT EXISTS (
                         SELECT 1 FROM gaben_abgaben ga
                         WHERE ga.standblatt_id = s.id AND ga.abgegeben = 0
                     ) AS gaben_abgegeben
              FROM standblatt s
-             WHERE id = :id
+             INNER JOIN adressen a ON a.id = s.id_adresse
+             INNER JOIN anlass an ON an.id = s.id_anlass
+             WHERE s.id = :id
              LIMIT 1'
         );
         $statement->execute(['id' => $id]);
@@ -184,19 +167,46 @@ final class Standblatt
     /**
      * Laedt die geloesten Stiche eines Standblatts.
      */
+    private function stichColumns(): string
+    {
+        return 'st.id, st.id_anlass, ss.anzahl_stiche, st.name, st.short_name, st.anzeige_id, st.scheibe,
+                st.wertigkeit, st.anzahl_schuss, st.anzahl_passen, ss.preis, ss.kosten, ss.preis_quelle, st.verbindung';
+    }
+
     public function findSticheForStandblatt(int $standblattId): array
     {
         $statement = Database::connection()->prepare(
-            'SELECT st.id, st.id_anlass, ss.anzahl_stiche, st.name, st.short_name, st.anzeige_id, st.scheibe,
-                    st.wertigkeit, st.anzahl_schuss, st.anzahl_passen, st.preis, st.verbindung
-             FROM standblatt_stich ss
-             INNER JOIN stich st ON st.id = ss.id_stich
-             WHERE ss.id_standblatt = :id_standblatt
-             ORDER BY st.name ASC, st.id ASC'
+            'SELECT ' . $this->stichColumns() . '
+             FROM standblatt_stich ss INNER JOIN stich st ON st.id = ss.id_stich
+             WHERE ss.id_standblatt = :id ORDER BY st.name ASC, st.id ASC'
         );
-        $statement->execute(['id_standblatt' => $standblattId]);
-
+        $statement->execute(['id' => $standblattId]);
         return $statement->fetchAll();
+    }
+
+    public function findSticheForAnlass(int $anlassId): array
+    {
+        $statement = Database::connection()->prepare(
+            'SELECT ss.id_standblatt, ' . $this->stichColumns() . '
+             FROM standblatt_stich ss INNER JOIN stich st ON st.id = ss.id_stich
+             INNER JOIN standblatt s ON s.id = ss.id_standblatt
+             WHERE s.id_anlass = :id ORDER BY st.name ASC, st.id ASC'
+        );
+        $statement->execute(['id' => $anlassId]);
+        $result = [];
+        foreach ($statement->fetchAll() as $row) $result[(int) $row['id_standblatt']][] = $row;
+        return $result;
+    }
+
+    public function existingIdsForAnlass(int $anlassId, array $ids): array
+    {
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) return [];
+        $statement = Database::connection()->prepare(
+            'SELECT id FROM standblatt WHERE id_anlass = ? AND id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')'
+        );
+        $statement->execute(array_merge([$anlassId], $ids));
+        return array_map('intval', $statement->fetchAll(\PDO::FETCH_COLUMN));
     }
 
     /**
@@ -206,41 +216,49 @@ final class Standblatt
     {
         $connection = Database::connection();
         $connection->beginTransaction();
-
         try {
+            $lock = $connection->prepare('SELECT id FROM standblatt WHERE id = ? FOR UPDATE');
+            $lock->execute([$id]);
+            $old = [];
+            foreach ($this->findSticheForStandblatt($id) as $row) $old[(int) $row['id']] = $row;
             $this->update($id, $data);
-
-            $deleteStatement = $connection->prepare(
-                'DELETE FROM standblatt_stich
-                 WHERE id_standblatt = :id_standblatt'
-            );
-            $deleteStatement->execute(['id_standblatt' => $id]);
-
-            $insertStatement = $connection->prepare(
-                'INSERT INTO standblatt_stich (
-                    id_standblatt, id_stich, anzahl_stiche, created_by_user_id, updated_by_user_id
-                 ) VALUES (
-                    :id_standblatt, :id_stich, :anzahl_stiche, :created_by_user_id, :updated_by_user_id
-                 )'
-            );
-
-            foreach ($stichCounts as $stichId => $anzahlStiche) {
-                $insertStatement->execute([
-                    'id_standblatt' => $id,
-                    'id_stich' => (int) $stichId,
-                    'anzahl_stiche' => (int) $anzahlStiche,
-                    'created_by_user_id' => $userId,
-                    'updated_by_user_id' => $userId,
-                ]);
-            }
-
+            $this->saveStiche($id, (int) $data['id_anlass'], $stichCounts, $userId, $old);
+            $oldCounts = array_map(static fn (array $row): int => (int) $row['anzahl_stiche'], $old);
+            ksort($oldCounts); ksort($stichCounts);
+            if ($oldCounts !== $stichCounts) (new Gaben())->resetAbgabenForStandblatt($id, $userId);
             $connection->commit();
-
             return true;
-        } catch (\Throwable $throwable) {
+        } catch (\Throwable $error) {
             $connection->rollBack();
-            throw $throwable;
+            throw $error;
         }
+    }
+
+    private function saveStiche(int $id, int $anlassId, array $counts, int $userId, array $old): void
+    {
+        $connection = Database::connection();
+        $rows = [];
+        $total = 0;
+        $lookup = $connection->prepare('SELECT id, preis FROM stich WHERE id = ? AND id_anlass = ? FOR UPDATE');
+        foreach ($counts as $stichId => $count) {
+            if (!is_int($count) || $count < 1 || $count > 1000) throw new \InvalidArgumentException('Ungültige Anzahl Stiche.');
+            $lookup->execute([(int) $stichId, $anlassId]);
+            $stich = $lookup->fetch();
+            if (!$stich) throw new \InvalidArgumentException('Stich gehört nicht zu diesem Anlass.');
+            $previous = $old[(int) $stichId] ?? null;
+            $preis = $previous['preis'] ?? $stich['preis'] ?? '0';
+            $kosten = $previous !== null && (int) $previous['anzahl_stiche'] === $count
+                ? (int) round((float) $previous['kosten'] * 100) : (int) round((float) $preis * $count * 100);
+            $total += $kosten;
+            if ($total > 9999999999 || $kosten < 0) throw new \InvalidArgumentException('Standblattkosten überschreiten den zulässigen Bereich.');
+            $rows[] = [(int) $stichId, $count, $preis, number_format($kosten / 100, 2, '.', ''), $previous['preis_quelle'] ?? 'erfasst'];
+        }
+        $delete = $connection->prepare('DELETE FROM standblatt_stich WHERE id_standblatt = ?');
+        $delete->execute([$id]);
+        $insert = $connection->prepare('INSERT INTO standblatt_stich (id_standblatt, id_stich, anzahl_stiche, preis, kosten, preis_quelle, created_by_user_id, updated_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        foreach ($rows as $row) $insert->execute(array_merge([$id], $row, [$userId, $userId]));
+        $update = $connection->prepare('UPDATE standblatt SET kosten = ? WHERE id = ?');
+        $update->execute([number_format($total / 100, 2, '.', ''), $id]);
     }
 
     /**

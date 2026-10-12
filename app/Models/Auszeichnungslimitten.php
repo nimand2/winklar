@@ -61,9 +61,12 @@ final class Auszeichnungslimitten
                 :created_by_user_id, :updated_by_user_id
              )'
         );
-        $statement->execute($this->buildPayload($data));
-
-        return (int) Database::connection()->lastInsertId();
+        return Database::transaction(function () use ($statement, $data): int {
+            $statement->execute($this->buildPayload($data));
+            $id = (int) Database::connection()->lastInsertId();
+            (new Gaben())->invalidateStich((int) $data['stich_id'], $data['updated_by_user_id'] ?? null);
+            return $id;
+        });
     }
 
     /**
@@ -76,7 +79,12 @@ final class Auszeichnungslimitten
              WHERE id = :id'
         );
 
-        return $statement->execute(['id' => $id]);
+        return Database::transaction(function () use ($statement, $id): bool {
+            $regel = $this->getById($id);
+            $result = $statement->execute(['id' => $id]);
+            if ($regel !== null) (new Gaben())->invalidateStich((int) $regel['stich_id'], null);
+            return $result;
+        });
     }
 
     /**

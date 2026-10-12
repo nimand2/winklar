@@ -11,6 +11,17 @@ Alternativ kann `config/database.local.example.php` nach
 `config/database.local.php` kopiert und lokal ausgefüllt werden.
 Umgebungsvariablen haben Vorrang; die lokale Datei wird weder versioniert noch verpackt.
 Die bisherige lokale Datenbankkonfiguration wurde bei der Umstellung übernommen.
+Der PHP/Webserver-Benutzer muss die lokale Datei lesen können. Für Apache unter
+Ubuntu mit Gruppe `www-data` eignen sich:
+
+```bash
+chgrp www-data config/database.local.php
+chmod 640 config/database.local.php
+```
+
+Die Datei gehört damit weiterhin dem administrativen Benutzer; die Webservergruppe
+bekommt nur Leserechte. `600` funktioniert nur, wenn PHP als Dateieigentümer läuft.
+Nach Konfigurationsänderungen auch `/login` über den tatsächlichen Webserver prüfen.
 `config.php` bleibt als kompatibler Ladepunkt bestehen.
 
 Allgemeine Einstellungen stehen unter `config/app.php`. `API_TOKEN_SECRET` muss
